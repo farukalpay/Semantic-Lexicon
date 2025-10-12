@@ -6,10 +6,10 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 from numpy.typing import NDArray
-from typing import cast
 
 from .templates import BalancedTutorTemplate
 from .utils import read_jsonl, tokenize
