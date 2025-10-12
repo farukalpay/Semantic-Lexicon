@@ -1,156 +1,155 @@
 # Semantic Lexicon
 
-Semantic Lexicon is a research-grade Python library that bundles together the
-components of the “neural semantic model” developed in this repository.  The
-package focuses on learned embeddings, intent understanding, a lightweight
-knowledge graph, and persona-conditioned text generation – all implemented in
-pure NumPy so the system can run without a deep-learning framework.
+Semantic Lexicon is a NumPy-first research toolkit that demonstrates persona-aware semantic modelling. The project packages a compact neural stack consisting of intent understanding, a light-weight knowledge network, persona management, and text generation into an automated Python library and CLI.
 
 ## Features
 
-- **NeuralSemanticModel** – unified façade that wires embeddings, intent
-  classification, knowledge retrieval, persona conditioning, and generation.
-- **Training utilities** – helpers for preparing corpora, seeding the knowledge
-  graph, and running illustrative optimisation loops.
-- **Diagnostics suite** – structured smoke tests that mirror the historical
-  command-line script and surface key signals for embeddings, intents, and
-  generation behaviour.
-- **Zero external services** – no runtime dependency on Wikipedia or other
-  network calls; behaviour is derived from embeddings and optional training
-  data.
+- **Modular architecture** – dedicated submodules for embeddings, intent classification, knowledge graphs, persona handling, and persona-aware generation.
+- **Deterministic NumPy training loops** – simple yet reproducible optimisation routines for intents and knowledge edges.
+- **Automated workflows** – Typer-powered CLI (`semantic-lexicon`) for corpus preparation, training, diagnostics, and generation.
+- **Extensible configuration** – YAML/JSON configuration loading with dataclass-backed defaults.
+- **Diagnostics** – structured reports covering embeddings, intents, knowledge neighbours, personas, and generation previews.
+- **Docs & tests** – MkDocs documentation, pytest-based regression tests, and CI-ready tooling (black, ruff, mypy).
 
 ## Installation
 
-Semantic Lexicon uses a `src/` layout and standard Python packaging metadata in
-`pyproject.toml`.  Install it from a local checkout with:
-
 ```bash
-python -m pip install .
+python -m venv .venv
+source .venv/bin/activate
+pip install .[dev,docs]
 ```
 
-The only runtime dependency is `numpy>=1.23`.  The library targets Python 3.9+
-(and runs happily on newer interpreters).
+To install the core package only:
+
+```bash
+pip install .
+```
+
+## Project Layout
+
+```
+src/semantic_lexicon/
+├── cli.py                # Typer CLI entry point
+├── config.py             # Dataclass-backed configuration helpers
+├── embeddings.py         # GloVe-style embeddings and persistence
+├── intent.py             # NumPy multinomial logistic regression intents
+├── knowledge.py          # Simple relation network with gradient updates
+├── persona.py            # Persona profiles and blending logic
+├── generator.py          # Persona-aware response generation
+├── model.py              # Orchestration façade
+├── training.py           # Training pipeline and diagnostics integration
+├── diagnostics.py        # Structured diagnostics reports
+├── utils/                # Tokenisation, seeding, and I/O helpers
+└── data/                 # Sample intent & knowledge datasets for tests
+```
 
 ## Quick Start
 
+1. **Prepare the corpus** (optional if using bundled sample data):
+
+   ```bash
+   semantic-lexicon prepare --intent src/semantic_lexicon/data/intent.jsonl --knowledge src/semantic_lexicon/data/knowledge.jsonl --workspace artifacts
+   ```
+
+2. **Train the model** (uses processed datasets in `artifacts/`):
+
+   ```bash
+   semantic-lexicon train --workspace artifacts
+   ```
+
+   The CLI saves embeddings, intent weights, and knowledge matrices to the workspace directory.
+
+3. **Run diagnostics**:
+
+   ```bash
+   semantic-lexicon diagnostics --workspace artifacts --output diagnostics.json
+   ```
+
+   The command prints a JSON summary to stdout and optionally writes the report to disk.
+
+4. **Generate responses**:
+
+   ```bash
+   semantic-lexicon generate "Explain neural networks" --workspace artifacts --persona tutor
+   ```
+
+## Configuration
+
+Semantic Lexicon reads configuration files in YAML or JSON using the `SemanticModelConfig` dataclass. Example `config.yaml`:
+
+```yaml
+embeddings:
+  dimension: 50
+  max_words: 5000
+intent:
+  learning_rate: 0.2
+  epochs: 5
+knowledge:
+  max_relations: 4
+persona:
+  default_persona: tutor
+generator:
+  temperature: 0.7
+```
+
+Load the configuration via CLI (`semantic-lexicon train --config config.yaml`) or programmatically:
+
 ```python
-from semantic_lexicon import NeuralSemanticModel
+from semantic_lexicon import NeuralSemanticModel, load_config
+
+config = load_config("config.yaml")
+model = NeuralSemanticModel(config)
+```
+
+## Training API
+
+```python
+from semantic_lexicon import NeuralSemanticModel, SemanticModelConfig
+from semantic_lexicon.training import Trainer, TrainerConfig
+
+config = SemanticModelConfig()
+model = NeuralSemanticModel(config)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+response = model.generate("How to learn python?", persona="tutor")
+print(response.response)
+```
+
+## Diagnostics Programmatically
+
+```python
+from semantic_lexicon.model import NeuralSemanticModel
+from semantic_lexicon.training import Trainer, TrainerConfig
 
 model = NeuralSemanticModel()
-response = model.generate_response(
-    query="What is machine learning?",
-    persona="tutor",
-    max_length=60,
-    temperature=0.7,
-)
-print(response)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+report = trainer.run_diagnostics()
+print(report.to_dict())
 ```
 
-Retrieve high-level signals about how the model is behaving:
+## Development Workflow
 
-```python
-from semantic_lexicon import run_all_diagnostics
+- **Format & lint**: `ruff check .` and `black .`
+- **Type check**: `mypy src`
+- **Tests**: `pytest`
+- **Docs**: `mkdocs serve`
 
-result = run_all_diagnostics(stream=None)
-print(result.to_dict())
-```
+A `Makefile` (or CI workflow) can orchestrate the tasks:
 
-## Diagnostics
-
-The former `test_neural_model.py` script now lives behind the
-`semantic_lexicon.diagnostics` module.  The public helpers are:
-
-- `DiagnosticsSuite` – orchestrates the probes and exposes structured results.
-- `run_all_diagnostics()` – convenience function that optionally prints a human
-  readable report when a `stream` (like `sys.stdout`) is provided.
-
-Example command-line usage:
-
-```python
-from semantic_lexicon import run_all_diagnostics
-import sys
-
-run_all_diagnostics(stream=sys.stdout)
-```
-
-This prints a concise summary including embedding norms, intent predictions,
-knowledge retrieval samples, persona vector statistics, and generation
-previews.
-
-## Training Helpers
-
-The `semantic_lexicon.training` module provides building blocks for preparing
-custom corpora and populating the model:
-
-```python
-from semantic_lexicon import NeuralSemanticModel
-from semantic_lexicon.training import CorpusProcessor, NeuralTrainer
-
-raw_entries = [
-    {"title": "Neural Networks", "summary": "A model inspired by biology."},
-    {"title": "Gradient Descent", "summary": "Optimisation procedure."},
-]
-
-processor = CorpusProcessor()
-processed = processor.prepare_corpus(raw_entries)
-
-model = NeuralSemanticModel()
-trainer = NeuralTrainer(model)
-training_pairs = trainer.create_training_pairs(processed)
-trainer.train_intent_classifier(training_pairs, epochs=3)
-trainer.train_knowledge_network(processed)
-```
-
-Key classes:
-
-- `CorpusProcessor` – normalises raw records, tokenises text, and extracts
-  concept hints for the knowledge graph.
-- `NeuralTrainer` – bootstraps the intent classifier, knowledge graph, and
-  generator using lightweight illustrative loops.
-- `LexiconMigrator` – wraps the neural generator so teams can compare new
-  outputs against legacy systems.
-
-All utilities are intentionally framework-agnostic; integrate them into your own
-pipelines or replace them with domain-specific variants.
-
-## Architecture Overview
-
-`NeuralSemanticModel` exposes the following subsystems:
-
-1. **Embeddings** – loads or synthesises GloVe-style vectors with consistent
-   handling for out-of-vocabulary tokens.
-2. **IntentClassifier** – BiLSTM-inspired scaffolding that scores definition,
-   comparison, how-to, benefit, identity, and general intents.
-3. **KnowledgeNetwork** – attention-weighted concept graph used to retrieve
-   supporting facts.
-4. **NeuralGenerator** – persona-aware decoder featuring beam search and copy
-   heuristics (implemented with NumPy tensors).
-5. **PersonalityModule** – transforms base representations into persona-specific
-   styles through learned matrices.
-
-The architecture is intentionally modular so researchers can swap out components
-or plug in trained weights.
-
-## Repository Layout
-
-```
-├── pyproject.toml          # Packaging metadata
-├── src/
-│   └── semantic_lexicon/
-│       ├── __init__.py     # Public API exports
-│       ├── model.py        # Core neural architecture
-│       ├── diagnostics.py  # Structured diagnostic harness
-│       └── training.py     # Corpus and migration helpers
-└── Archive/                # Legacy materials retained for reference
+```bash
+make lint
+make test
+make docs
 ```
 
 ## Contributing
 
-Issues and pull requests are welcome.  Please ensure new functionality includes
-pertinent documentation updates and, where possible, extend the diagnostics or
-add automated tests to showcase the behaviour.
+1. Fork the repository and create a feature branch.
+2. Install development dependencies: `pip install .[dev]`.
+3. Run `make test` to ensure linting, typing, and tests pass.
+4. Submit a pull request with detailed notes on new features or fixes.
 
 ## License
 
-Semantic Lexicon is released under the MIT License.  See `LICENSE` for the full
-text.
+Semantic Lexicon is released under the MIT License. See [LICENSE](LICENSE) for details.

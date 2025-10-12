@@ -1,32 +1,83 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "semantic-lexicon"
 version = "0.1.0"
-description = "Neural semantic modeling toolkit built around learned embeddings and persona-conditioned generation."
-authors = [
-    {name = "Semantic Lexicon Team"}
-]
+description = "Neural semantic modeling toolkit with persona-aware generation and diagnostics."
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.9"
+authors = [
+    {name = "Semantic Lexicon Team"},
+]
+keywords = ["nlp", "semantics", "persona", "knowledge-graph", "cli"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "numpy>=1.23",
+    "numpy>=1.23,<2.0",
+    "typer>=0.9,<0.13",
+    "PyYAML>=6.0,<7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.0",
+    "ruff>=0.4",
+    "mypy>=1.4",
+    "pytest>=7.0",
+    "pytest-cov>=4.1",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.5",
 ]
 
 [project.urls]
 Homepage = "https://github.com/example/semantic-lexicon"
 Documentation = "https://github.com/example/semantic-lexicon#readme"
+Issues = "https://github.com/example/semantic-lexicon/issues"
+
+[project.scripts]
+semantic-lexicon = "semantic_lexicon.cli:app"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B905"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+packages = ["semantic_lexicon"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["semantic_lexicon"]

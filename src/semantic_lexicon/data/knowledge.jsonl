@@ -1,0 +1,3 @@
+{"head": "artificial intelligence", "relation": "includes", "tail": "machine learning"}
+{"head": "machine learning", "relation": "related_to", "tail": "statistics"}
+{"head": "python programming", "relation": "requires", "tail": "practice"}
