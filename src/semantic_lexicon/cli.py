@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-import typer
+import typer  # type: ignore[import-not-found]
 
 from .config import SemanticModelConfig, load_config
 from .logging import configure_logging
@@ -60,7 +60,7 @@ app = typer.Typer(
 def _load_records(path: Path) -> list[dict[str, Any]]:
     path = Path(path)
     if path.suffix.lower() in {".jsonl", ".jsonl.gz"}:
-        return list(read_jsonl(path))
+        return [dict(record) for record in read_jsonl(path)]
     with path.open("r", encoding="utf8") as handle:
         data = json.load(handle)
     if isinstance(data, dict):

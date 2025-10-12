@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .config import EmbeddingConfig
 from .logging import configure_logging
@@ -19,10 +21,10 @@ class GloVeEmbeddings:
 
     def __init__(self, config: EmbeddingConfig | None = None) -> None:
         self.config = config or EmbeddingConfig()
-        self.word_to_vector: dict[str, np.ndarray] = {}
+        self.word_to_vector: dict[str, NDArray[np.float64]] = {}
         self.word_to_index: dict[str, int] = {}
         self.index_to_word: dict[int, str] = {}
-        self.embedding_matrix: np.ndarray | None = None
+        self.embedding_matrix: NDArray[np.float64] | None = None
 
     # Persistence -----------------------------------------------------------------
     def save(self, path: Path) -> None:
@@ -53,9 +55,13 @@ class GloVeEmbeddings:
         instance = cls(config=config)
         instance.word_to_index = {str(k): int(v) for k, v in payload["word_to_index"].items()}
         instance.index_to_word = {int(v): str(k) for k, v in instance.word_to_index.items()}
-        instance.embedding_matrix = np.asarray(payload["embeddings"], dtype=float)
+        instance.embedding_matrix = cast(
+            NDArray[np.float64], np.asarray(payload["embeddings"], dtype=float)
+        )
         for word, index in instance.word_to_index.items():
-            instance.word_to_vector[word] = instance.embedding_matrix[index]
+            instance.word_to_vector[word] = cast(
+                NDArray[np.float64], instance.embedding_matrix[index]
+            )
         LOGGER.info("Loaded embeddings from %s", path)
         return instance
 
@@ -83,7 +89,7 @@ class GloVeEmbeddings:
         LOGGER.info("Loaded %d vectors", len(words))
         self._build_matrix(words, vectors)
 
-    def _build_matrix(self, words: list[str], vectors: list[np.ndarray]) -> None:
+    def _build_matrix(self, words: list[str], vectors: list[NDArray[np.float64]]) -> None:
         vocab_size = len(words) + 1
         self.embedding_matrix = np.zeros((vocab_size, self.config.dimension), dtype=float)
         for index, vector in enumerate(vectors, start=1):
@@ -92,22 +98,24 @@ class GloVeEmbeddings:
         self.word_to_index["<pad>"] = 0
         self.index_to_word = {index: word for word, index in self.word_to_index.items()}
         self.word_to_vector = {
-            word: self.embedding_matrix[index] for word, index in self.word_to_index.items()
+            word: cast(NDArray[np.float64], self.embedding_matrix[index])
+            for word, index in self.word_to_index.items()
         }
 
     # Lookup ----------------------------------------------------------------------
     def __contains__(self, word: str) -> bool:
         return word.lower() in self.word_to_index
 
-    def get_embedding(self, word: str) -> np.ndarray:
+    def get_embedding(self, word: str) -> NDArray[np.float64]:
         word = word.lower()
         if word in self.word_to_index and self.embedding_matrix is not None:
-            return self.embedding_matrix[self.word_to_index[word]]
+            index = self.word_to_index[word]
+            return cast(NDArray[np.float64], self.embedding_matrix[index])
         rng = np.random.default_rng(abs(hash(word)) % 2**32)
-        return rng.normal(0, 0.1, size=self.config.dimension)
+        return np.asarray(rng.normal(0, 0.1, size=self.config.dimension), dtype=float)
 
-    def encode_tokens(self, tokens: Iterable[str]) -> np.ndarray:
+    def encode_tokens(self, tokens: Iterable[str]) -> NDArray[np.float64]:
         vectors = [self.get_embedding(token) for token in tokens]
         if not vectors:
-            return np.zeros((0, self.config.dimension))
-        return np.vstack(vectors)
+            return np.zeros((0, self.config.dimension), dtype=float)
+        return cast(NDArray[np.float64], np.vstack(vectors))

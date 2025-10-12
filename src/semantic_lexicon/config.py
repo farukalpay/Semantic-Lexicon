@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 try:
-    import yaml
+    import yaml  # type: ignore[import-untyped]
 except ImportError:  # pragma: no cover - optional dependency
     yaml = None  # type: ignore[assignment]
-
 
 def _fallback_yaml_load(text: str) -> dict[str, Any]:
     """Parse a minimal subset of YAML used in tests without PyYAML."""
@@ -132,16 +131,28 @@ def _load_yaml_or_json(path: Path) -> dict[str, Any]:
     if path.suffix.lower() in {".yaml", ".yml"}:
         if yaml is None:  # pragma: no cover - exercised when PyYAML missing
             return _fallback_yaml_load(text)
-        return yaml.safe_load(text) or {}
-    return json.loads(text)
+        loaded = yaml.safe_load(text)
+        if isinstance(loaded, Mapping):
+            return cast(dict[str, Any], dict(loaded))
+        if loaded is None:
+            return {}
+        msg = "Expected mapping at root of YAML configuration"
+        raise TypeError(msg)
+    loaded_json = json.loads(text)
+    if isinstance(loaded_json, dict):
+        return cast(dict[str, Any], loaded_json)
+    msg = "Expected mapping at root of JSON configuration"
+    raise TypeError(msg)
 
 
 def _merge_dict(base: dict[str, Any], overrides: Iterable[dict[str, Any]]) -> dict[str, Any]:
-    result = dict(base)
+    result: dict[str, Any] = dict(base)
     for override in overrides:
         for key, value in override.items():
-            if isinstance(value, dict) and isinstance(result.get(key), dict):
-                result[key] = _merge_dict(result[key], [value])
+            existing = result.get(key)
+            if isinstance(value, dict) and isinstance(existing, dict):
+                nested = _merge_dict(cast(dict[str, Any], existing), [value])
+                result[key] = nested
             else:
                 result[key] = value
     return result

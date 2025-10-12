@@ -140,7 +140,7 @@ class DiagnosticsSuite:
         predictions: list[IntentPrediction] = []
         for query, expected in self.intent_examples:
             proba = self.model.intent_classifier.predict_proba(query)
-            intent = max(proba, key=proba.get)
+            intent = max(proba, key=lambda label: proba[label])
             predictions.append(
                 IntentPrediction(
                     query=query,

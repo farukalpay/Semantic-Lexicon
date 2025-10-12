@@ -57,7 +57,11 @@ class NeuralSemanticModel:
     def generate(self, prompt: str, persona: str | None = None) -> GenerationResult:
         profile = self.persona_store.get(persona)
         intent_probs = self.intent_classifier.predict_proba(prompt)
-        intents = sorted(intent_probs, key=intent_probs.get, reverse=True)[:3]
+        intents = sorted(
+            intent_probs,
+            key=lambda label: intent_probs[label],
+            reverse=True,
+        )[:3]
         return self.generator.generate(prompt, profile, intents)
 
     # Persistence -----------------------------------------------------------------

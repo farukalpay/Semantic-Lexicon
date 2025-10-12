@@ -6,6 +6,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .config import IntentConfig
 from .logging import configure_logging
@@ -30,7 +31,7 @@ class IntentClassifier:
         self.label_to_index: dict[str, int] = {}
         self.index_to_label: dict[int, str] = {}
         self.vocabulary: dict[str, int] = {}
-        self.weights: np.ndarray | None = None
+        self.weights: NDArray[np.float64] | None = None
 
     # Training --------------------------------------------------------------------
     def fit(self, examples: Iterable[IntentExample]) -> None:
@@ -43,11 +44,14 @@ class IntentClassifier:
         num_features = matrix.shape[1]
         num_labels = len(self.label_to_index)
         rng = np.random.default_rng(0)
-        self.weights = rng.normal(0, 0.1, size=(num_features, num_labels))
+        self.weights = np.asarray(
+            rng.normal(0, 0.1, size=(num_features, num_labels)),
+            dtype=float,
+        )
         for epoch in range(self.config.epochs):
-            logits = matrix @ self.weights
+            logits = np.asarray(matrix @ self.weights, dtype=float)
             probs = self._softmax(logits)
-            one_hot = np.eye(num_labels)[labels]
+            one_hot = np.eye(num_labels, dtype=float)[labels]
             gradient = matrix.T @ (probs - one_hot) / len(dataset)
             self.weights -= self.config.learning_rate * gradient
             loss = -np.mean(np.log(probs[np.arange(len(dataset)), labels] + 1e-12))
@@ -66,7 +70,7 @@ class IntentClassifier:
         self.vocabulary = {token: idx for idx, token in enumerate(vocab)}
         LOGGER.debug("Built vocabulary of size %d", len(self.vocabulary))
 
-    def _vectorise(self, examples: Sequence[IntentExample]) -> np.ndarray:
+    def _vectorise(self, examples: Sequence[IntentExample]) -> NDArray[np.float64]:
         tokenised = [tokenize(example.text) for example in examples]
         if not self.vocabulary:
             self._build_vocabulary(tokenised)
@@ -80,7 +84,7 @@ class IntentClassifier:
     # Prediction ------------------------------------------------------------------
     def predict(self, text: str) -> str:
         probabilities = self.predict_proba(text)
-        return max(probabilities, key=probabilities.get)
+        return max(probabilities, key=lambda label: probabilities[label])
 
     def predict_proba(self, text: str) -> dict[str, float]:
         if self.weights is None:
@@ -94,7 +98,8 @@ class IntentClassifier:
         return {self.index_to_label[i]: float(prob) for i, prob in enumerate(probs)}
 
     @staticmethod
-    def _softmax(logits: np.ndarray) -> np.ndarray:
+    def _softmax(logits: NDArray[np.float64]) -> NDArray[np.float64]:
         logits = logits - np.max(logits, axis=1, keepdims=True)
         exp = np.exp(logits)
-        return exp / np.sum(exp, axis=1, keepdims=True)
+        denominator = np.sum(exp, axis=1, keepdims=True)
+        return np.asarray(exp / denominator, dtype=float)
