@@ -13,6 +13,7 @@ The name reflects the long-standing academic concept of the [semantic lexicon](h
 - **Automated workflows** – Typer-powered CLI (`semantic-lexicon`) for corpus preparation, training, diagnostics, and generation.
 - **Extensible configuration** – YAML/JSON configuration loading with dataclass-backed defaults.
 - **Diagnostics** – structured reports covering embeddings, intents, knowledge neighbours, personas, and generation previews.
+- **Adversarial style selection** – EXP3 utilities for experimenting with persona choices under bandit feedback.
 - **Docs & tests** – MkDocs documentation, pytest-based regression tests, and CI-ready tooling (black, ruff, mypy).
 
 ## Installation
@@ -149,11 +150,41 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
    Response: From a balanced tutor perspective, let's look at Define gravitational potential energy. This ties closely to the 'definition' intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames, and connect Energy Transfer.
    ```
 
-These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
-research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
-persona-aware pipeline.
+  These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
+  research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
+  persona-aware pipeline.
 
-The same behaviour is available through the CLI:
+  Running `python examples/quickstart.py` (or `PYTHONPATH=src python examples/quickstart.py` from a checkout) produces a combined
+  generation preview and the new intent-selection walkthrough:
+
+  ```
+  Sample generation:
+  From a balanced tutor perspective, let's look at Share tips to learn python. This ties closely to the 'how_to' intent I detected.
+  Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule,
+  practice Focus Blocks, and reflect Break Strategies. Related concepts worth exploring: practice, statistics, artificial intelligence.
+
+  Intent bandit walkthrough:
+  Prompt: Clarify when to use breadth-first search
+  Selected intent: definition (reward=0.33)
+  Response: From a balanced tutor perspective, let's look at Clarify when to use breadth-first search. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.
+
+  Prompt: How should I start researching renewable energy?
+  Selected intent: comparison (reward=0.28)
+  Response: From a balanced tutor perspective, let's look at How should I start researching renewable energy? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.
+
+  Prompt: Compare supervised and unsupervised learning
+  Selected intent: how_to (reward=0.24)
+  Response: From a balanced tutor perspective, let's look at Compare supervised and unsupervised learning. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: artificial intelligence, statistics, practice.
+
+  Prompt: Offer reflective prompts for creative writing
+  Selected intent: definition (reward=0.33)
+  Response: From a balanced tutor perspective, let's look at Offer reflective prompts for creative writing. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.
+  ```
+
+  The quickstart rewards are simulated using the intent classifier's posterior probabilities so the bandit loop stays in the unit
+  interval without external feedback.
+
+  The same behaviour is available through the CLI:
 
 ```bash
 semantic-lexicon generate "What is machine learning?" \
@@ -167,6 +198,93 @@ Key parameters for `semantic-lexicon generate`:
 - `--workspace PATH` – directory that contains the trained embeddings and weights (defaults to `artifacts`).
 - `--persona NAME` – persona to blend into the response (defaults to the configuration's `default_persona`).
 - `--config PATH` – optional configuration file to override model hyperparameters during loading.
+
+## Adversarial Style Selection
+
+Semantic Lexicon now bundles EXP3 helpers for experimenting with
+adversarial persona *and* intent selection. The following snippet alternates
+between two personas while learning from scalar feedback in ``[0, 1]``:
+
+```python
+from semantic_lexicon import AnytimeEXP3, NeuralSemanticModel, SemanticModelConfig
+from semantic_lexicon.training import Trainer, TrainerConfig
+
+config = SemanticModelConfig()
+model = NeuralSemanticModel(config)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+
+bandit = AnytimeEXP3(num_arms=2)
+personas = ["tutor", "researcher"]
+
+for prompt in [
+    "Outline matrix factorisation for recommendations",
+    "Give journaling prompts about creativity",
+    "Explain reinforcement learning trade-offs",
+]:
+    arm = bandit.select_arm()
+    persona = personas[arm]
+    response = model.generate(prompt, persona=persona)
+    score = min(1.0, len(response.response.split()) / 40.0)
+    bandit.update(score)
+```
+
+### Intent Selection with EXP3
+
+We can model intent routing as an adversarial bandit problem. Let ``K`` be
+the number of intents (e.g. ``{"how_to", "definition", "comparison", "exploration"}``).
+At round ``t`` the system receives a prompt ``P_t`` and chooses an intent ``I_t``
+using EXP3. After delivering the answer, a reward ``r_t`` in ``[0, 1]`` arrives
+from explicit ratings or engagement metrics. The arm-selection probabilities are
+
+$$
+p_i(t) = (1 - \gamma) \frac{w_i(t)}{\sum_{j=1}^{K} w_j(t)} + \frac{\gamma}{K},
+$$
+
+and the weight for the played intent updates via
+
+$$
+w_{I_t}(t+1) = w_{I_t}(t) \exp\left(\frac{\gamma r_t}{K p_{I_t}(t)}\right).
+$$
+
+When the horizon ``T`` is unknown, the bundled ``AnytimeEXP3`` class applies the
+doubling trick to refresh its parameters so the regret remains ``O(\sqrt{T})``.
+
+The quickstart script demonstrates the pattern by mapping arms to intent labels
+and simulating rewards from the classifier's posterior probability:
+
+```python
+from semantic_lexicon import AnytimeEXP3, NeuralSemanticModel, SemanticModelConfig
+from semantic_lexicon.training import Trainer, TrainerConfig
+
+config = SemanticModelConfig()
+model = NeuralSemanticModel(config)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+
+intents = [label for _, label in sorted(model.intent_classifier.index_to_label.items())]
+bandit = AnytimeEXP3(num_arms=len(intents))
+prompt = "How should I start researching renewable energy?"
+arm = bandit.select_arm()
+intent = intents[arm]
+reward = model.intent_classifier.predict_proba(prompt)[intent]
+bandit.update(reward)
+```
+
+### Intent Classification Objective
+
+Ethical deployment requires robust intent understanding. Semantic Lexicon's
+``IntentClassifier`` treats intent prediction as a multinomial logistic regression
+problem over prompts ``(P_i, I_i)``. Given parameters ``\theta``, the model
+minimises the cross-entropy loss
+
+$$
+\mathcal{L}(\theta) = -\frac{1}{N} \sum_{i=1}^{N} \log p(I_i \mid P_i; \theta),
+$$
+
+which matches the negative log-likelihood optimised during training. Improving
+intent accuracy directly translates into higher-quality feedback for the bandit
+loop.
 
 ## Configuration
 

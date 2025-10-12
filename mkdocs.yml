@@ -9,6 +9,7 @@ nav:
       - Configuration: api/config.md
       - Model: api/model.md
       - CLI: api/cli.md
+      - Algorithms: api/algorithms.md
 theme:
   name: material
 markdown_extensions:

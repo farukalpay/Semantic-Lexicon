@@ -1,5 +1,6 @@
 """Semantic Lexicon package."""
 
+from .algorithms import AnytimeEXP3, EXP3, EXP3Config
 from .config import SemanticModelConfig, load_config
 from .model import NeuralSemanticModel
 from .training import Trainer, TrainerConfig
@@ -10,6 +11,9 @@ __all__ = [
     "NeuralSemanticModel",
     "Trainer",
     "load_config",
+    "EXP3",
+    "EXP3Config",
+    "AnytimeEXP3",
 ]
 
 __version__ = "0.1.0"
