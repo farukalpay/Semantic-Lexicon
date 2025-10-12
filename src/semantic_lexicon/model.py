@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 
@@ -23,15 +24,15 @@ LOGGER = configure_logging(logger_name=__name__)
 
 @dataclass
 class ModelArtifacts:
-    embeddings_path: Path | None = None
-    intent_path: Path | None = None
-    knowledge_path: Path | None = None
+    embeddings_path: Optional[Path] = None
+    intent_path: Optional[Path] = None
+    knowledge_path: Optional[Path] = None
 
 
 class NeuralSemanticModel:
     """Facade over model components."""
 
-    def __init__(self, config: SemanticModelConfig | None = None) -> None:
+    def __init__(self, config: Optional[SemanticModelConfig] = None) -> None:
         self.config = config or SemanticModelConfig()
         seed_everything(0)
         self.embeddings = GloVeEmbeddings(self.config.embeddings)
@@ -54,7 +55,7 @@ class NeuralSemanticModel:
         self.knowledge_network.fit(list(edges))
 
     # Inference -------------------------------------------------------------------
-    def generate(self, prompt: str, persona: str | None = None) -> GenerationResult:
+    def generate(self, prompt: str, persona: Optional[str] = None) -> GenerationResult:
         profile = self.persona_store.get(persona)
         intent_probs = self.intent_classifier.predict_proba(prompt)
         intents = sorted(
@@ -113,7 +114,7 @@ class NeuralSemanticModel:
     def load(
         cls,
         directory: Path,
-        config: SemanticModelConfig | None = None,
+        config: Optional[SemanticModelConfig] = None,
     ) -> NeuralSemanticModel:
         directory = Path(directory)
         instance = cls(config=config)
@@ -157,5 +158,5 @@ class NeuralSemanticModel:
         self.knowledge_network.config = KnowledgeConfig(**payload.get("config", {}))
 
     # Persona ---------------------------------------------------------------------
-    def persona(self, name: str | None = None) -> PersonaProfile:
+    def persona(self, name: Optional[str] = None) -> PersonaProfile:
         return self.persona_store.get(name)

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from .config import SemanticModelConfig
 from .diagnostics import DiagnosticsResult, DiagnosticsSuite
@@ -30,7 +31,7 @@ class TrainerConfig:
 class Trainer:
     """High level training pipeline."""
 
-    def __init__(self, model: NeuralSemanticModel, config: TrainerConfig | None = None) -> None:
+    def __init__(self, model: NeuralSemanticModel, config: Optional[TrainerConfig] = None) -> None:
         self.model = model
         self.config = config or TrainerConfig()
 
@@ -95,7 +96,7 @@ class Trainer:
 
 def train_from_config(
     config: SemanticModelConfig,
-    trainer_config: TrainerConfig | None = None,
+    trainer_config: Optional[TrainerConfig] = None,
 ) -> NeuralSemanticModel:
     """Convenience helper to instantiate and train a model from configuration."""
 

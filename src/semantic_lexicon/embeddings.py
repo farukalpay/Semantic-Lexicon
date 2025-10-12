@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from pathlib import Path
-from typing import cast
+from typing import Optional, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,12 +19,12 @@ LOGGER = configure_logging(logger_name=__name__)
 class GloVeEmbeddings:
     """Light-weight wrapper for GloVe-style embeddings."""
 
-    def __init__(self, config: EmbeddingConfig | None = None) -> None:
+    def __init__(self, config: Optional[EmbeddingConfig] = None) -> None:
         self.config = config or EmbeddingConfig()
         self.word_to_vector: dict[str, NDArray[np.float64]] = {}
         self.word_to_index: dict[str, int] = {}
         self.index_to_word: dict[int, str] = {}
-        self.embedding_matrix: NDArray[np.float64] | None = None
+        self.embedding_matrix: Optional[NDArray[np.float64]] = None
 
     # Persistence -----------------------------------------------------------------
     def save(self, path: Path) -> None:

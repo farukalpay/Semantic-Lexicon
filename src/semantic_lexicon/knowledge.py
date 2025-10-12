@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -23,12 +24,12 @@ class KnowledgeEdge:
 class KnowledgeNetwork:
     """A light-weight knowledge graph with simple scoring functions."""
 
-    def __init__(self, config: KnowledgeConfig | None = None) -> None:
+    def __init__(self, config: Optional[KnowledgeConfig] = None) -> None:
         self.config = config or KnowledgeConfig()
         self.entities: dict[str, int] = {}
         self.relations: dict[str, int] = {}
-        self.embeddings: np.ndarray | None = None
-        self.relation_matrices: np.ndarray | None = None
+        self.embeddings: Optional[np.ndarray] = None
+        self.relation_matrices: Optional[np.ndarray] = None
 
     # Building --------------------------------------------------------------------
     def _ensure_entity(self, name: str) -> int:

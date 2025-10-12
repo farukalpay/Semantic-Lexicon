@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -26,12 +27,12 @@ class IntentExample:
 class IntentClassifier:
     """A simple NumPy-based multinomial logistic regression model."""
 
-    def __init__(self, config: IntentConfig | None = None) -> None:
+    def __init__(self, config: Optional[IntentConfig] = None) -> None:
         self.config = config or IntentConfig()
         self.label_to_index: dict[str, int] = {}
         self.index_to_label: dict[int, str] = {}
         self.vocabulary: dict[str, int] = {}
-        self.weights: NDArray[np.float64] | None = None
+        self.weights: Optional[NDArray[np.float64]] = None
 
     # Training --------------------------------------------------------------------
     def fit(self, examples: Iterable[IntentExample]) -> None:

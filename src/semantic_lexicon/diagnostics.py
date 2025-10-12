@@ -6,6 +6,7 @@ import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 
@@ -59,7 +60,7 @@ class GenerationPreview:
 class DiagnosticsResult:
     embedding_stats: Sequence[EmbeddingStat] = field(default_factory=list)
     intents: Sequence[IntentPrediction] = field(default_factory=list)
-    knowledge: KnowledgeRetrieval | None = None
+    knowledge: Optional[KnowledgeRetrieval] = None
     personas: Sequence[PersonaDiagnostic] = field(default_factory=list)
     generations: Sequence[GenerationPreview] = field(default_factory=list)
 
@@ -151,7 +152,7 @@ class DiagnosticsSuite:
             )
         return predictions
 
-    def _probe_knowledge(self) -> KnowledgeRetrieval | None:
+    def _probe_knowledge(self) -> Optional[KnowledgeRetrieval]:
         if not self.embedding_tokens:
             return None
         query = self.embedding_tokens[0]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import typer  # type: ignore[import-not-found]
 
@@ -75,7 +75,7 @@ def _load_records(path: Path) -> list[dict[str, Any]]:
     raise TypeError(msg)
 
 
-def _load_model(config_path: Path | None) -> tuple[NeuralSemanticModel, SemanticModelConfig]:
+def _load_model(config_path: Optional[Path]) -> tuple[NeuralSemanticModel, SemanticModelConfig]:
     config = load_config(config_path)
     model = NeuralSemanticModel(config=config)
     return model, config
@@ -100,7 +100,7 @@ def prepare(
 
 @app.command()
 def train(
-    config_path: Path | None = CONFIG_OPTION,
+    config_path: Optional[Path] = CONFIG_OPTION,
     workspace: Path = TRAIN_WORKSPACE_OPTION,
 ) -> None:
     """Train the intent classifier and knowledge network."""
@@ -118,9 +118,9 @@ def train(
 
 @app.command()
 def diagnostics(
-    config_path: Path | None = CONFIG_OPTION,
+    config_path: Optional[Path] = CONFIG_OPTION,
     workspace: Path = DIAG_WORKSPACE_OPTION,
-    output: Path | None = DIAG_OUTPUT_OPTION,
+    output: Optional[Path] = DIAG_OUTPUT_OPTION,
 ) -> None:
     """Run diagnostics and optionally export to JSON."""
 
@@ -139,8 +139,8 @@ def diagnostics(
 @app.command()
 def generate(
     prompt: str = typer.Argument(..., help="Prompt to respond to."),
-    persona: str | None = PERSONA_OPTION,
-    config_path: Path | None = GENERATE_CONFIG_OPTION,
+    persona: Optional[str] = PERSONA_OPTION,
+    config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
     workspace: Path = GENERATE_WORKSPACE_OPTION,
 ) -> None:
     """Generate a persona-conditioned response."""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -29,9 +30,9 @@ class PersonaGenerator:
 
     def __init__(
         self,
-        config: GeneratorConfig | None = None,
-        embeddings: GloVeEmbeddings | None = None,
-        knowledge: KnowledgeNetwork | None = None,
+        config: Optional[GeneratorConfig] = None,
+        embeddings: Optional[GloVeEmbeddings] = None,
+        knowledge: Optional[KnowledgeNetwork] = None,
     ) -> None:
         self.config = config or GeneratorConfig()
         self.embeddings = embeddings

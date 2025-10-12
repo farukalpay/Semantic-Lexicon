@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -23,18 +24,18 @@ class PersonaProfile:
 class PersonaStore:
     """Maintain persona embeddings and blending logic."""
 
-    def __init__(self, config: PersonaConfig | None = None) -> None:
+    def __init__(self, config: Optional[PersonaConfig] = None) -> None:
         self.config = config or PersonaConfig()
         self.personas: dict[str, PersonaProfile] = {}
         self._rng = np.random.default_rng(0)
 
-    def get(self, name: str | None = None) -> PersonaProfile:
+    def get(self, name: Optional[str] = None) -> PersonaProfile:
         name = name or self.config.default_persona
         if name not in self.personas:
             self.personas[name] = self._create_default(name)
         return self.personas[name]
 
-    def blend(self, primary: str, secondary: str, weight: float | None = None) -> PersonaProfile:
+    def blend(self, primary: str, secondary: str, weight: Optional[float] = None) -> PersonaProfile:
         first = self.get(primary)
         second = self.get(secondary)
         weight = self.config.persona_strength if weight is None else weight

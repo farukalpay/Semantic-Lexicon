@@ -6,7 +6,7 @@ import json
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 try:
     import yaml  # type: ignore[import-untyped]
@@ -62,9 +62,9 @@ def _fallback_yaml_load(text: str) -> dict[str, Any]:
 class EmbeddingConfig:
     """Configuration for embedding subsystem."""
 
-    path: Path | None = None
+    path: Optional[Path] = None
     dimension: int = 50
-    max_words: int | None = 10000
+    max_words: Optional[int] = 10000
 
 
 @dataclass
@@ -160,8 +160,8 @@ def _merge_dict(base: dict[str, Any], overrides: Iterable[dict[str, Any]]) -> di
 
 
 def load_config(
-    path: Path | None = None,
-    overrides: Iterable[dict[str, Any]] | None = None,
+    path: Optional[Path] = None,
+    overrides: Optional[Iterable[dict[str, Any]]] = None,
 ) -> SemanticModelConfig:
     """Load configuration from disk and merge overrides."""
 
