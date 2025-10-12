@@ -147,7 +147,7 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
    Prompt: Define gravitational potential energy
    Response: From a balanced tutor perspective, let's look at Define gravitational potential energy. This ties closely to the 'definition' intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames, and connect Energy Transfer.
-  ```
+   ```
 
 These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
 research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
