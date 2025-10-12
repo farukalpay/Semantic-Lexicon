@@ -4,6 +4,8 @@
 
 Semantic Lexicon is a NumPy-first research toolkit that demonstrates persona-aware semantic modelling. The project packages a compact neural stack consisting of intent understanding, a light-weight knowledge network, persona management, and text generation into an automated Python library and CLI.
 
+The name reflects the long-standing academic concept of the [semantic lexicon](https://en.wikipedia.org/wiki/Semantic_lexicon); this repository contributes an applied, open implementation that operationalises those ideas for persona-aware experimentation.
+
 ## Features
 
 - **Modular architecture** – dedicated submodules for embeddings, intent classification, knowledge graphs, persona handling, and persona-aware generation.
@@ -226,6 +228,16 @@ make docs
 2. Install development dependencies: `pip install .[dev]`.
 3. Run `make test` to ensure linting, typing, and tests pass.
 4. Submit a pull request with detailed notes on new features or fixes.
+
+## Acknowledgments
+
+This work was shaped by the survey ["Interpretation of Time-Series Deep Models: A Survey" (arXiv:2305.14582)](https://arxiv.org/abs/2305.14582) shared by Dr. Zhao after reading our preprint on Calibrated Counterfactual Conformal Fairness (C3F). His survey offered both the conceptual framing and motivation for exploring this research path. We also thank Hamdi Alakkad and Bugra Kilictas for their pivotal contributions to our related preprints, which laid the groundwork for the developments presented here.
+
+## Contact & Legal
+
+- Semantic Lexicon is a Lightcap® research project distributed as open source under the Apache License 2.0; see [LICENSE](LICENSE) for details on rights and obligations.
+- Lightcap® is a registered trademark (EUIPO Reg. No. 019172085).
+- For enquiries, contact [alpay@lightcap.ai](mailto:alpay@lightcap.ai).
 
 ## License
 
