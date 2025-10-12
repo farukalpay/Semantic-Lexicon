@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
 
 import numpy as np
 
@@ -164,19 +164,21 @@ class BalancedTutorPredictor:
         self._token_to_index = {token: index for index, token in enumerate(self._vocabulary)}
         self._idf = self._compute_idf(self.examples)
 
-        self._feature_matrix = np.vstack([self._vectorise(example.prompt) for example in self.examples])
+        self._feature_matrix = np.vstack(
+            [self._vectorise(example.prompt) for example in self.examples]
+        )
         self._train_models()
 
     # ------------------------------------------------------------------
     @classmethod
-    def from_jsonl(cls, path: str | Path, **kwargs: float) -> "BalancedTutorPredictor":
+    def from_jsonl(cls, path: str | Path, **kwargs: float) -> BalancedTutorPredictor:
         """Load examples from a JSONL file and create a predictor."""
 
         examples = load_balanced_tutor_dataset(path)
         return cls(examples, **kwargs)
 
     @classmethod
-    def load_default(cls, **kwargs: float) -> "BalancedTutorPredictor":
+    def load_default(cls, **kwargs: float) -> BalancedTutorPredictor:
         """Load the bundled training set for balanced tutor prompts."""
 
         data_path = Path(__file__).resolve().parent / "data" / "balanced_tutor_training.jsonl"
