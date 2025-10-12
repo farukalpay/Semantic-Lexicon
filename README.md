@@ -152,4 +152,4 @@ make docs
 
 ## License
 
-Semantic Lexicon is released under the MIT License. See [LICENSE](LICENSE) for details.
+Semantic Lexicon is released under the Apache License. See [LICENSE](LICENSE) for details.
