@@ -13,6 +13,7 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     yaml = None  # type: ignore[assignment]
 
+
 def _fallback_yaml_load(text: str) -> dict[str, Any]:
     """Parse a minimal subset of YAML used in tests without PyYAML."""
 
