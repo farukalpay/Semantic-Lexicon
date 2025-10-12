@@ -1,0 +1,234 @@
+"""Diagnostics for :mod:`semantic_lexicon`."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, List, Optional, Sequence, TextIO
+import numpy as np
+
+from .model import NeuralSemanticModel
+
+
+@dataclass
+class EmbeddingStat:
+    token: str
+    norm: float
+
+
+@dataclass
+class IntentPrediction:
+    query: str
+    expected: str
+    predicted: str
+    confidence: float
+
+    @property
+    def matches(self) -> bool:
+        return self.expected == self.predicted
+
+
+@dataclass
+class KnowledgeRetrieval:
+    query_token: str
+    retrieved: Sequence[str]
+
+
+@dataclass
+class PersonaDiagnostic:
+    persona: str
+    dimension: int
+    non_zero: int
+
+
+@dataclass
+class GenerationPreview:
+    query: str
+    intent: str
+    confidence: float
+    concepts: Sequence[str]
+    preview: str
+
+
+@dataclass
+class DiagnosticsResult:
+    embedding_stats: Sequence[EmbeddingStat] = field(default_factory=list)
+    intents: Sequence[IntentPrediction] = field(default_factory=list)
+    knowledge: Optional[KnowledgeRetrieval] = None
+    personas: Sequence[PersonaDiagnostic] = field(default_factory=list)
+    generations: Sequence[GenerationPreview] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, object]:  # pragma: no cover - convenience helper
+        return {
+            "embedding_stats": [stat.__dict__ for stat in self.embedding_stats],
+            "intents": [
+                {
+                    "query": pred.query,
+                    "expected": pred.expected,
+                    "predicted": pred.predicted,
+                    "confidence": pred.confidence,
+                    "matches": pred.matches,
+                }
+                for pred in self.intents
+            ],
+            "knowledge": None
+            if self.knowledge is None
+            else {"query_token": self.knowledge.query_token, "retrieved": list(self.knowledge.retrieved)},
+            "personas": [persona.__dict__ for persona in self.personas],
+            "generations": [
+                {
+                    "query": preview.query,
+                    "intent": preview.intent,
+                    "confidence": preview.confidence,
+                    "concepts": list(preview.concepts),
+                    "preview": preview.preview,
+                }
+                for preview in self.generations
+            ],
+        }
+
+
+@dataclass
+class DiagnosticsSuite:
+    """Convenience harness that mirrors the historical CLI diagnostics."""
+
+    model: NeuralSemanticModel = field(default_factory=NeuralSemanticModel)
+    embedding_tokens: Sequence[str] = ("machine", "learning", "neural", "network")
+    persona_labels: Sequence[str] = ("tutor", "researcher", "default")
+    intent_examples: Sequence[IntentPrediction] = field(
+        default_factory=lambda: [
+            IntentPrediction("What is machine learning?", "definition", "", 0.0),
+            IntentPrediction("How to train a model?", "how_to", "", 0.0),
+            IntentPrediction("Compare CPU vs GPU", "comparison", "", 0.0),
+            IntentPrediction("Benefits of exercise", "benefit", "", 0.0),
+            IntentPrediction("Who are you?", "identity", "", 0.0),
+        ]
+    )
+    generation_prompts: Sequence[str] = (
+        "What is artificial intelligence?",
+        "How to learn programming?",
+        "Explain neural networks",
+    )
+
+    def run(self) -> DiagnosticsResult:
+        result = DiagnosticsResult()
+        result.embedding_stats = self._probe_embeddings()
+        result.intents = self._probe_intents()
+        result.knowledge = self._probe_knowledge()
+        result.personas = self._probe_personas()
+        result.generations = self._probe_generations()
+        return result
+
+    def _probe_embeddings(self) -> List[EmbeddingStat]:
+        stats: List[EmbeddingStat] = []
+        for token in self.embedding_tokens:
+            vector = self.model.embeddings.get_embedding(token)
+            stats.append(EmbeddingStat(token=token, norm=float(np.linalg.norm(vector))))
+        return stats
+
+    def _probe_intents(self) -> List[IntentPrediction]:
+        predictions: List[IntentPrediction] = []
+        for example in self.intent_examples:
+            tokens = example.query.lower().split()
+            embeddings = self.model.embeddings.encode_sequence(tokens)
+            intent, confidence, _ = self.model.intent_classifier.classify(embeddings)
+            predictions.append(
+                IntentPrediction(
+                    query=example.query,
+                    expected=example.expected,
+                    predicted=intent,
+                    confidence=float(confidence),
+                )
+            )
+        return predictions
+
+    def _probe_knowledge(self) -> KnowledgeRetrieval:
+        for token in self.embedding_tokens:
+            self.model.knowledge.add_concept(token, ["artificial", "intelligence"])
+        retrieved = self.model.knowledge.retrieve_concepts(
+            self.model.embeddings.get_embedding("learning"), top_k=3
+        )
+        return KnowledgeRetrieval(query_token="learning", retrieved=[item[0] for item in retrieved])
+
+    def _probe_personas(self) -> List[PersonaDiagnostic]:
+        personas: List[PersonaDiagnostic] = []
+        for persona in self.persona_labels:
+            embedding = self.model.personality.get_persona_embedding(persona)
+            personas.append(
+                PersonaDiagnostic(
+                    persona=persona,
+                    dimension=int(embedding.shape[0]),
+                    non_zero=int(np.count_nonzero(embedding)),
+                )
+            )
+        return personas
+
+    def _probe_generations(self) -> List[GenerationPreview]:
+        previews: List[GenerationPreview] = []
+        for prompt in self.generation_prompts:
+            intent, confidence, concepts = self.model.understand_query(prompt)
+            response = self.model.generate_response(prompt, persona="tutor", max_length=20)
+            previews.append(
+                GenerationPreview(
+                    query=prompt,
+                    intent=intent,
+                    confidence=float(confidence),
+                    concepts=tuple(concepts),
+                    preview=response[:50],
+                )
+            )
+        return previews
+
+
+def run_all_diagnostics(model: Optional[NeuralSemanticModel] = None, stream: Optional[TextIO] = None) -> DiagnosticsResult:
+    """Run the historical diagnostics and optionally pretty-print to *stream*."""
+
+    suite = DiagnosticsSuite(model=model or NeuralSemanticModel())
+    result = suite.run()
+
+    if stream is not None:
+        stream.write("=" * 60 + "\n")
+        stream.write("TESTING NEURAL SEMANTIC MODEL\n")
+        stream.write("=" * 60 + "\n\n")
+
+        stream.write("1. Embeddings\n")
+        for stat in result.embedding_stats:
+            stream.write(f"  {stat.token}: norm={stat.norm:.2f}\n")
+
+        stream.write("\n2. Intent classifier\n")
+        for prediction in result.intents:
+            marker = "✓" if prediction.matches else "✗"
+            stream.write(
+                f"  {marker} '{prediction.query[:30]}...' → {prediction.predicted} ({prediction.confidence:.1%})\n"
+            )
+
+        if result.knowledge is not None:
+            stream.write("\n3. Knowledge network\n")
+            stream.write(f"  Query: '{result.knowledge.query_token}'\n")
+            stream.write(f"  Retrieved: {list(result.knowledge.retrieved)}\n")
+
+        stream.write("\n4. Persona embeddings\n")
+        for persona in result.personas:
+            stream.write(
+                f"  {persona.persona}: dim={persona.dimension}, non-zero={persona.non_zero}\n"
+            )
+
+        stream.write("\n5. Generation previews\n")
+        for preview in result.generations:
+            stream.write(f"  Query: {preview.query}\n")
+            stream.write(
+                f"    Intent: {preview.intent} ({preview.confidence:.1%}) | Concepts: {list(preview.concepts)}\n"
+            )
+            stream.write(f"    Preview: {preview.preview}...\n")
+    return result
+
+
+__all__ = [
+    "DiagnosticsResult",
+    "DiagnosticsSuite",
+    "EmbeddingStat",
+    "GenerationPreview",
+    "IntentPrediction",
+    "KnowledgeRetrieval",
+    "PersonaDiagnostic",
+    "run_all_diagnostics",
+]

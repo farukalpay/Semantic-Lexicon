@@ -1,195 +1,156 @@
-# Neural Semantic Model - Complete Transformation
+# Semantic Lexicon
 
-## Overview
-Successfully transformed the old lexicon-based system into a modern neural architecture with learned weights and embeddings. The new system eliminates hardcoded word lists, template sentences, and Wikipedia dependencies while providing better understanding and generation capabilities.
+Semantic Lexicon is a research-grade Python library that bundles together the
+components of the “neural semantic model” developed in this repository.  The
+package focuses on learned embeddings, intent understanding, a lightweight
+knowledge graph, and persona-conditioned text generation – all implemented in
+pure NumPy so the system can run without a deep-learning framework.
 
-## Key Improvements Delivered
+## Features
 
-### 1. **Learned Embeddings Replace Lexicon**
-- **Old**: Static TF-IDF, co-occurrence counts, hardcoded word lists
-- **New**: GloVe embeddings (300d) with learned domain adaptation
-- Supports both `glove.6B.300d.txt` and `glove.840B.300d.txt`
-- Automatic OOV handling with consistent random initialization
+- **NeuralSemanticModel** – unified façade that wires embeddings, intent
+  classification, knowledge retrieval, persona conditioning, and generation.
+- **Training utilities** – helpers for preparing corpora, seeding the knowledge
+  graph, and running illustrative optimisation loops.
+- **Diagnostics suite** – structured smoke tests that mirror the historical
+  command-line script and surface key signals for embeddings, intents, and
+  generation behaviour.
+- **Zero external services** – no runtime dependency on Wikipedia or other
+  network calls; behaviour is derived from embeddings and optional training
+  data.
 
-### 2. **Neural Intent Understanding**
-- **Old**: Regex patterns (`what is`, `how to`, etc.)
-- **New**: BiLSTM classifier with attention mechanism
-- Classifies: definition, comparison, how_to, benefit, identity, general
-- Provides confidence scores and attention weights
+## Installation
 
-### 3. **Dynamic Knowledge Graph**
-- **Old**: Static co-occurrence matrices
-- **New**: Neural knowledge network with learned concept relationships
-- Attention-based retrieval mechanism
-- Dynamic relationship learning with momentum updates
+Semantic Lexicon uses a `src/` layout and standard Python packaging metadata in
+`pyproject.toml`.  Install it from a local checkout with:
 
-### 4. **Neural Text Generation**
-- **Old**: Template filling and rule-based composition
-- **New**: LSTM encoder-decoder with attention
-- Persona-conditioned generation
-- Beam search for diverse outputs
-- Copy mechanism for factual accuracy
-
-### 5. **Personality Through Weights**
-- **Old**: Word preferences and story biases
-- **New**: Learned persona embeddings (100d)
-- Style transformation matrices
-- Voice modulation parameters
-- No hardcoded personality traits
-
-## File Structure
-
+```bash
+python -m pip install .
 ```
-neural_semantic_model.py    # Core neural architecture
-├── GloVeEmbeddings         # Embedding management
-├── IntentClassifier        # Query understanding
-├── KnowledgeNetwork        # Concept relationships
-├── NeuralGenerator         # Text generation
-├── PersonalityModule       # Persona management
-└── NeuralSemanticModel     # Main integration
 
-neural_integration.py       # Training and migration utilities
-├── CorpusProcessor         # Data preparation
-├── NeuralTrainer           # Training pipelines
-└── LexiconMigrator         # Migration from old system
-
-test_neural_model.py        # Testing and validation
-```
+The only runtime dependency is `numpy>=1.23`.  The library targets Python 3.9+
+(and runs happily on newer interpreters).
 
 ## Quick Start
 
-### Basic Usage
 ```python
-from neural_semantic_model import NeuralSemanticModel
+from semantic_lexicon import NeuralSemanticModel
 
-# Initialize with GloVe embeddings
-model = NeuralSemanticModel(glove_path='Glove/glove.6B.300d.txt')
-
-# Generate response
+model = NeuralSemanticModel()
 response = model.generate_response(
     query="What is machine learning?",
-    persona='tutor',
-    max_length=50,
-    temperature=0.7
+    persona="tutor",
+    max_length=60,
+    temperature=0.7,
 )
-
-# Understand query intent
-intent, confidence, concepts = model.understand_query("How to optimize algorithms?")
+print(response)
 ```
 
-### Training the Model
-```bash
-# Train on your corpus
-python neural_integration.py --train --glove_path Glove/glove.6B.300d.txt --epochs 5
-
-# With all options
-python neural_integration.py \
-    --train \
-    --glove_path Glove/glove.6B.300d.txt \
-    --stories_dir stories \
-    --epochs 10 \
-    --save_model my_model.pkl
-```
-
-### Testing
-```bash
-# Run all tests
-python test_neural_model.py --all
-
-# Compare with old system
-python test_neural_model.py --compare
-
-# See improvements demonstrated
-python test_neural_model.py --improvements
-```
-
-## Key Advantages
-
-### 1. **No More Hardcoding**
-- Eliminated: DEFAULT_WIKI_TOPICS, STOPWORDS, role_map, TOPIC_ALIASES
-- Everything learned from data and embeddings
-
-### 2. **Better Understanding**
-- Semantic similarity from embeddings, not word matching
-- Intent classification with attention shows what's important
-- Context-aware concept retrieval
-
-### 3. **True Neural Generation**
-- No templates or "f-strings"
-- Learned generation patterns
-- Persona-specific transformations
-
-### 4. **Scalable and Trainable**
-- Can improve with more data
-- Supports continuous learning
-- Domain adaptation through fine-tuning
-
-### 5. **No Runtime Dependencies**
-- No Wikipedia API calls during generation
-- No external services needed
-- Fast inference with pre-loaded embeddings
-
-## Architecture Details
-
-### Intent Classifier
-- **Input**: Token embeddings (300d)
-- **Encoder**: BiLSTM (256d hidden)
-- **Attention**: Pooling mechanism
-- **Output**: 6 intent classes + confidence
-
-### Knowledge Network
-- **Concepts**: GloVe (300d) + Learned (128d)
-- **Relations**: Weighted edges with momentum updates
-- **Retrieval**: Query-Key-Value attention
-
-### Text Generator
-- **Encoder**: LSTM (512d hidden)
-- **Decoder**: LSTM with persona conditioning
-- **Attention**: Bahdanau-style mechanism
-- **Output**: Vocabulary projection (50k words)
-
-### Personality Module
-- **Embeddings**: 100d persona vectors
-- **Style**: 300x300 transformation matrices
-- **Voice**: Formality, verbosity, technicality parameters
-
-## Migration from Old System
-
-The new system can work alongside the old one during transition:
+Retrieve high-level signals about how the model is behaving:
 
 ```python
-from neural_integration import LexiconMigrator
+from semantic_lexicon import run_all_diagnostics
 
-migrator = LexiconMigrator(neural_model)
-response = migrator.migrate_lexicon_query(
-    prompt="Explain fixed point theorem",
-    persona='researcher'
-)
+result = run_all_diagnostics(stream=None)
+print(result.to_dict())
 ```
 
-## Performance Metrics
+## Diagnostics
 
-- **Intent Classification**: ~85% accuracy (untrained baseline)
-- **Memory Usage**: ~500MB with glove.6B embeddings
-- **Inference Speed**: <100ms per query
-- **Training Time**: ~5 min for 1000 entries
+The former `test_neural_model.py` script now lives behind the
+`semantic_lexicon.diagnostics` module.  The public helpers are:
 
-## Future Enhancements
+- `DiagnosticsSuite` – orchestrates the probes and exposes structured results.
+- `run_all_diagnostics()` – convenience function that optionally prints a human
+  readable report when a `stream` (like `sys.stdout`) is provided.
 
-1. **Backpropagation Implementation**: Currently uses placeholder training
-2. **Vocabulary Mapping**: Complete token ↔ index mapping for generation
-3. **Model Persistence**: Save/load trained weights
-4. **Attention Visualization**: Tools for interpretability
-5. **Fine-tuning Pipeline**: Domain-specific adaptation
+Example command-line usage:
 
-## Conclusion
+```python
+from semantic_lexicon import run_all_diagnostics
+import sys
 
-The neural semantic model successfully addresses all the limitations of the lexicon-based system:
-- ✅ No hardcoded word lists
-- ✅ Learned understanding, not pattern matching
-- ✅ Neural generation, not templates
-- ✅ Personality through weights, not word biases
-- ✅ No Wikipedia dependency at runtime
-- ✅ Continuous learning capability
+run_all_diagnostics(stream=sys.stdout)
+```
 
-The system is ready for further training and deployment, with a clear path for improvements and domain adaptation.
+This prints a concise summary including embedding norms, intent predictions,
+knowledge retrieval samples, persona vector statistics, and generation
+previews.
+
+## Training Helpers
+
+The `semantic_lexicon.training` module provides building blocks for preparing
+custom corpora and populating the model:
+
+```python
+from semantic_lexicon import NeuralSemanticModel
+from semantic_lexicon.training import CorpusProcessor, NeuralTrainer
+
+raw_entries = [
+    {"title": "Neural Networks", "summary": "A model inspired by biology."},
+    {"title": "Gradient Descent", "summary": "Optimisation procedure."},
+]
+
+processor = CorpusProcessor()
+processed = processor.prepare_corpus(raw_entries)
+
+model = NeuralSemanticModel()
+trainer = NeuralTrainer(model)
+training_pairs = trainer.create_training_pairs(processed)
+trainer.train_intent_classifier(training_pairs, epochs=3)
+trainer.train_knowledge_network(processed)
+```
+
+Key classes:
+
+- `CorpusProcessor` – normalises raw records, tokenises text, and extracts
+  concept hints for the knowledge graph.
+- `NeuralTrainer` – bootstraps the intent classifier, knowledge graph, and
+  generator using lightweight illustrative loops.
+- `LexiconMigrator` – wraps the neural generator so teams can compare new
+  outputs against legacy systems.
+
+All utilities are intentionally framework-agnostic; integrate them into your own
+pipelines or replace them with domain-specific variants.
+
+## Architecture Overview
+
+`NeuralSemanticModel` exposes the following subsystems:
+
+1. **Embeddings** – loads or synthesises GloVe-style vectors with consistent
+   handling for out-of-vocabulary tokens.
+2. **IntentClassifier** – BiLSTM-inspired scaffolding that scores definition,
+   comparison, how-to, benefit, identity, and general intents.
+3. **KnowledgeNetwork** – attention-weighted concept graph used to retrieve
+   supporting facts.
+4. **NeuralGenerator** – persona-aware decoder featuring beam search and copy
+   heuristics (implemented with NumPy tensors).
+5. **PersonalityModule** – transforms base representations into persona-specific
+   styles through learned matrices.
+
+The architecture is intentionally modular so researchers can swap out components
+or plug in trained weights.
+
+## Repository Layout
+
+```
+├── pyproject.toml          # Packaging metadata
+├── src/
+│   └── semantic_lexicon/
+│       ├── __init__.py     # Public API exports
+│       ├── model.py        # Core neural architecture
+│       ├── diagnostics.py  # Structured diagnostic harness
+│       └── training.py     # Corpus and migration helpers
+└── Archive/                # Legacy materials retained for reference
+```
+
+## Contributing
+
+Issues and pull requests are welcome.  Please ensure new functionality includes
+pertinent documentation updates and, where possible, extend the diagnostics or
+add automated tests to showcase the behaviour.
+
+## License
+
+Semantic Lexicon is released under the MIT License.  See `LICENSE` for the full
+text.
