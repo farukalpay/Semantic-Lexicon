@@ -55,7 +55,7 @@ class PersonaGenerator:
         rng = np.random.default_rng(int(np.sum(blended) * 1000) % (2**32))
         candidates = [
             "Let's explore that further.",
-            "From what I understand,", 
+            "From what I understand,",
             "It sounds like",
             "A thoughtful approach could be",
         ]

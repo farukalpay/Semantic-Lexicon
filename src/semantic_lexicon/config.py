@@ -136,9 +136,7 @@ def _load_yaml_or_json(path: Path) -> dict[str, Any]:
     return json.loads(text)
 
 
-def _merge_dict(
-    base: dict[str, Any], overrides: Iterable[dict[str, Any]]
-) -> dict[str, Any]:
+def _merge_dict(base: dict[str, Any], overrides: Iterable[dict[str, Any]]) -> dict[str, Any]:
     result = dict(base)
     for override in overrides:
         for key, value in override.items():

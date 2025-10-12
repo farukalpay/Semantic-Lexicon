@@ -28,11 +28,7 @@ class GloVeEmbeddings:
     def save(self, path: Path) -> None:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        embeddings = (
-            self.embedding_matrix.tolist()
-            if self.embedding_matrix is not None
-            else []
-        )
+        embeddings = self.embedding_matrix.tolist() if self.embedding_matrix is not None else []
         payload = {
             "config": {
                 "dimension": self.config.dimension,
@@ -96,8 +92,7 @@ class GloVeEmbeddings:
         self.word_to_index["<pad>"] = 0
         self.index_to_word = {index: word for word, index in self.word_to_index.items()}
         self.word_to_vector = {
-            word: self.embedding_matrix[index]
-            for word, index in self.word_to_index.items()
+            word: self.embedding_matrix[index] for word, index in self.word_to_index.items()
         }
 
     # Lookup ----------------------------------------------------------------------
