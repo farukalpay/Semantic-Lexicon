@@ -134,9 +134,7 @@ class PersonaGenerator:
             topics,
             tokens,
         )
-        response_parts = [
-            segment for segment in [base_line, try_line, related] if segment
-        ]
+        response_parts = [segment for segment in [base_line, try_line, related] if segment]
         if not response_parts:
             response_parts.append(
                 "I'm here to help, but I need a bit more detail to respond meaningfully."
@@ -203,7 +201,7 @@ def _build_intro(prompt: str, intent: str) -> str:
     prompt_text = prompt.strip()
     if not prompt_text:
         prompt_text = "this topic"
-    if not prompt_text.endswith(('.', '!', '?')):
+    if not prompt_text.endswith((".", "!", "?")):
         prompt_text = f"{prompt_text}."
     intent_label = intent or "general"
     return (
@@ -243,9 +241,7 @@ def _ensure_topics(tokens: Sequence[str], phrases: Sequence[str]) -> list[str]:
     return topics
 
 
-def _fallback_topics(
-    tokens: Sequence[str], needed: int, existing: Sequence[str]
-) -> list[str]:
+def _fallback_topics(tokens: Sequence[str], needed: int, existing: Sequence[str]) -> list[str]:
     seen = {topic.lower() for topic in existing}
     fallbacks: list[str] = []
     for token in tokens:
@@ -301,7 +297,7 @@ def _enumerate_phrase_candidates(
     threshold = _percentile(list(bigram_pmi.values()), 0.8)
     max_length = min(4, len(tokens))
     seen: dict[str, PhraseCandidate] = {}
-    
+
     def add_candidate(
         window: tuple[str, ...],
         lemmas: tuple[str, ...],
@@ -407,7 +403,12 @@ def _select_phrases(
             break
         selected.append(best_candidate)
         remaining.remove(best_candidate)
-    if not any(len(item.tokens) > 1 and _contains_sequence(prompt_tokens, item.tokens) for item in selected):
+    has_prompt_collocation = False
+    for item in selected:
+        if len(item.tokens) > 1 and _contains_sequence(prompt_tokens, item.tokens):
+            has_prompt_collocation = True
+            break
+    if not has_prompt_collocation:
         collocations = [
             candidate
             for candidate in candidates
@@ -417,7 +418,11 @@ def _select_phrases(
             best_collocation = max(collocations, key=lambda cand: cand.score)
             if best_collocation not in selected:
                 selected.append(best_collocation)
-                selected = sorted(selected, key=lambda cand: cand.score, reverse=True)[:PHRASE_LIMIT]
+                selected = sorted(
+                    selected,
+                    key=lambda cand: cand.score,
+                    reverse=True,
+                )[:PHRASE_LIMIT]
     selected.sort(key=lambda cand: cand.score, reverse=True)
     return selected
 
@@ -474,10 +479,7 @@ def _pmi_bonus(
 ) -> float:
     if len(phrase) <= 1:
         return 0.0
-    values = [
-        bigram_pmi.get((phrase[i], phrase[i + 1]), 0.0)
-        for i in range(len(phrase) - 1)
-    ]
+    values = [bigram_pmi.get((phrase[i], phrase[i + 1]), 0.0) for i in range(len(phrase) - 1)]
     if not values:
         return 0.0
     average = sum(values) / len(values)
