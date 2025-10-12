@@ -75,6 +75,81 @@ src/semantic_lexicon/
    semantic-lexicon generate "Explain neural networks" --workspace artifacts --persona tutor
    ```
 
+## Lightweight Q&A Demo
+
+Semantic Lexicon can answer short questions after its bundled model components are trained. The stack is intentionally tiny, so
+the phrasing is concise, but the generator now runs a compact optimisation loop that:
+
+1. **Classifies intent** with the logistic-regression intent model.
+2. **Builds noun-phrase and collocation candidates** whose adjacent tokens clear an adaptive pointwise mutual information (PMI)
+   threshold, keeping multi-word ideas intact.
+3. **Scores each candidate** via cosine relevance to the blended persona/prompt embedding, tf–idf salience, and a capped PMI
+   cohesion bonus.
+4. **Selects diverse topics** with Maximum Marginal Relevance (MMR) plus an n-gram overlap penalty so the guidance does not echo
+   the question verbatim.
+5. **Surfaces knowledge neighbours** starting from the strongest topic for additional context.
+6. **Aligns journaling actions** with the detected intent so each topic carries a concise Explore/Practice/Reflect-style cue.
+
+1. Install the project in editable mode:
+
+   ```bash
+   pip install -e .
+   ```
+
+2. Run a quick script that trains the miniature model and generates answers for a few prompts:
+
+   ```bash
+   python - <<'PY'
+   from semantic_lexicon import NeuralSemanticModel, SemanticModelConfig
+   from semantic_lexicon.training import Trainer, TrainerConfig
+
+   config = SemanticModelConfig()
+   model = NeuralSemanticModel(config)
+   trainer = Trainer(model, TrainerConfig())
+   trainer.train()
+
+   for prompt in [
+       "How do I improve my public speaking?",
+       "Explain matrix multiplication",
+       "What is machine learning?",
+   ]:
+       response = model.generate(prompt, persona="tutor")
+       print(f"Prompt: {prompt}\\nResponse: {response.response}\\n")
+   PY
+   ```
+
+   Sample output after training the bundled data:
+
+   ```
+   Prompt: How do I improve my public speaking?
+   Response: From a balanced tutor perspective, let's look at How do I improve my public speaking? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice Practice Routine, and reflect Feedback Loops.
+
+   Prompt: Explain matrix multiplication
+   Response: From a balanced tutor perspective, let's look at Explain matrix multiplication. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations.
+
+   Prompt: What is machine learning?
+   Response: From a balanced tutor perspective, let's look at What is machine learning? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: artificial intelligence, statistics, practice.
+   ```
+
+These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
+research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
+persona-aware pipeline.
+
+The same behaviour is available through the CLI:
+
+```bash
+semantic-lexicon generate "What is machine learning?" \
+  --workspace artifacts \
+  --persona tutor \
+  --config config.yaml
+```
+
+Key parameters for `semantic-lexicon generate`:
+
+- `--workspace PATH` – directory that contains the trained embeddings and weights (defaults to `artifacts`).
+- `--persona NAME` – persona to blend into the response (defaults to the configuration's `default_persona`).
+- `--config PATH` – optional configuration file to override model hyperparameters during loading.
+
 ## Configuration
 
 Semantic Lexicon reads configuration files in YAML or JSON using the `SemanticModelConfig` dataclass. Example `config.yaml`:
