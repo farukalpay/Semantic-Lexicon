@@ -1,0 +1,18 @@
+{
+  "entries": [
+    {
+      "title": "Neural Networks",
+      "summary": "Neural networks are computational models inspired by biology.",
+      "persona": "tutor",
+      "tokens": ["neural", "networks"],
+      "concepts": ["neural", "networks"]
+    },
+    {
+      "title": "Gradient Descent",
+      "summary": "Gradient descent minimises loss functions via iterative updates.",
+      "persona": "researcher",
+      "tokens": ["gradient", "descent"],
+      "concepts": ["gradient", "descent"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+site_name: Semantic Lexicon
+repo_url: https://github.com/example/semantic-lexicon
+site_description: Automated workflows for the Semantic Lexicon project
+nav:
+  - Home: index.md
+  - CLI: cli.md
+  - Architecture: architecture.md
+theme:
+  name: material
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true

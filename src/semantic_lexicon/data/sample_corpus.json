@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Neural Networks",
+    "summary": "Neural networks are computational models inspired by biological neurons.",
+    "persona": "tutor"
+  },
+  {
+    "title": "Gradient Descent",
+    "summary": "Gradient descent is an optimisation algorithm used to minimise loss functions.",
+    "persona": "researcher"
+  }
+]
