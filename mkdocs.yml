@@ -1,0 +1,18 @@
+site_name: Semantic Lexicon
+site_description: Persona-aware semantic modelling toolkit
+site_url: https://example.com/semantic-lexicon
+repo_url: https://github.com/example/semantic-lexicon
+nav:
+  - Home: index.md
+  - User Guide: user-guide.md
+  - API Reference:
+      - Configuration: api/config.md
+      - Model: api/model.md
+      - CLI: api/cli.md
+theme:
+  name: material
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
