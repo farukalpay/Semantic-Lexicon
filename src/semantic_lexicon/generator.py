@@ -6,9 +6,10 @@ import math
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .config import GeneratorConfig
 from .embeddings import GloVeEmbeddings
@@ -39,7 +40,7 @@ class PhraseCandidate:
     tokens: tuple[str, ...]
     lemmas: tuple[str, ...]
     text: str
-    embedding: np.ndarray
+    embedding: NDArray[np.float64]
     relevance: float
     tfidf: float
     bonus: float
@@ -430,13 +431,16 @@ def _select_phrases(
 def _phrase_embedding(
     tokens: Sequence[str],
     embeddings: Optional[GloVeEmbeddings],
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     if embeddings is None:
-        return np.zeros((0,), dtype=float)
+        return cast(NDArray[np.float64], np.zeros((0,), dtype=float))
     vectors = embeddings.encode_tokens(tokens)
     if vectors.size == 0:
-        return np.zeros((embeddings.config.dimension,), dtype=float)
-    return np.mean(vectors, axis=0)
+        return cast(
+            NDArray[np.float64],
+            np.zeros((embeddings.config.dimension,), dtype=float),
+        )
+    return cast(NDArray[np.float64], np.mean(vectors, axis=0))
 
 
 def _tf_idf(
