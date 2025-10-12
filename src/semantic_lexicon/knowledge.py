@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 
@@ -25,8 +25,8 @@ class KnowledgeNetwork:
 
     def __init__(self, config: KnowledgeConfig | None = None) -> None:
         self.config = config or KnowledgeConfig()
-        self.entities: Dict[str, int] = {}
-        self.relations: Dict[str, int] = {}
+        self.entities: dict[str, int] = {}
+        self.relations: dict[str, int] = {}
         self.embeddings: np.ndarray | None = None
         self.relation_matrices: np.ndarray | None = None
 
@@ -53,7 +53,15 @@ class KnowledgeNetwork:
         relation_dim = len(self.relations)
         rng = np.random.default_rng(0)
         self.embeddings = rng.normal(0, 0.1, size=(entity_dim, self.config.max_relations))
-        self.relation_matrices = rng.normal(0, 0.1, size=(relation_dim, self.config.max_relations, self.config.max_relations))
+        self.relation_matrices = rng.normal(
+            0,
+            0.1,
+            size=(
+                relation_dim,
+                self.config.max_relations,
+                self.config.max_relations,
+            ),
+        )
         learning_rate = self.config.learning_rate
         for epoch in range(self.config.epochs):
             total_loss = 0.0
@@ -77,7 +85,7 @@ class KnowledgeNetwork:
         LOGGER.info("Trained knowledge network with %d entities", entity_dim)
 
     # Querying --------------------------------------------------------------------
-    def neighbours(self, entity: str, top_k: int = 5) -> List[Tuple[str, float]]:
+    def neighbours(self, entity: str, top_k: int = 5) -> list[tuple[str, float]]:
         if self.embeddings is None or entity not in self.entities:
             return []
         idx = self.entities[entity]

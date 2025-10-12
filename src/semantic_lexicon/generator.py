@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, List
 
 import numpy as np
 
@@ -20,8 +20,8 @@ LOGGER = configure_logging(logger_name=__name__)
 @dataclass
 class GenerationResult:
     response: str
-    intents: List[str]
-    knowledge_hits: List[str]
+    intents: list[str]
+    knowledge_hits: list[str]
 
 
 class PersonaGenerator:
@@ -37,7 +37,12 @@ class PersonaGenerator:
         self.embeddings = embeddings
         self.knowledge = knowledge
 
-    def generate(self, prompt: str, persona: PersonaProfile, intents: Iterable[str]) -> GenerationResult:
+    def generate(
+        self,
+        prompt: str,
+        persona: PersonaProfile,
+        intents: Iterable[str],
+    ) -> GenerationResult:
         tokens = tokenize(prompt)
         vectors = self.embeddings.encode_tokens(tokens) if self.embeddings else np.zeros((0,))
         if vectors.size:

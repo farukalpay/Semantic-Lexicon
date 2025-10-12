@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import random
-from typing import Optional
 
 import numpy as np
 
 
-def seed_everything(seed: Optional[int] = None) -> int:
+def seed_everything(seed: int | None = None) -> int:
     """Seed Python and NumPy RNGs."""
 
     if seed is None:

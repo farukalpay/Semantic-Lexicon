@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Any
 
 import typer
 
@@ -16,21 +16,70 @@ from .utils import normalise_text, read_jsonl
 
 LOGGER = configure_logging(logger_name=__name__)
 
-app = typer.Typer(help="Automate training, diagnostics, and generation for the Semantic Lexicon model.")
+DEFAULT_WORKSPACE = Path("artifacts")
+INTENT_PATH_OPTION = typer.Option(
+    ..., help="Path to raw intent dataset (JSON or JSONL)."
+)
+KNOWLEDGE_PATH_OPTION = typer.Option(
+    ..., help="Path to raw knowledge dataset."
+)
+WORKSPACE_OPTION = typer.Option(
+    DEFAULT_WORKSPACE,
+    help="Output directory for processed datasets.",
+)
+CONFIG_OPTION = typer.Option(
+    None,
+    help="Path to semantic model configuration.",
+)
+TRAIN_WORKSPACE_OPTION = typer.Option(
+    DEFAULT_WORKSPACE,
+    help="Workspace containing processed datasets.",
+)
+DIAG_WORKSPACE_OPTION = typer.Option(
+    DEFAULT_WORKSPACE,
+    help="Workspace containing trained artifacts.",
+)
+DIAG_OUTPUT_OPTION = typer.Option(
+    None,
+    help="Optional path to write diagnostics report.",
+)
+PERSONA_OPTION = typer.Option(
+    None,
+    help="Persona to condition generation.",
+)
+GENERATE_CONFIG_OPTION = typer.Option(
+    None,
+    help="Optional configuration file.",
+)
+GENERATE_WORKSPACE_OPTION = typer.Option(
+    DEFAULT_WORKSPACE,
+    help="Directory containing trained artifacts.",
+)
+
+app = typer.Typer(
+    help="Automate training, diagnostics, and generation for the Semantic Lexicon model."
+)
 
 
-def _load_records(path: Path) -> Iterable[dict]:
+def _load_records(path: Path) -> list[dict[str, Any]]:
     path = Path(path)
     if path.suffix.lower() in {".jsonl", ".jsonl.gz"}:
         return list(read_jsonl(path))
     with path.open("r", encoding="utf8") as handle:
         data = json.load(handle)
     if isinstance(data, dict):
-        return data.get("records", [])
-    return data
+        records = data.get("records", [])
+        if isinstance(records, list):
+            return records
+        msg = "Expected 'records' list in JSON payload"
+        raise TypeError(msg)
+    if isinstance(data, list):
+        return data
+    msg = "Unsupported corpus format; expected list or mapping with 'records'"
+    raise TypeError(msg)
 
 
-def _load_model(config_path: Optional[Path]) -> tuple[NeuralSemanticModel, SemanticModelConfig]:
+def _load_model(config_path: Path | None) -> tuple[NeuralSemanticModel, SemanticModelConfig]:
     config = load_config(config_path)
     model = NeuralSemanticModel(config=config)
     return model, config
@@ -38,9 +87,9 @@ def _load_model(config_path: Optional[Path]) -> tuple[NeuralSemanticModel, Seman
 
 @app.command()
 def prepare(
-    intent_path: Path = typer.Option(..., help="Path to raw intent dataset (JSON or JSONL)."),
-    knowledge_path: Path = typer.Option(..., help="Path to raw knowledge dataset."),
-    workspace: Path = typer.Option(Path("artifacts"), help="Output directory for processed datasets."),
+    intent_path: Path = INTENT_PATH_OPTION,
+    knowledge_path: Path = KNOWLEDGE_PATH_OPTION,
+    workspace: Path = WORKSPACE_OPTION,
 ) -> None:
     """Normalise raw datasets and write JSONL files suitable for training."""
 
@@ -55,8 +104,8 @@ def prepare(
 
 @app.command()
 def train(
-    config_path: Optional[Path] = typer.Option(None, help="Path to semantic model configuration."),
-    workspace: Path = typer.Option(Path("artifacts"), help="Workspace containing processed datasets."),
+    config_path: Path | None = CONFIG_OPTION,
+    workspace: Path = TRAIN_WORKSPACE_OPTION,
 ) -> None:
     """Train the intent classifier and knowledge network."""
 
@@ -73,9 +122,9 @@ def train(
 
 @app.command()
 def diagnostics(
-    config_path: Optional[Path] = typer.Option(None, help="Path to semantic model configuration."),
-    workspace: Path = typer.Option(Path("artifacts"), help="Workspace containing trained artifacts."),
-    output: Optional[Path] = typer.Option(None, help="Optional path to write diagnostics report."),
+    config_path: Path | None = CONFIG_OPTION,
+    workspace: Path = DIAG_WORKSPACE_OPTION,
+    output: Path | None = DIAG_OUTPUT_OPTION,
 ) -> None:
     """Run diagnostics and optionally export to JSON."""
 
@@ -94,9 +143,9 @@ def diagnostics(
 @app.command()
 def generate(
     prompt: str = typer.Argument(..., help="Prompt to respond to."),
-    persona: Optional[str] = typer.Option(None, help="Persona to condition generation."),
-    config_path: Optional[Path] = typer.Option(None, help="Optional configuration file."),
-    workspace: Path = typer.Option(Path("artifacts"), help="Directory containing trained artifacts."),
+    persona: str | None = PERSONA_OPTION,
+    config_path: Path | None = GENERATE_CONFIG_OPTION,
+    workspace: Path = GENERATE_WORKSPACE_OPTION,
 ) -> None:
     """Generate a persona-conditioned response."""
 

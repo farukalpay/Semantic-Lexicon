@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List
 
 from .config import SemanticModelConfig
 from .diagnostics import DiagnosticsResult, DiagnosticsSuite
@@ -69,13 +69,13 @@ class Trainer:
         self.model.train_intents(intents)
         self.model.train_knowledge(knowledge)
 
-    def _load_intent_examples(self, path: Path) -> List[IntentExample]:
+    def _load_intent_examples(self, path: Path) -> list[IntentExample]:
         dataset = []
         for record in read_jsonl(path):
             dataset.append(IntentExample(text=str(record["text"]), intent=str(record["intent"])))
         return dataset
 
-    def _load_knowledge_edges(self, path: Path) -> List[KnowledgeEdge]:
+    def _load_knowledge_edges(self, path: Path) -> list[KnowledgeEdge]:
         dataset = []
         for record in read_jsonl(path):
             dataset.append(
@@ -93,7 +93,10 @@ class Trainer:
         return suite.run()
 
 
-def train_from_config(config: SemanticModelConfig, trainer_config: TrainerConfig | None = None) -> NeuralSemanticModel:
+def train_from_config(
+    config: SemanticModelConfig,
+    trainer_config: TrainerConfig | None = None,
+) -> NeuralSemanticModel:
     """Convenience helper to instantiate and train a model from configuration."""
 
     trainer_config = trainer_config or TrainerConfig()

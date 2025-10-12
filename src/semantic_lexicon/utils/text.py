@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable, List
+from collections.abc import Iterable
 
 _WHITESPACE_RE = re.compile(r"\s+")
 
@@ -16,13 +16,13 @@ def normalise_text(text: str) -> str:
     return text.strip()
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str) -> list[str]:
     """Basic whitespace tokenizer."""
 
     return normalise_text(text).split()
 
 
-def build_vocabulary(corpus: Iterable[str]) -> List[str]:
+def build_vocabulary(corpus: Iterable[str]) -> list[str]:
     """Create a sorted vocabulary from ``corpus``."""
 
     vocab = {token for text in corpus for token in tokenize(text)}

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from semantic_lexicon.generator import PersonaGenerator
-from semantic_lexicon.generator import GenerationResult
 from semantic_lexicon.config import GeneratorConfig
+from semantic_lexicon.generator import GenerationResult, PersonaGenerator
 from semantic_lexicon.persona import PersonaStore
 
 

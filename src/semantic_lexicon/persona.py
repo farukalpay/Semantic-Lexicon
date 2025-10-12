@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 import numpy as np
 
@@ -26,7 +25,7 @@ class PersonaStore:
 
     def __init__(self, config: PersonaConfig | None = None) -> None:
         self.config = config or PersonaConfig()
-        self.personas: Dict[str, PersonaProfile] = {}
+        self.personas: dict[str, PersonaProfile] = {}
         self._rng = np.random.default_rng(0)
 
     def get(self, name: str | None = None) -> PersonaProfile:

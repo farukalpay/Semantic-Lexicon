@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable, Optional
 
 import numpy as np
 
@@ -23,9 +23,9 @@ LOGGER = configure_logging(logger_name=__name__)
 
 @dataclass
 class ModelArtifacts:
-    embeddings_path: Optional[Path] = None
-    intent_path: Optional[Path] = None
-    knowledge_path: Optional[Path] = None
+    embeddings_path: Path | None = None
+    intent_path: Path | None = None
+    knowledge_path: Path | None = None
 
 
 class NeuralSemanticModel:
@@ -54,7 +54,7 @@ class NeuralSemanticModel:
         self.knowledge_network.fit(list(edges))
 
     # Inference -------------------------------------------------------------------
-    def generate(self, prompt: str, persona: Optional[str] = None) -> GenerationResult:
+    def generate(self, prompt: str, persona: str | None = None) -> GenerationResult:
         profile = self.persona_store.get(persona)
         intent_probs = self.intent_classifier.predict_proba(prompt)
         intents = sorted(intent_probs, key=intent_probs.get, reverse=True)[:3]
@@ -89,13 +89,18 @@ class NeuralSemanticModel:
             json.dump(payload, handle)
 
     def _save_knowledge(self, path: Path) -> None:
-        if self.knowledge_network.embeddings is None or self.knowledge_network.relation_matrices is None:
+        if (
+            self.knowledge_network.embeddings is None
+            or self.knowledge_network.relation_matrices is None
+        ):
             raise ValueError("Knowledge network has not been trained")
         payload = {
             "entities": self.knowledge_network.entities,
             "relations": self.knowledge_network.relations,
             "embeddings": self.knowledge_network.embeddings.tolist(),
-            "relation_matrices": self.knowledge_network.relation_matrices.tolist(),
+            "relation_matrices": (
+                self.knowledge_network.relation_matrices.tolist()
+            ),
             "config": asdict(self.config.knowledge),
         }
         with Path(path).open("w", encoding="utf8") as handle:
@@ -103,7 +108,11 @@ class NeuralSemanticModel:
 
     # Loading ---------------------------------------------------------------------
     @classmethod
-    def load(cls, directory: Path, config: SemanticModelConfig | None = None) -> "NeuralSemanticModel":
+    def load(
+        cls,
+        directory: Path,
+        config: SemanticModelConfig | None = None,
+    ) -> NeuralSemanticModel:
         directory = Path(directory)
         instance = cls(config=config)
         instance.embeddings = GloVeEmbeddings.load(directory / "embeddings.json")
@@ -119,20 +128,42 @@ class NeuralSemanticModel:
     def _load_intent(self, path: Path) -> None:
         with Path(path).open("r", encoding="utf8") as handle:
             payload = json.load(handle)
-        self.intent_classifier.vocabulary = {str(k): int(v) for k, v in payload["vocabulary"].items()}
-        self.intent_classifier.index_to_label = {int(k): str(v) for k, v in payload["labels"].items()}
-        self.intent_classifier.label_to_index = {v: k for k, v in self.intent_classifier.index_to_label.items()}
+        vocabulary = {
+            str(key): int(value)
+            for key, value in payload["vocabulary"].items()
+        }
+        labels = {
+            int(key): str(value)
+            for key, value in payload["labels"].items()
+        }
+        self.intent_classifier.vocabulary = vocabulary
+        self.intent_classifier.index_to_label = labels
+        self.intent_classifier.label_to_index = {
+            label: index for index, label in labels.items()
+        }
         self.intent_classifier.weights = np.asarray(payload["weights"], dtype=float)
 
     def _load_knowledge(self, path: Path) -> None:
         with Path(path).open("r", encoding="utf8") as handle:
             payload = json.load(handle)
-        self.knowledge_network.entities = {str(k): int(v) for k, v in payload["entities"].items()}
-        self.knowledge_network.relations = {str(k): int(v) for k, v in payload["relations"].items()}
-        self.knowledge_network.embeddings = np.asarray(payload["embeddings"], dtype=float)
-        self.knowledge_network.relation_matrices = np.asarray(payload["relation_matrices"], dtype=float)
+        self.knowledge_network.entities = {
+            str(key): int(value)
+            for key, value in payload["entities"].items()
+        }
+        self.knowledge_network.relations = {
+            str(key): int(value)
+            for key, value in payload["relations"].items()
+        }
+        self.knowledge_network.embeddings = np.asarray(
+            payload["embeddings"],
+            dtype=float,
+        )
+        self.knowledge_network.relation_matrices = np.asarray(
+            payload["relation_matrices"],
+            dtype=float,
+        )
         self.knowledge_network.config = KnowledgeConfig(**payload.get("config", {}))
 
     # Persona ---------------------------------------------------------------------
-    def persona(self, name: Optional[str] = None) -> PersonaProfile:
+    def persona(self, name: str | None = None) -> PersonaProfile:
         return self.persona_store.get(name)

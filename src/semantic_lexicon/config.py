@@ -3,20 +3,68 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
-import yaml
+try:
+    import yaml
+except ImportError:  # pragma: no cover - optional dependency
+    yaml = None  # type: ignore[assignment]
+
+
+def _fallback_yaml_load(text: str) -> dict[str, Any]:
+    """Parse a minimal subset of YAML used in tests without PyYAML."""
+
+    result: dict[str, Any] = {}
+    stack: list[tuple[int, dict[str, Any]]] = [(0, result)]
+    for raw_line in text.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        line = raw_line.strip()
+        if ":" not in line:
+            msg = f"Unsupported YAML syntax: {line!r}"
+            raise ValueError(msg)
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        while stack and indent < stack[-1][0]:
+            stack.pop()
+        if not stack:
+            stack = [(0, result)]
+        current = stack[-1][1]
+        if value == "":
+            nested: dict[str, Any] = {}
+            current[key] = nested
+            stack.append((indent + 2, nested))
+            continue
+        try:
+            parsed: Any = json.loads(value)
+        except json.JSONDecodeError:
+            lowered = value.lower()
+            if lowered in {"true", "false"}:
+                parsed = lowered == "true"
+            else:
+                try:
+                    parsed = int(value)
+                except ValueError:
+                    try:
+                        parsed = float(value)
+                    except ValueError:
+                        parsed = value
+        current[key] = parsed
+    return result
 
 
 @dataclass
 class EmbeddingConfig:
     """Configuration for embedding subsystem."""
 
-    path: Optional[Path] = None
+    path: Path | None = None
     dimension: int = 50
-    max_words: Optional[int] = 10000
+    max_words: int | None = 10000
 
 
 @dataclass
@@ -65,7 +113,7 @@ class SemanticModelConfig:
     generator: GeneratorConfig = field(default_factory=GeneratorConfig)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SemanticModelConfig":
+    def from_dict(cls, data: dict[str, Any]) -> SemanticModelConfig:
         return cls(
             embeddings=EmbeddingConfig(**data.get("embeddings", {})),
             intent=IntentConfig(**data.get("intent", {})),
@@ -74,18 +122,23 @@ class SemanticModelConfig:
             generator=GeneratorConfig(**data.get("generator", {})),
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
-def _load_yaml_or_json(path: Path) -> Dict[str, Any]:
+def _load_yaml_or_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf8") as handle:
-        if path.suffix.lower() in {".yaml", ".yml"}:
-            return yaml.safe_load(handle) or {}
-        return json.load(handle)
+        text = handle.read()
+    if path.suffix.lower() in {".yaml", ".yml"}:
+        if yaml is None:  # pragma: no cover - exercised when PyYAML missing
+            return _fallback_yaml_load(text)
+        return yaml.safe_load(text) or {}
+    return json.loads(text)
 
 
-def _merge_dict(base: Dict[str, Any], overrides: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+def _merge_dict(
+    base: dict[str, Any], overrides: Iterable[dict[str, Any]]
+) -> dict[str, Any]:
     result = dict(base)
     for override in overrides:
         for key, value in override.items():
@@ -96,12 +149,15 @@ def _merge_dict(base: Dict[str, Any], overrides: Iterable[Dict[str, Any]]) -> Di
     return result
 
 
-def load_config(path: Optional[Path] = None, overrides: Optional[Iterable[Dict[str, Any]]] = None) -> SemanticModelConfig:
+def load_config(
+    path: Path | None = None,
+    overrides: Iterable[dict[str, Any]] | None = None,
+) -> SemanticModelConfig:
     """Load configuration from disk and merge overrides."""
 
     overrides = list(overrides or [])
     if path is None:
-        base: Dict[str, Any] = {}
+        base: dict[str, Any] = {}
     else:
         base = _load_yaml_or_json(Path(path))
 

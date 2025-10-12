@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence
 
 import numpy as np
 
@@ -59,11 +59,11 @@ class GenerationPreview:
 class DiagnosticsResult:
     embedding_stats: Sequence[EmbeddingStat] = field(default_factory=list)
     intents: Sequence[IntentPrediction] = field(default_factory=list)
-    knowledge: Optional[KnowledgeRetrieval] = None
+    knowledge: KnowledgeRetrieval | None = None
     personas: Sequence[PersonaDiagnostic] = field(default_factory=list)
     generations: Sequence[GenerationPreview] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "embedding_stats": [stat.__dict__ for stat in self.embedding_stats],
             "intents": [
@@ -78,7 +78,10 @@ class DiagnosticsResult:
             ],
             "knowledge": None
             if self.knowledge is None
-            else {"query_token": self.knowledge.query_token, "retrieved": list(self.knowledge.retrieved)},
+            else {
+                "query_token": self.knowledge.query_token,
+                "retrieved": list(self.knowledge.retrieved),
+            },
             "personas": [persona.__dict__ for persona in self.personas],
             "generations": [
                 {
@@ -126,15 +129,15 @@ class DiagnosticsSuite:
         result.generations = self._probe_generations()
         return result
 
-    def _probe_embeddings(self) -> List[EmbeddingStat]:
-        stats: List[EmbeddingStat] = []
+    def _probe_embeddings(self) -> list[EmbeddingStat]:
+        stats: list[EmbeddingStat] = []
         for token in self.embedding_tokens:
             vector = self.model.embeddings.get_embedding(token)
             stats.append(EmbeddingStat(token=token, norm=float(np.linalg.norm(vector))))
         return stats
 
-    def _probe_intents(self) -> List[IntentPrediction]:
-        predictions: List[IntentPrediction] = []
+    def _probe_intents(self) -> list[IntentPrediction]:
+        predictions: list[IntentPrediction] = []
         for query, expected in self.intent_examples:
             proba = self.model.intent_classifier.predict_proba(query)
             intent = max(proba, key=proba.get)
@@ -148,15 +151,15 @@ class DiagnosticsSuite:
             )
         return predictions
 
-    def _probe_knowledge(self) -> Optional[KnowledgeRetrieval]:
+    def _probe_knowledge(self) -> KnowledgeRetrieval | None:
         if not self.embedding_tokens:
             return None
         query = self.embedding_tokens[0]
         neighbours = self.model.knowledge_network.neighbours(query, top_k=3)
         return KnowledgeRetrieval(query_token=query, retrieved=[edge for edge, _ in neighbours])
 
-    def _probe_personas(self) -> List[PersonaDiagnostic]:
-        diagnostics: List[PersonaDiagnostic] = []
+    def _probe_personas(self) -> list[PersonaDiagnostic]:
+        diagnostics: list[PersonaDiagnostic] = []
         for name in self.persona_labels:
             profile = self.model.persona_store.get(name)
             diagnostics.append(
@@ -168,8 +171,8 @@ class DiagnosticsSuite:
             )
         return diagnostics
 
-    def _probe_generations(self) -> List[GenerationPreview]:
-        previews: List[GenerationPreview] = []
+    def _probe_generations(self) -> list[GenerationPreview]:
+        previews: list[GenerationPreview] = []
         for prompt in self.generation_prompts:
             result = self.model.generate(prompt)
             intent = result.intents[0] if result.intents else "unknown"

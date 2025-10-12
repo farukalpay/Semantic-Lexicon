@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 
-def configure_logging(level: int = logging.INFO, logger_name: Optional[str] = None) -> logging.Logger:
+def configure_logging(level: int = logging.INFO, logger_name: str | None = None) -> logging.Logger:
     """Configure application logging.
 
     Args:
