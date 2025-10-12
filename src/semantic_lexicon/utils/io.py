@@ -2,20 +2,33 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 
 
-def read_jsonl(path: Path) -> Iterator[Mapping[str, object]]:
-    """Stream JSON lines from ``path``."""
+def _open_text(path: Path) -> Iterator[str]:
+    path = Path(path)
+    if path.suffix == ".gz":
+        with gzip.open(path, mode="rt", encoding="utf8") as handle:
+            yield from handle
+    else:
+        with path.open("r", encoding="utf8") as handle:
+            yield from handle
 
-    with Path(path).open("r", encoding="utf8") as handle:
-        for line in handle:
-            line = line.strip()
-            if not line:
-                continue
-            yield json.loads(line)
+
+def read_jsonl(path: Path) -> Iterator[Mapping[str, object]]:
+    """Stream JSON lines from ``path``.
+
+    Supports plain-text ``.jsonl`` files as well as gzip-compressed ``.jsonl.gz`` files.
+    """
+
+    for line in _open_text(Path(path)):
+        line = line.strip()
+        if not line:
+            continue
+        yield json.loads(line)
 
 
 def write_jsonl(path: Path, records: Iterable[Mapping[str, object]]) -> None:

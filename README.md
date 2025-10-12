@@ -112,6 +112,10 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
        "How do I improve my public speaking?",
        "Explain matrix multiplication",
        "What is machine learning?",
+       "Tips for staying productive while studying",
+       "Clarify the concept of photosynthesis",
+       "How can I organize my research presentation effectively?",
+       "Define gravitational potential energy",
    ]:
        response = model.generate(prompt, persona="tutor")
        print(f"Prompt: {prompt}\\nResponse: {response.response}\\n")
@@ -129,7 +133,19 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
    Prompt: What is machine learning?
    Response: From a balanced tutor perspective, let's look at What is machine learning? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: artificial intelligence, statistics, practice.
-   ```
+
+   Prompt: Tips for staying productive while studying
+   Response: From a balanced tutor perspective, let's look at Tips for staying productive while studying. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.
+
+   Prompt: Clarify the concept of photosynthesis
+   Response: From a balanced tutor perspective, let's look at Clarify the concept of photosynthesis. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.
+
+   Prompt: How can I organize my research presentation effectively?
+   Response: From a balanced tutor perspective, let's look at How can I organize my research presentation effectively? This ties closely to the 'how_to' intent I detected. Consider journaling about: Presentation Outline (Plan), Visual Storytelling (Design), Audience Engagement (Practice). Try to plan Presentation Outline, design Visual Storytelling, and practice Audience Engagement.
+
+   Prompt: Define gravitational potential energy
+   Response: From a balanced tutor perspective, let's look at Define gravitational potential energy. This ties closely to the 'definition' intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames, and connect Energy Transfer.
+  ```
 
 These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
 research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the

@@ -1,0 +1,15 @@
+{"prompt": "How do I improve my public speaking?", "intent": "how_to", "topics": ["Public Speaking", "Practice Routine", "Feedback Loops"], "actions": ["Explore", "Practice", "Reflect"]}
+{"prompt": "Explain matrix multiplication", "intent": "definition", "topics": ["Matrix Multiplication", "Dot Products", "Linear Transformations"], "actions": ["Define", "Explore", "Compare"]}
+{"prompt": "What is machine learning?", "intent": "definition", "topics": ["Machine Learning", "Supervised Learning", "Generalization Error"], "actions": ["Define", "Explore", "Compare"]}
+{"prompt": "Tips for staying productive while studying", "intent": "how_to", "topics": ["Study Schedule", "Focus Blocks", "Break Strategies"], "actions": ["Plan", "Practice", "Reflect"]}
+{"prompt": "Clarify the concept of photosynthesis", "intent": "definition", "topics": ["Photosynthesis", "Chlorophyll Function", "Energy Conversion"], "actions": ["Define", "Explore", "Connect"]}
+{"prompt": "Looking for ways to become a confident public speaker", "intent": "how_to", "topics": ["Public Speaking", "Practice Routine", "Feedback Loops"], "actions": ["Explore", "Practice", "Reflect"]}
+{"prompt": "Can you walk me through the basics of matrix multiplication?", "intent": "definition", "topics": ["Matrix Multiplication", "Dot Products", "Linear Transformations"], "actions": ["Define", "Explore", "Compare"]}
+{"prompt": "Could you define machine learning in simple terms?", "intent": "definition", "topics": ["Machine Learning", "Supervised Learning", "Generalization Error"], "actions": ["Define", "Explore", "Compare"]}
+{"prompt": "What routines help students stay productive during study sessions?", "intent": "how_to", "topics": ["Study Schedule", "Focus Blocks", "Break Strategies"], "actions": ["Plan", "Practice", "Reflect"]}
+{"prompt": "Help me understand how plants convert light energy", "intent": "definition", "topics": ["Photosynthesis", "Chlorophyll Function", "Energy Conversion"], "actions": ["Define", "Explore", "Connect"]}
+{"prompt": "How can I organize my research presentation effectively?", "intent": "how_to", "topics": ["Presentation Outline", "Visual Storytelling", "Audience Engagement"], "actions": ["Plan", "Design", "Practice"]}
+{"prompt": "Strategies for guiding a collaborative study group", "intent": "how_to", "topics": ["Group Roles", "Shared Goals", "Feedback Rituals"], "actions": ["Organize", "Align", "Reflect"]}
+{"prompt": "Define gravitational potential energy", "intent": "definition", "topics": ["Potential Energy", "Reference Frames", "Energy Transfer"], "actions": ["Define", "Illustrate", "Connect"]}
+{"prompt": "Explain the role of enzymes in digestion", "intent": "definition", "topics": ["Digestive Enzymes", "Substrate Interaction", "Nutrient Absorption"], "actions": ["Define", "Explore", "Connect"]}
+{"prompt": "How do I build a consistent morning study routine?", "intent": "how_to", "topics": ["Morning Planning", "Focus Habits", "Progress Reflection"], "actions": ["Plan", "Practice", "Reflect"]}

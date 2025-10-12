@@ -17,6 +17,7 @@ from .intent import IntentClassifier, IntentExample
 from .knowledge import KnowledgeEdge, KnowledgeNetwork
 from .logging import configure_logging
 from .persona import PersonaProfile, PersonaStore
+from .template_learning import BalancedTutorPredictor
 from .utils import seed_everything
 
 LOGGER = configure_logging(logger_name=__name__)
@@ -39,10 +40,12 @@ class NeuralSemanticModel:
         self.intent_classifier = IntentClassifier(self.config.intent)
         self.knowledge_network = KnowledgeNetwork(self.config.knowledge)
         self.persona_store = PersonaStore(self.config.persona)
+        self.template_predictor = BalancedTutorPredictor.load_default()
         self.generator = PersonaGenerator(
             config=self.config.generator,
             embeddings=self.embeddings,
             knowledge=self.knowledge_network,
+            template_predictor=self.template_predictor,
         )
 
     # Training --------------------------------------------------------------------
@@ -125,6 +128,7 @@ class NeuralSemanticModel:
             config=instance.config.generator,
             embeddings=instance.embeddings,
             knowledge=instance.knowledge_network,
+            template_predictor=instance.template_predictor,
         )
         return instance
 
