@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from numpy.typing import NDArray
+from typing import cast
 
 from .templates import BalancedTutorTemplate
 from .utils import read_jsonl, tokenize
@@ -19,6 +21,9 @@ __all__ = [
 ]
 
 _STOP_TOKEN = "<STOP>"
+
+
+FloatArray = NDArray[np.float64]
 
 
 @dataclass(frozen=True)
@@ -127,14 +132,16 @@ class _SoftmaxModel:
         return _softmax(logits)
 
 
-def _softmax(logits: np.ndarray) -> np.ndarray:
+def _softmax(logits: np.ndarray) -> FloatArray:
     if logits.ndim == 1:
         logits = logits[None, :]
     shifted = logits - logits.max(axis=-1, keepdims=True)
     exp = np.exp(shifted)
     denom = exp.sum(axis=-1, keepdims=True)
-    probs = exp / np.maximum(denom, 1e-12)
-    return probs.squeeze(axis=0) if probs.shape[0] == 1 else probs
+    probs = cast(FloatArray, exp / np.maximum(denom, 1e-12))
+    if probs.shape[0] == 1:
+        return cast(FloatArray, probs.squeeze(axis=0))
+    return probs
 
 
 class BalancedTutorPredictor:
@@ -155,7 +162,7 @@ class BalancedTutorPredictor:
         self.lambda_topics = float(lambda_topics)
         self.lambda_actions = float(lambda_actions)
 
-        self._intent_defaults = {}
+        self._intent_defaults: dict[str, BalancedTutorExample] = {}
         for example in self.examples:
             self._intent_defaults.setdefault(example.intent, example)
 
@@ -164,8 +171,9 @@ class BalancedTutorPredictor:
         self._token_to_index = {token: index for index, token in enumerate(self._vocabulary)}
         self._idf = self._compute_idf(self.examples)
 
-        self._feature_matrix = np.vstack(
-            [self._vectorise(example.prompt) for example in self.examples]
+        self._feature_matrix = cast(
+            FloatArray,
+            np.vstack([self._vectorise(example.prompt) for example in self.examples]),
         )
         self._train_models()
 
@@ -298,20 +306,20 @@ class BalancedTutorPredictor:
             tokens.update(tokenize(example.prompt))
         return sorted(tokens)
 
-    def _compute_idf(self, examples: Sequence[BalancedTutorExample]) -> np.ndarray:
+    def _compute_idf(self, examples: Sequence[BalancedTutorExample]) -> FloatArray:
         document_count = len(examples)
-        idf = np.zeros(len(self._vocabulary), dtype=float)
+        idf: FloatArray = np.zeros(len(self._vocabulary), dtype=float)
         for example in examples:
             seen_tokens = set(tokenize(example.prompt))
             for token in seen_tokens:
                 if token in self._token_to_index:
                     idf[self._token_to_index[token]] += 1.0
-        idf = np.log((1 + document_count) / (1 + idf)) + 1.0
+        idf = cast(FloatArray, np.log((1.0 + document_count) / (1.0 + idf)) + 1.0)
         return idf
 
-    def _vectorise(self, prompt: str) -> np.ndarray:
+    def _vectorise(self, prompt: str) -> FloatArray:
         counts = Counter(tokenize(prompt))
-        vector = np.zeros(len(self._vocabulary), dtype=float)
+        vector: FloatArray = np.zeros(len(self._vocabulary), dtype=float)
         if not counts:
             return vector
         total = sum(counts.values())
@@ -390,12 +398,19 @@ def _build_actions_by_intent(examples: Sequence[BalancedTutorExample]) -> dict[s
 def load_balanced_tutor_dataset(path: str | Path) -> list[BalancedTutorExample]:
     """Load balanced tutor examples from ``path``."""
 
+    resolved = Path(path)
     return [
         BalancedTutorExample(
             prompt=str(payload["prompt"]),
             intent=str(payload["intent"]),
-            topics=tuple(payload["topics"]),
-            actions=tuple(payload["actions"]),
+            topics=tuple(str(value) for value in _expect_sequence(payload["topics"])),
+            actions=tuple(str(value) for value in _expect_sequence(payload["actions"])),
         )
-        for payload in read_jsonl(path)
+        for payload in read_jsonl(resolved)
     ]
+
+
+def _expect_sequence(value: object) -> Sequence[object]:
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
+        return value
+    raise TypeError(f"Expected a sequence, received {type(value)!r}")
