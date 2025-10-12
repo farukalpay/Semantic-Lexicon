@@ -16,6 +16,8 @@ from .embeddings import GloVeEmbeddings
 from .knowledge import KnowledgeNetwork
 from .logging import configure_logging
 from .persona import PersonaProfile
+from .template_learning import BalancedTutorPredictor
+from .templates import render_balanced_tutor_response
 from .utils import tokenize
 
 LOGGER = configure_logging(logger_name=__name__)
@@ -90,10 +92,12 @@ class PersonaGenerator:
         config: Optional[GeneratorConfig] = None,
         embeddings: Optional[GloVeEmbeddings] = None,
         knowledge: Optional[KnowledgeNetwork] = None,
+        template_predictor: Optional[BalancedTutorPredictor] = None,
     ) -> None:
         self.config = config or GeneratorConfig()
         self.embeddings = embeddings
         self.knowledge = knowledge
+        self.template_predictor = template_predictor
 
     def generate(
         self,
@@ -111,31 +115,50 @@ class PersonaGenerator:
         semantic_vector = 0.6 * prompt_vector + 0.4 * persona_vector
         intents_list = list(intents)
         primary_intent = next(iter(intents_list), "general")
-        intro = _build_intro(prompt, primary_intent)
         phrase_guidance = _build_phrase_guidance(
             tokens,
             semantic_vector,
             self.embeddings,
             self.knowledge,
         )
-        topics = _ensure_topics(tokens, phrase_guidance.phrases)
-        actions = _actions_for_intent(primary_intent, len(topics))
-        topics = topics[: len(actions)]
-        if topics:
-            topics_with_actions = ", ".join(
-                f"{topic} ({action})" for topic, action in zip(topics, actions)
-            )
-            base_line = f"{intro} Consider journaling about: {topics_with_actions}."
-            try_line = _build_try_sentence(topics, actions)
+        topics: list[str] = []
+        actions: list[str] = []
+        predicted_intent: Optional[str] = None
+        if self.template_predictor is not None:
+            prediction = self.template_predictor.predict_variables(prompt)
+            predicted_intent = prediction.intent
+            topics = list(prediction.topics)
+            actions = list(prediction.actions)
+        if predicted_intent:
+            primary_intent = predicted_intent
+            if predicted_intent not in intents_list:
+                intents_list.insert(0, predicted_intent)
+        if not topics:
+            topics = _ensure_topics(tokens, phrase_guidance.phrases)
+            actions = _actions_for_intent(primary_intent, len(topics))
+            topics = topics[: len(actions)]
         else:
-            base_line = intro
-            try_line = ""
+            limit = min(len(topics), len(actions)) if actions else 0
+            if not limit:
+                actions = _actions_for_intent(primary_intent, len(topics))
+                limit = min(len(topics), len(actions))
+            topics = topics[:limit]
+            actions = actions[:limit]
+        if topics:
+            base_line = render_balanced_tutor_response(
+                prompt=prompt,
+                intent=primary_intent,
+                topics=topics,
+                actions=actions,
+            )
+        else:
+            base_line = _build_intro(prompt, primary_intent)
         related, hits = _build_related_topics(
             self.knowledge,
             topics,
             tokens,
         )
-        response_parts = [segment for segment in [base_line, try_line, related] if segment]
+        response_parts = [segment for segment in [base_line, related] if segment]
         if not response_parts:
             response_parts.append(
                 "I'm here to help, but I need a bit more detail to respond meaningfully."
@@ -274,18 +297,6 @@ def _actions_for_intent(intent: str, topic_count: int) -> list[str]:
     while len(actions) < topic_count:
         actions.append(base_actions[-1])
     return actions
-
-
-def _build_try_sentence(topics: Sequence[str], actions: Sequence[str]) -> str:
-    pairs = list(zip(actions, topics))
-    if not pairs:
-        return ""
-    fragments = [f"{action.lower()} {topic}" for action, topic in pairs]
-    if len(fragments) == 1:
-        return f"Try to {fragments[0]}."
-    if len(fragments) == 2:
-        return f"Try to {fragments[0]} and {fragments[1]}."
-    return f"Try to {', '.join(fragments[:-1])}, and {fragments[-1]}."
 
 
 def _enumerate_phrase_candidates(
