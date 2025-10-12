@@ -79,4 +79,3 @@ def test_render_balanced_tutor_response_requires_pairs() -> None:
             topics=("Topic A",),
             actions=("Explore", "Reflect"),
         )
-

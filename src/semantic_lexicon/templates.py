@@ -107,4 +107,3 @@ def _format_try_sentence(pairs: Sequence[tuple[str, str]]) -> str:
     else:
         tail = f"{', '.join(fragments[:-1])}, and {fragments[-1]}"
     return f"Try to {tail}."
-
