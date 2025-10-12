@@ -74,7 +74,7 @@ class KnowledgeNetwork:
                 relation_matrix = self.relation_matrices[relation_idx]
                 score = head_vec @ relation_matrix @ tail_vec
                 error = 1.0 - score
-                total_loss += error ** 2
+                total_loss += error**2
                 grad_head = -2 * error * relation_matrix @ tail_vec
                 grad_tail = -2 * error * relation_matrix.T @ head_vec
                 grad_rel = -2 * error * np.outer(head_vec, tail_vec)

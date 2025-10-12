@@ -98,9 +98,7 @@ class NeuralSemanticModel:
             "entities": self.knowledge_network.entities,
             "relations": self.knowledge_network.relations,
             "embeddings": self.knowledge_network.embeddings.tolist(),
-            "relation_matrices": (
-                self.knowledge_network.relation_matrices.tolist()
-            ),
+            "relation_matrices": (self.knowledge_network.relation_matrices.tolist()),
             "config": asdict(self.config.knowledge),
         }
         with Path(path).open("w", encoding="utf8") as handle:
@@ -128,31 +126,21 @@ class NeuralSemanticModel:
     def _load_intent(self, path: Path) -> None:
         with Path(path).open("r", encoding="utf8") as handle:
             payload = json.load(handle)
-        vocabulary = {
-            str(key): int(value)
-            for key, value in payload["vocabulary"].items()
-        }
-        labels = {
-            int(key): str(value)
-            for key, value in payload["labels"].items()
-        }
+        vocabulary = {str(key): int(value) for key, value in payload["vocabulary"].items()}
+        labels = {int(key): str(value) for key, value in payload["labels"].items()}
         self.intent_classifier.vocabulary = vocabulary
         self.intent_classifier.index_to_label = labels
-        self.intent_classifier.label_to_index = {
-            label: index for index, label in labels.items()
-        }
+        self.intent_classifier.label_to_index = {label: index for index, label in labels.items()}
         self.intent_classifier.weights = np.asarray(payload["weights"], dtype=float)
 
     def _load_knowledge(self, path: Path) -> None:
         with Path(path).open("r", encoding="utf8") as handle:
             payload = json.load(handle)
         self.knowledge_network.entities = {
-            str(key): int(value)
-            for key, value in payload["entities"].items()
+            str(key): int(value) for key, value in payload["entities"].items()
         }
         self.knowledge_network.relations = {
-            str(key): int(value)
-            for key, value in payload["relations"].items()
+            str(key): int(value) for key, value in payload["relations"].items()
         }
         self.knowledge_network.embeddings = np.asarray(
             payload["embeddings"],
