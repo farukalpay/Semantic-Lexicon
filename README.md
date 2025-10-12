@@ -1,6 +1,6 @@
 # Semantic Lexicon
 
-[![CLI Tests](https://github.com/semantic-lexicon/Semantic-Lexicon/actions/workflows/cli-tests.yml/badge.svg)](https://github.com/semantic-lexicon/Semantic-Lexicon/actions/workflows/cli-tests.yml)
+[![CLI Tests](https://github.com/farukalpay/Semantic-Lexicon/actions/workflows/cli-tests.yml/badge.svg)](https://github.com/semantic-lexicon/Semantic-Lexicon/actions/workflows/cli-tests.yml)
 
 Semantic Lexicon is a NumPy-first research toolkit that demonstrates persona-aware semantic modelling. The project packages a compact neural stack consisting of intent understanding, a light-weight knowledge network, persona management, and text generation into an automated Python library and CLI.
 
