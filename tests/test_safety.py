@@ -13,14 +13,12 @@ from semantic_lexicon.safety import (
     SafetyGateTuner,
 )
 
+
 def test_primal_dual_tuner_solves_box_constrained_qp() -> None:
     parameter_names = ("x1", "x2")
 
     objective = ObjectiveSpec(
-        function=lambda params: params["x1"] ** 2
-        + params["x2"] ** 2
-        - params["x1"]
-        - params["x2"],
+        function=lambda params: params["x1"] ** 2 + params["x2"] ** 2 - params["x1"] - params["x2"],
         gradient=lambda params: {
             "x1": 2.0 * params["x1"] - 1.0,
             "x2": 2.0 * params["x2"] - 1.0,

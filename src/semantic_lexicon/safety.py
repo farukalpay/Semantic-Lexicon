@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Iterable, Mapping, Sequence
+from typing import Callable
 
 import numpy as np
 
@@ -113,8 +114,13 @@ class SafetyGateTuner:
             history.append(
                 {
                     "parameters": mapping_next,
-                    "residuals": {spec.name: float(value) for spec, value in zip(self.constraints, residuals)},
-                    "dual": {spec.name: float(value) for spec, value in zip(self.constraints, lambdas_next)},
+                    "residuals": {
+                        spec.name: float(value) for spec, value in zip(self.constraints, residuals)
+                    },
+                    "dual": {
+                        spec.name: float(value)
+                        for spec, value in zip(self.constraints, lambdas_next)
+                    },
                 }
             )
 
@@ -127,8 +133,13 @@ class SafetyGateTuner:
                     converged=True,
                     iterations=iteration,
                     parameters=mapping_next,
-                    dual_variables={spec.name: float(value) for spec, value in zip(self.constraints, lambdas)},
-                    residuals={spec.name: float(max(res, 0.0)) for spec, res in zip(self.constraints, residuals)},
+                    dual_variables={
+                        spec.name: float(value) for spec, value in zip(self.constraints, lambdas)
+                    },
+                    residuals={
+                        spec.name: float(max(res, 0.0))
+                        for spec, res in zip(self.constraints, residuals)
+                    },
                     history=history,
                 )
 
@@ -137,10 +148,11 @@ class SafetyGateTuner:
             converged=False,
             iterations=self.max_iterations,
             parameters=mapping,
-            dual_variables={spec.name: float(value) for spec, value in zip(self.constraints, lambdas)},
+            dual_variables={
+                spec.name: float(value) for spec, value in zip(self.constraints, lambdas)
+            },
             residuals={
-                spec.name: float(max(spec.function(mapping), 0.0))
-                for spec in self.constraints
+                spec.name: float(max(spec.function(mapping), 0.0)) for spec in self.constraints
             },
             history=history,
         )
@@ -180,11 +192,17 @@ class SafetyGateTuner:
     ) -> np.ndarray:
         if spec.gradient is not None:
             grad_map = spec.gradient(params)
-            return np.asarray([float(grad_map.get(name, 0.0)) for name in self.parameter_names], dtype=float)
+            return np.asarray(
+                [float(grad_map.get(name, 0.0)) for name in self.parameter_names],
+                dtype=float,
+            )
 
-        base = np.asarray([float(params.get(name, 0.0)) for name in self.parameter_names], dtype=float)
+        base = np.asarray(
+            [float(params.get(name, 0.0)) for name in self.parameter_names],
+            dtype=float,
+        )
         grad = np.zeros_like(base)
-        for idx, name in enumerate(self.parameter_names):
+        for idx in range(len(self.parameter_names)):
             delta = np.zeros_like(base)
             delta[idx] = epsilon
             plus_params = self._to_mapping(base + delta)
@@ -231,4 +249,3 @@ def run_primal_dual_autotune(
         max_iterations=max_iterations,
     )
     return tuner.run(initial_parameters)
-
