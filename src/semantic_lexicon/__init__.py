@@ -1,6 +1,25 @@
 """Semantic Lexicon package."""
 
 from .algorithms import EXP3, AnytimeEXP3, EXP3Config
+from .analysis import (
+    DirichletCalibrator,
+    PosteriorPredictive,
+    RewardComponents,
+    RobbinsMonroProcess,
+    composite_reward,
+    composite_reward_bound,
+    compute_confusion_correction,
+    confidence_reward,
+    confusion_correction_residual,
+    convergence_rate_bound,
+    correctness_reward,
+    estimate_optimal_weights,
+    exp3_expected_regret,
+    feedback_reward,
+    project_to_simplex,
+    semantic_similarity_reward,
+    simulate_intent_bandit,
+)
 from .config import SemanticModelConfig, load_config
 from .model import NeuralSemanticModel
 from .training import Trainer, TrainerConfig
@@ -14,6 +33,23 @@ __all__ = [
     "EXP3",
     "EXP3Config",
     "AnytimeEXP3",
+    "RewardComponents",
+    "correctness_reward",
+    "confidence_reward",
+    "semantic_similarity_reward",
+    "feedback_reward",
+    "composite_reward",
+    "composite_reward_bound",
+    "estimate_optimal_weights",
+    "DirichletCalibrator",
+    "PosteriorPredictive",
+    "exp3_expected_regret",
+    "simulate_intent_bandit",
+    "compute_confusion_correction",
+    "confusion_correction_residual",
+    "RobbinsMonroProcess",
+    "convergence_rate_bound",
+    "project_to_simplex",
 ]
 
 __version__ = "0.1.0"

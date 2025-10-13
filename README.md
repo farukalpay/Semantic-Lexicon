@@ -14,6 +14,7 @@ The name reflects the long-standing academic concept of the [semantic lexicon](h
 - **Extensible configuration** – YAML/JSON configuration loading with dataclass-backed defaults.
 - **Diagnostics** – structured reports covering embeddings, intents, knowledge neighbours, personas, and generation previews.
 - **Adversarial style selection** – EXP3 utilities for experimenting with persona choices under bandit feedback.
+- **Analytical guarantees** – composite reward shaping, Bayesian calibration, and regret tooling with documented proofs.
 - **Docs & tests** – MkDocs documentation, pytest-based regression tests, and CI-ready tooling (black, ruff, mypy).
 
 ## Installation
@@ -62,7 +63,7 @@ src/semantic_lexicon/
    semantic-lexicon train --workspace artifacts
    ```
 
-   The CLI saves embeddings, intent weights, and knowledge matrices to the workspace directory.
+The CLI saves embeddings, intent weights, and knowledge matrices to the workspace directory.
 
 3. **Run diagnostics**:
 
@@ -267,9 +268,30 @@ bandit = AnytimeEXP3(num_arms=len(intents))
 prompt = "How should I start researching renewable energy?"
 arm = bandit.select_arm()
 intent = intents[arm]
-reward = model.intent_classifier.predict_proba(prompt)[intent]
-bandit.update(reward)
-```
+   reward = model.intent_classifier.predict_proba(prompt)[intent]
+   bandit.update(reward)
+   ```
+
+## Intent-Bandit Analysis Toolkit
+
+The `semantic_lexicon.analysis` module supplies the maths underpinning the
+improved EXP3 workflow:
+
+- `RewardComponents` & `composite_reward` combine correctness, calibration,
+  semantic, and feedback signals into the bounded reward required by EXP3.
+- `estimate_optimal_weights` fits component weights via simplex-constrained least
+  squares on historical interactions.
+- `DirichletCalibrator` provides Bayesian confidence calibration with a
+  Dirichlet prior, yielding posterior predictive probabilities that minimise
+  expected calibration error.
+- `simulate_intent_bandit` and `exp3_expected_regret` numerically check the
+  \(2.63\sqrt{K T \log K}\) regret guarantee for the composite reward.
+- `compute_confusion_correction` and `confusion_correction_residual` extract the
+  SVD-based pseudoinverse that reduces systematic routing errors.
+- `RobbinsMonroProcess` and `convergence_rate_bound` expose the stochastic
+  approximation perspective with an \(O(1/\sqrt{n})\) convergence rate bound.
+
+See [docs/analysis.md](docs/analysis.md) for full derivations and proofs.
 
 ### Intent Classification Objective
 

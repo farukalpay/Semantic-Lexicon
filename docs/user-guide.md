@@ -129,3 +129,7 @@ $$
 
 ensuring higher-quality intent predictions feed better rewards into the bandit
 loop.
+
+For a full mathematical treatment of the composite reward, Bayesian calibration,
+and regret guarantees that govern this loop, consult the
+[Intent-Bandit Analysis appendix](analysis.md).
