@@ -103,45 +103,7 @@ The CLI saves embeddings, intent weights, and knowledge matrices to the workspac
 
 The knowledge selector now treats every AGENTS.md instruction as a hard feasibility constraint. Broad concepts can still join the shortlist, but only when they collaborate with prompt-relevant anchors *and* all group bounds are respected.
 
-### Objects, Groups, and Matrices
-
-- **Concept universe.** A finite set \(V\) with \(|V| = n\). We choose subsets \(S \subseteq V\) subject to \(|S| \le K\).
-- **Embedding geometry.** Each concept has an embedding \(\phi(i) \in \mathbb{R}^d\); the prompt vector is \(x \in \mathbb{R}^d\).
-- **Similarity matrix.** Non-negative similarities \(s_{ij} \in [0,1]\) form \(S = (s_{ij})\); row sums give \(D = \operatorname{diag}(\sum_j s_{ij})\) and the walk \(P = D^{-1}S\).
-- **Group system.** AGENTS.md rules define a partition \(V = \bigsqcup_{g=1}^G V_g\) with bounds \(l_g \le |S \cap V_g| \le u_g\). Banned sets use \(u_g = 0\); required personas or domains set \(l_g \ge 1\). On- and off-topic groups are derived automatically from topic scores.
-
-### Anchors and Gates
-
-- **Anchor pool.** Take the top \(M = \min\{3K, |V_\mathrm{on}|\}\) on-topic items by raw relevance (fall back to the global top if \(V_\mathrm{on}\) is empty).
-- **Bridge strength.** Personalised PageRank toward any anchor with damping \(\alpha\) supplies \(\rho_i = \max_{a \in A} (1-\alpha) e_i^\top (I - \alpha P)^{-1} e_a\).
-- **Soft gate.** Convert bridges into \(g_i = \rho_i / (\rho_i + \tau_g)\) so well-anchored concepts receive high weight while stray items shrink toward zero.
-- **Smoothed relevance.** Solve \((I + \lambda L) \tilde r = r\) with \(L = D - S\); gated relevance multiplies \(\tilde r_i\) by \(g_i\).
-
-### Score Components
-
-- **Coverage.** Facility location \(F_{\mathrm{cov}}(S) = \sum_{u \in V} \max_{j \in S} s_{uj}\).
-- **Cohesion.** Rayleigh quotient \(F_{\mathrm{coh}}(S) = \frac{\mathbf{1}_S^\top S\mathbf{1}_S}{\mathbf{1}_S^\top D\mathbf{1}_S}\).
-- **Collaboration.** For \(i \in V_\mathrm{off}\) and \(j \in V_\mathrm{on}\) use \(\kappa_{ij} = g_i s_{ij}\) and reward \(C(S) = \sum_{i \in S \cap V_\mathrm{off}} \max_{j \in S \cap V_\mathrm{on}} \kappa_{ij}\).
-- **Diversity.** Log-determinant \(F_{\mathrm{dpp}}(S) = \log\det(I + B_S^\top B_S)\) with feature map \(B\) extracted from the similarity spectrum.
-- **Knowledge score.** \(K(S) = \lambda_1 F_{\mathrm{cov}}(S) + \lambda_2 F_{\mathrm{coh}}(S)\) with \(\lambda_1 + \lambda_2 = 1\).
-
-### Objective and Constraints
-
-\[
-\begin{aligned}
-\max_{S \subseteq V} \quad & \sum_{i \in S} g_i \tilde r_i + \mu K(S) + \gamma C(S) + \tau F_{\mathrm{dpp}}(S) \\
-\text{s.t.} \quad & |S| \le K, \\[-0.25em]
-& l_g \le |S \cap V_g| \le u_g \quad \forall g.
-\end{aligned}
-\]
-
-All AGENTS.md rules map to intervals \((l_g, u_g)\). Feasible selections therefore cannot violate depth caps, persona quotas, disclosure bans, or domain restrictions.
-
-### Optimisation Strategy
-
-- **Feasibility-first greedy.** Maintain residual group capacity. At each step consider candidates that keep every constraint satisfiable with the remaining slots, then pick the one with the largest marginal gain in the monotone submodular sum.
-- **Matroid view.** Partition bounds form a matroid; the objective stays monotone submodular, so the greedy solution enjoys the standard \((1-1/e)\)-style guarantees under the partition constraint.
-- **Cholesky updates.** Log-det gains come from rank-one updates of the Cholesky factor of \(I + B_S^\top B_S\), keeping the DPP diversity marginal cheap.
+> **Note:** The full mathematical specification for the selector — including the object definitions, scoring components, constraints, and optimisation guarantees — now lives in [`docs/articles/knowledge-selector.tex`](docs/articles/knowledge-selector.tex). The README keeps the practitioner-focused workflow and validation guidance below; consult the article whenever you need the derivations or precise notation.
 
 ### Workflow
 
@@ -166,30 +128,18 @@ and the mean gate value across selected concepts.
 
 Before shipping a new persona or pricing configuration, run the Go/No-Go suite to certify that knowledge selection obeys AGENTS.md, the deployment policy respects the exploration rules, and the off-policy lift is trustworthy.
 
-1. **Rule feasibility.** Map each concept to its groups and bounds, form \(n_g(S) = \sum_{i \in S} \mathbf{1}\{i \in V_g\}\), and reject whenever the violation vector
-   \[
-   \mathbf{v}(S) = \bigl(\max\{0, l_g - n_g(S)\},\; \max\{0, n_g(S) - u_g\}\bigr)_{g}
-   \]
-   has non-zero entries. `SelectionSpec` now bundles a `KnowledgeSignals` payload so the same object carries the calibrated knowledge metrics required later in the gate.
+1. **Rule feasibility.** Map each concept to its groups and bounds, count how many selections fall inside every group, and reject whenever any lower or upper bound is violated. `SelectionSpec` now bundles a `KnowledgeSignals` payload so the same object carries the calibrated knowledge metrics required later in the gate.
 
-2. **Policy consistency.** For each logged step, reconstruct
-   \[
-   \pi^{(i)}(a \mid x) = (1-\epsilon_t^{(i)})\,\mathrm{Softmax}\!\left(\frac{s_\theta^{(i)}(X)_a - \Lambda_{t,a} + \eta q_a(x)}{\tau_t}\right) + \epsilon_t^{(i)} \frac{1}{K}
-   \]
-   where `PolicyLogEntry` supplies the logits, the softmax temperature, *one* penalty mode (either prices \(\lambda\) or congestion \(c\,\hat n\) — never both), the exploration mixture \(\epsilon_t^{(i)}\), and the knowledge prior \(q_a(x)\). The policy gate fails if any logged action falls below its exploration floor \(\epsilon_t^{(i)}/K\) or if a mixture of penalty modes appears.
-   The validator also rejects runs whose knowledge weight leaves the \([0,1]\) search range or whose SNIPS weight floor dips below the exploration floor, preventing silent violations of the AGENTS exploration guarantees.
+2. **Policy consistency.** For each logged step, rebuild the policy that was deployed using the stored logits, temperature, exploration mixture, and whichever penalty mode (prices or congestion) was active. The policy gate fails if any logged action falls below its exploration floor, if prices and congestion penalties are mixed, if the knowledge weight leaves the [0,1] range, or if the SNIPS floor dips below the exploration limit — guarding the AGENTS exploration guarantees.
 
-3. **Off-policy value & fairness.** With tuples \((x_i, a_i, r_i, p_i)\) and the reconstructed target policy \(\pi_e\), compute SNIPS weights \(w_i = \pi_e(a_i \mid x_i)/\max(p_i, \epsilon)\),
-   \[
-   \widehat{V}_{\mathrm{SNIPS}} = \frac{\sum_i w_i r_i}{\sum_i w_i}, \qquad \mathrm{ESS} = \frac{(\sum_i w_i)^2}{\sum_i w_i^2},
-   \]
-   and a normal approximation lower confidence bound for the lift against the baseline policy. The check enforces \(\mathrm{ESS} \ge 0.01n\), a non-negative lower bound, and fairness via `FairnessConfig` either on action frequencies \(|q_{i,a} - \alpha_a| \le \epsilon_a|\) or KPI gaps \(\|u - \widehat{\phi}^{(i)}\|_\infty \le \delta_\phi\).
+3. **Off-policy value & fairness.** Using tuples (x_i, a_i, r_i, p_i) and the reconstructed target policy, compute SNIPS weights, the estimated value, and the effective sample size. Enforce a non-negative lower confidence bound on the lift, require the effective sample size to exceed one percent of the log length, and evaluate fairness either on action frequencies or KPI gaps via `FairnessConfig`.
 
-4. **Price/congestion stability.** Aggregate the penalty vector \(\Lambda_t\) per timestep and ensure the most recent window satisfies \(\sum_a |\Lambda_{t+1,a} - \Lambda_{t,a}| \le \delta\). The new `StabilityCheckResult` records the peak deviation so you can tighten \(\rho\) or \(\beta\) when oscillations appear.
+4. **Price/congestion stability.** Aggregate the penalty vector each timestep and ensure the most recent window keeps total variation below the configured threshold. `StabilityCheckResult` records the peak deviation so you can tighten rho or beta when oscillations appear.
 
-5. **Knowledge lift.** Compare the calibrated score and graph metrics captured in `KnowledgeSignals`. The gate demands \(K_{\text{cal}}(S)\) stay above the median of the trailing prompts and both coverage and cohesion deltas \(\Delta F_{\text{cov}}, \Delta F_{\text{coh}}\) remain non-negative against the baseline selection size.
+5. **Knowledge lift.** Compare the calibrated score and graph metrics captured in `KnowledgeSignals`. The gate demands the calibrated knowledge score stay above the trailing median and both coverage and cohesion deltas remain non-negative against the baseline selection size.
 
-6. **Go/No-Go decision.** `run_go_no_go` wires the six checks together and emits a `GoNoGoResult` containing the selection feasibility, policy mode, OPE summary (with ESS target), stability diagnostics, and knowledge lift verdict. The `accepted` flag only flips to `True` when **every** gate passes. If any condition fails, follow the fix-once cascade in the specification — tweak the single knob (e.g., adjust \(l_{\text{off}}\), \(\tau_g\), \(\eta\), or \(\rho\)) and re-run the optimisation exactly once before re-testing.
+6. **Go/No-Go decision.** `run_go_no_go` wires the six checks together and emits a `GoNoGoResult` containing the selection feasibility, policy mode, OPE summary (with ESS target), stability diagnostics, and knowledge lift verdict. The `accepted` flag only flips to `True` when **every** gate passes. If any condition fails, follow the fix-once cascade in the specification — tweak the single knob (e.g., adjust `l_off`, `tau_g`, `eta`, or `rho`) and re-run the optimisation exactly once before re-testing.
+
 
 ### Primal–Dual Safety Gate Autotuning
 

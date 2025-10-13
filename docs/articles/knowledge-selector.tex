@@ -1,0 +1,139 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\begin{document}
+\title{Knowledge Selector Specification}
+\author{}
+\date{}
+\maketitle
+
+\section{Knowledge Selection Playbook}
+The knowledge selector treats every \texttt{AGENTS.md} instruction as a hard feasibility constraint. Broad concepts can still join the shortlist, but only when they collaborate with prompt-relevant anchors and all group bounds are respected.
+
+\subsection{Objects, Groups, and Matrices}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Concept universe.} A finite set $V$ with $|V| = n$. We choose subsets $S \subseteq V$ subject to $|S| \le K$.
+  \item \textbf{Embedding geometry.} Each concept has an embedding $\phi(i) \in \mathbb{R}^d$; the prompt vector is $x \in \mathbb{R}^d$.
+  \item \textbf{Similarity matrix.} Non-negative similarities $s_{ij} \in [0,1]$ form $S = (s_{ij})$; row sums give $D = \operatorname{diag}(\sum_j s_{ij})$ and the walk $P = D^{-1} S$.
+  \item \textbf{Group system.} \texttt{AGENTS.md} rules define a partition $V = \bigsqcup_{g=1}^G V_g$ with bounds $l_g \le |S \cap V_g| \le u_g$. Banned sets use $u_g = 0$; required personas or domains set $l_g \ge 1$. On- and off-topic groups are derived automatically from topic scores.
+\end{itemize}
+
+\subsection{Anchors and Gates}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Anchor pool.} Take the top $M = \min\{3K, |V_{\mathrm{on}}|\}$ on-topic items by raw relevance (fall back to the global top if $V_{\mathrm{on}}$ is empty).
+  \item \textbf{Bridge strength.} Personalised PageRank toward any anchor with damping $\alpha$ supplies $\rho_i = \max_{a \in A} (1-\alpha) e_i^\top (I - \alpha P)^{-1} e_a$.
+  \item \textbf{Soft gate.} Convert bridges into $g_i = \rho_i / (\rho_i + \tau_g)$ so well-anchored concepts receive high weight while stray items shrink toward zero.
+  \item \textbf{Smoothed relevance.} Solve $(I + \lambda L) \tilde r = r$ with $L = D - S$; gated relevance multiplies $\tilde r_i$ by $g_i$.
+\end{itemize}
+
+\subsection{Score Components}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Coverage.} Facility location $F_{\mathrm{cov}}(S) = \sum_{u \in V} \max_{j \in S} s_{uj}$.
+  \item \textbf{Cohesion.} Rayleigh quotient $F_{\mathrm{coh}}(S) = \frac{\mathbf{1}_S^\top S \mathbf{1}_S}{\mathbf{1}_S^\top D \mathbf{1}_S}$.
+  \item \textbf{Collaboration.} For $i \in V_{\mathrm{off}}$ and $j \in V_{\mathrm{on}}$ use $\kappa_{ij} = g_i s_{ij}$ and reward $C(S) = \sum_{i \in S \cap V_{\mathrm{off}}} \max_{j \in S \cap V_{\mathrm{on}}} \kappa_{ij}$.
+  \item \textbf{Diversity.} Log-determinant $F_{\mathrm{dpp}}(S) = \log\det(I + B_S^\top B_S)$ with feature map $B$ extracted from the similarity spectrum.
+  \item \textbf{Knowledge score.} $K(S) = \lambda_1 F_{\mathrm{cov}}(S) + \lambda_2 F_{\mathrm{coh}}(S)$ with $\lambda_1 + \lambda_2 = 1$.
+\end{itemize}
+
+\subsection{Objective and Constraints}
+\begin{align*}
+  \max_{S \subseteq V} \quad & \sum_{i \in S} g_i \tilde r_i + \mu K(S) + \gamma C(S) + \tau F_{\mathrm{dpp}}(S) \\
+  \text{s.t.} \quad & |S| \le K, \\
+  & l_g \le |S \cap V_g| \le u_g \quad \forall g.
+\end{align*}
+All \texttt{AGENTS.md} rules map to intervals $(l_g, u_g)$. Feasible selections therefore cannot violate depth caps, persona quotas, disclosure bans, or domain restrictions.
+
+\subsection{Optimisation Strategy}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Feasibility-first greedy.} Maintain residual group capacity. At each step consider candidates that keep every constraint satisfiable with the remaining slots, then pick the one with the largest marginal gain in the monotone submodular sum.
+  \item \textbf{Matroid view.} Partition bounds form a matroid; the objective stays monotone submodular, so the greedy solution enjoys the standard $(1-1/e)$-style guarantees under the partition constraint.
+  \item \textbf{Cholesky updates.} Log-det gains come from rank-one updates of the Cholesky factor of $I + B_S^\top B_S$, keeping the DPP diversity marginal cheap.
+\end{itemize}
+
+\subsection{Workflow}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Graph construction.} Estimate shifted PPMI weights with smoothing $p(i)^\gamma$; derive $S$, $D$, $L$, and $P$.
+  \item \textbf{Relevance smoothing.} Compute raw cosine relevance, solve the graph-regularised system, and classify on/off-topic nodes via the topic threshold.
+  \item \textbf{Anchoring.} Select anchors, compute personalised PageRank bridges, and form soft gates $g_i$.
+  \item \textbf{Group configuration.} Register \texttt{AGENTS.md} groups with \texttt{set\_concept\_groups} and interval bounds with \texttt{set\_group\_bounds}; the selector automatically adds on/off-topic ratios.
+  \item \textbf{Greedy selection.} Evaluate admissible candidates, compute marginal coverage, cohesion, collaboration, and diversity, and add the best concept while updating group capacities.
+  \item \textbf{Reporting.} Emit the chosen concepts plus relevance, coverage, cohesion, collaboration, diversity, raw knowledge score, and mean gate.
+\end{enumerate}
+Defaults $(\alpha, \lambda, \mu, \gamma, \tau, \lambda_1, \lambda_2, K, \tau_g, \text{on/off ratios}) = (0.12, 0.08, 0.5, 0.35, 0.1, 0.6, 0.4, 12, 0.08, 0.6/0.2/0.4)$ ship in \texttt{KnowledgeConfig}. Additional per-group intervals can be supplied at runtime. The legacy phrase planner (MMR phrase selection with PMI bonuses) remains available inside the generator for reproducibility.
+
+\section{Go/No-Go Validation}
+Before shipping a new persona or pricing configuration, run the Go/No-Go suite to certify that knowledge selection obeys \texttt{AGENTS.md}, the deployment policy respects the exploration rules, and the off-policy lift is trustworthy.
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Rule feasibility.} Map each concept to its groups and bounds, form $n_g(S) = \sum_{i \in S} \mathbf{1}\{i \in V_g\}$, and reject whenever the violation vector
+  \[
+    \mathbf{v}(S) = \bigl(\max\{0, l_g - n_g(S)\},\; \max\{0, n_g(S) - u_g\}\bigr)_g
+  \]
+  has non-zero entries. \texttt{SelectionSpec} bundles a \texttt{KnowledgeSignals} payload so the same object carries the calibrated knowledge metrics required later in the gate.
+  \item \textbf{Policy consistency.} For each logged step, reconstruct
+  \[
+    \pi^{(i)}(a \mid x) = (1-\epsilon_t^{(i)})\,\mathrm{Softmax}\!\left(\frac{s_\theta^{(i)}(X)_a - \Lambda_{t,a} + \eta q_a(x)}{\tau_t}\right) + \epsilon_t^{(i)} \frac{1}{K}
+  \]
+  where \texttt{PolicyLogEntry} supplies the logits, the softmax temperature, one penalty mode (either prices $\lambda$ or congestion $c\,\hat n$ --- never both), the exploration mixture $\epsilon_t^{(i)}$, and the knowledge prior $q_a(x)$. The policy gate fails if any logged action falls below its exploration floor $\epsilon_t^{(i)}/K$ or if a mixture of penalty modes appears. The validator also rejects runs whose knowledge weight leaves the $[0,1]$ search range or whose SNIPS weight floor dips below the exploration floor.
+  \item \textbf{Off-policy value \& fairness.} With tuples $(x_i, a_i, r_i, p_i)$ and the reconstructed target policy $\pi_e$, compute SNIPS weights $w_i = \pi_e(a_i \mid x_i)/\max(p_i, \epsilon)$,
+  \[
+    \widehat{V}_{\mathrm{SNIPS}} = \frac{\sum_i w_i r_i}{\sum_i w_i}, \qquad \mathrm{ESS} = \frac{(\sum_i w_i)^2}{\sum_i w_i^2},
+  \]
+  and a normal approximation lower confidence bound for the lift against the baseline policy. Enforce $\mathrm{ESS} \ge 0.01 n$, a non-negative lower bound, and fairness via \texttt{FairnessConfig} on action frequencies $|q_{i,a} - \alpha_a| \le \epsilon_a$ or KPI gaps $\|u - \widehat{\phi}^{(i)}\|_\infty \le \delta_\phi$.
+  \item \textbf{Price/congestion stability.} Aggregate the penalty vector $\Lambda_t$ per timestep and ensure the most recent window satisfies $\sum_a |\Lambda_{t+1,a} - \Lambda_{t,a}| \le \delta$. The \texttt{StabilityCheckResult} records the peak deviation so you can tighten $\rho$ or $\beta$ when oscillations appear.
+  \item \textbf{Knowledge lift.} Compare the calibrated score and graph metrics captured in \texttt{KnowledgeSignals}. The gate demands $K_{\text{cal}}(S)$ stay above the median of the trailing prompts and both coverage and cohesion deltas $(\Delta F_{\text{cov}}, \Delta F_{\text{coh}})$ remain non-negative against the baseline selection size.
+  \item \textbf{Go/No-Go decision.} \texttt{run\_go\_no\_go} wires the six checks together and emits a \texttt{GoNoGoResult} containing the selection feasibility, policy mode, OPE summary (with ESS target), stability diagnostics, and knowledge lift verdict. The \texttt{accepted} flag only flips to \texttt{True} when every gate passes. If any condition fails, follow the fix-once cascade in the specification --- tweak a single knob (e.g., adjust $l_{\text{off}}$, $\tau_g$, $\eta$, or $\rho$) and re-run the optimisation exactly once before re-testing.
+\end{enumerate}
+
+\section{Primal--Dual Safety Gate Autotuning}
+Manual gate sweeps are still supported, but the preferred workflow is to run the projected primal--dual controller introduced in \texttt{semantic\_lexicon.safety}. The controller minimises the supplied objective while enforcing convex constraints, matching the textbook projected primal--dual loop.
+
+\begin{verbatim}
+from semantic_lexicon.safety import (
+    ConstraintSpec,
+    GateBounds,
+    ObjectiveSpec,
+    run_primal_dual_autotune,
+)
+
+objective = ObjectiveSpec(
+    function=lambda params: params["x1"] ** 2
+    + params["x2"] ** 2
+    - params["x1"]
+    - params["x2"],
+    gradient=lambda params: {
+        "x1": 2.0 * params["x1"] - 1.0,
+        "x2": 2.0 * params["x2"] - 1.0,
+    },
+)
+
+constraints = [
+    ConstraintSpec(
+        "linear",
+        lambda params: params["x1"] + params["x2"] - 1.0,
+        gradient=lambda params: {"x1": 1.0, "x2": 1.0},
+    )
+]
+
+result = run_primal_dual_autotune(
+    objective,
+    constraints,
+    initial_parameters={"x1": 0.2, "x2": 0.8},
+    parameter_names=("x1", "x2"),
+    bounds={
+        "x1": GateBounds(lower=0.0, upper=1.0),
+        "x2": GateBounds(lower=0.0, upper=1.0),
+    },
+    primal_step=0.2,
+    dual_step=0.4,
+)
+
+print("before", result.history[0])
+print("after", result.parameters)
+\end{verbatim}
+The first history entry captures the primal iterate after the initial step alongside its constraint violation, while the final snapshot records the tuned solution and dual multiplier. Swapping in exploration, fairness, or stability constraints follows the same pattern --- only the callbacks change.
+
+\end{document}
