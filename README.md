@@ -6,6 +6,24 @@ Semantic Lexicon is a NumPy-first research toolkit that demonstrates persona-awa
 
 The name reflects the long-standing academic concept of the [semantic lexicon](https://en.wikipedia.org/wiki/Semantic_lexicon); this repository contributes an applied, open implementation that operationalises those ideas for persona-aware experimentation.
 
+## Citation
+
+Semantic Lexicon operationalises the reproducible persona-aware pipeline introduced in the accompanying preprint. If you build on this toolkit, please cite the work so other researchers can trace the connection between the paper's methodology and this implementation.
+
+```bibtex
+@misc{alpay2025reproduciblescalablepipelinesynthesizing,
+      title={A Reproducible, Scalable Pipeline for Synthesizing Autoregressive Model Literature}, 
+      author={Faruk Alpay and Bugra Kilictas and Hamdi Alakkad},
+      year={2025},
+      eprint={2508.04612},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2508.04612}, 
+}
+```
+
+You can read the preprint online at [https://arxiv.org/abs/2508.04612](https://arxiv.org/abs/2508.04612); it documents the scalable data curation and evaluation strategy that directly powers the automation, diagnostics, and persona controls exposed by this repository.
+
 ## Features
 
 - **Modular architecture** – dedicated submodules for embeddings, intent classification, knowledge graphs, persona handling, and persona-aware generation.
