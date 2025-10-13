@@ -175,7 +175,7 @@ def _kmeans(
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class TopicPureRetrievalConfig:
     """Configuration for the topic-pure retrieval trainer."""
 
@@ -190,7 +190,7 @@ class TopicPureRetrievalConfig:
     random_state: int | np.random.Generator | None = None
 
 
-@dataclass(slots=True)
+@dataclass
 class TrainingStats:
     epoch: int
     triplet_loss: float
