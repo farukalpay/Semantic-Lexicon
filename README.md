@@ -17,6 +17,7 @@ The name reflects the long-standing academic concept of the [semantic lexicon](h
 - **Analytical guarantees** – composite reward shaping, Bayesian calibration, and regret tooling with documented proofs.
 - **Graph-based knowledge curation** – SPPMI-weighted co-occurrence graphs, smoothed relevance, and greedy facility-location selection produce calibrated “Knowledge” scores that surface tightly connected concepts.
 - **Docs & tests** – MkDocs documentation, pytest-based regression tests, prompt evaluation hub (`docs/prompt-evaluations/index.md`), and CI-ready tooling (black, ruff, mypy).
+- **Primal–dual safety tuning** – projected primal–dual controller that auto-tunes exploration, pricing, and knowledge gates until all residuals vanish.
 
 ## Installation
 
@@ -171,6 +172,56 @@ Before shipping a new persona or pricing configuration, run the Go/No-Go suite t
 5. **Knowledge lift.** Compare the calibrated score and graph metrics captured in `KnowledgeSignals`. The gate demands \(K_{\text{cal}}(S)\) stay above the median of the trailing prompts and both coverage and cohesion deltas \(\Delta F_{\text{cov}}, \Delta F_{\text{coh}}\) remain non-negative against the baseline selection size.
 
 6. **Go/No-Go decision.** `run_go_no_go` wires the six checks together and emits a `GoNoGoResult` containing the selection feasibility, policy mode, OPE summary (with ESS target), stability diagnostics, and knowledge lift verdict. The `accepted` flag only flips to `True` when **every** gate passes. If any condition fails, follow the fix-once cascade in the specification — tweak the single knob (e.g., adjust \(l_{\text{off}}\), \(\tau_g\), \(\eta\), or \(\rho\)) and re-run the optimisation exactly once before re-testing.
+
+### Primal–Dual Safety Gate Autotuning
+
+Manual gate sweeps are still supported, but the preferred workflow is to run the projected primal–dual controller introduced in `semantic_lexicon.safety`. The controller now minimises the supplied objective while enforcing convex constraints, matching the textbook projected primal–dual loop.
+
+```python
+from semantic_lexicon.safety import (
+    ConstraintSpec,
+    GateBounds,
+    ObjectiveSpec,
+    run_primal_dual_autotune,
+)
+
+objective = ObjectiveSpec(
+    function=lambda params: params["x1"] ** 2
+    + params["x2"] ** 2
+    - params["x1"]
+    - params["x2"],
+    gradient=lambda params: {
+        "x1": 2.0 * params["x1"] - 1.0,
+        "x2": 2.0 * params["x2"] - 1.0,
+    },
+)
+
+constraints = [
+    ConstraintSpec(
+        "linear",
+        lambda params: params["x1"] + params["x2"] - 1.0,
+        gradient=lambda params: {"x1": 1.0, "x2": 1.0},
+    )
+]
+
+result = run_primal_dual_autotune(
+    objective,
+    constraints,
+    initial_parameters={"x1": 0.2, "x2": 0.8},
+    parameter_names=("x1", "x2"),
+    bounds={
+        "x1": GateBounds(lower=0.0, upper=1.0),
+        "x2": GateBounds(lower=0.0, upper=1.0),
+    },
+    primal_step=0.2,
+    dual_step=0.4,
+)
+
+print("before", result.history[0])
+print("after", result.parameters)
+```
+
+The first history entry captures the primal iterate after the initial step alongside its constraint violation, while the final snapshot records the tuned solution and dual multiplier. Swapping in exploration, fairness, or stability constraints follows the same pattern—only the callbacks change.
 
 ### Single-change presentation planner
 
