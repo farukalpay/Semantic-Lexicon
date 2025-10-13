@@ -182,4 +182,4 @@ def resolve_package_installation_failure(
     return False
 
 
-__all__: Iterable[str] = ["resolve_package_installation_failure"]
+__all__: Sequence[str] = ["resolve_package_installation_failure"]
