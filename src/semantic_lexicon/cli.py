@@ -157,5 +157,45 @@ def generate(
     typer.echo(result.response)
 
 
+@app.command()
+def knowledge(
+    prompt: str = typer.Argument(..., help="Prompt to analyse."),
+    persona: Optional[str] = PERSONA_OPTION,
+    config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
+    workspace: Path = GENERATE_WORKSPACE_OPTION,
+) -> None:
+    """Inspect the knowledge selection for a prompt."""
+
+    model, _ = _load_model(config_path)
+    artifacts_dir = Path(workspace)
+    if (artifacts_dir / "embeddings.json").exists():
+        model = NeuralSemanticModel.load(artifacts_dir, config=model.config)
+    result = model.generate(normalise_text(prompt), persona=persona)
+    selection = result.knowledge_selection
+    if selection is None or not selection.concepts:
+        payload = {
+            "concepts": [],
+            "relevance": 0.0,
+            "coverage": 0.0,
+            "cohesion": 0.0,
+            "collaboration": 0.0,
+            "diversity": 0.0,
+            "knowledge_raw": 0.0,
+            "gate_mean": 0.0,
+        }
+    else:
+        payload = {
+            "concepts": list(selection.concepts),
+            "relevance": selection.relevance,
+            "coverage": selection.coverage,
+            "cohesion": selection.cohesion,
+            "collaboration": selection.collaboration,
+            "diversity": selection.diversity,
+            "knowledge_raw": selection.knowledge_raw,
+            "gate_mean": selection.gate_mean,
+        }
+    typer.echo(json.dumps(payload, indent=2))
+
+
 if __name__ == "__main__":
     app()

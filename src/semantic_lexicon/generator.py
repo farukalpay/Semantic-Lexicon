@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 
 from .config import GeneratorConfig
 from .embeddings import GloVeEmbeddings
-from .knowledge import KnowledgeNetwork
+from .knowledge import KnowledgeNetwork, KnowledgeSelection
 from .logging import configure_logging
 from .persona import PersonaProfile
 from .template_learning import BalancedTutorPredictor
@@ -33,6 +33,7 @@ class GenerationResult:
     intents: list[str]
     knowledge_hits: list[str]
     phrases: list[str] = field(default_factory=list)
+    knowledge_selection: Optional[KnowledgeSelection] = None
 
 
 @dataclass
@@ -157,10 +158,11 @@ class PersonaGenerator:
             )
         else:
             base_line = _build_intro(prompt, primary_intent)
-        related, hits = _build_related_topics(
+        related, hits, selection = _build_related_topics(
             self.knowledge,
             topics,
             tokens,
+            semantic_vector,
         )
         response_parts = [segment for segment in [base_line, related] if segment]
         if not response_parts:
@@ -173,6 +175,7 @@ class PersonaGenerator:
             intents=intents_list,
             knowledge_hits=hits,
             phrases=topics,
+            knowledge_selection=selection,
         )
 
 
@@ -611,32 +614,31 @@ def _contains_sequence(tokens: Sequence[str], pattern: Sequence[str]) -> bool:
 
 
 def _build_related_topics(
-    knowledge: Optional[KnowledgeNetwork], phrases: Sequence[str], tokens: Iterable[str]
-) -> tuple[str, list[str]]:
+    knowledge: Optional[KnowledgeNetwork],
+    phrases: Sequence[str],
+    tokens: Iterable[str],
+    prompt_vector: np.ndarray,
+) -> tuple[str, list[str], Optional[KnowledgeSelection]]:
     if knowledge is None or not getattr(knowledge, "entities", None):
-        return "", []
-    token_list = list(tokens)
-    prompt_text = " ".join(token_list).lower()
-    candidate: Optional[str] = None
-    for entity_name in getattr(knowledge, "entities", {}):
-        if entity_name.lower() in prompt_text:
-            candidate = entity_name
-            break
-    if candidate is None and phrases:
+        return "", [], None
+    selection = knowledge.select_concepts(prompt_vector)
+    if not selection.concepts:
+        return "", [], selection
+    focus = selection.concepts[0]
+    related = list(selection.concepts[1:4])
+    if phrases and focus.lower() not in {phrase.lower() for phrase in phrases}:
         candidate = _match_knowledge_entity(knowledge, phrases[0])
-    if candidate is None and token_list:
-        candidate = _match_knowledge_entity(
-            knowledge,
-            _normalise_token(token_list[-1]),
+        if candidate:
+            focus = candidate
+    pieces: list[str] = []
+    pieces.append(f"Knowledge focus: {focus}.")
+    if related:
+        pieces.append(
+            "Related concepts worth exploring: " + ", ".join(related) + "."
         )
-    if candidate is None:
-        return "", []
-    neighbours = knowledge.neighbours(candidate, top_k=3)
-    if not neighbours:
-        return "", []
-    related_topics = ", ".join(name for name, _ in neighbours)
-    hits = [f"{candidate}->{name}" for name, _ in neighbours]
-    return f"Related concepts worth exploring: {related_topics}.", hits
+    message = " ".join(pieces)
+    hits = [focus, *related, f"K_raw={selection.knowledge_raw:.3f}"]
+    return message, hits, selection
 
 
 def _match_knowledge_entity(

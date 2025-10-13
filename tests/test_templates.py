@@ -22,12 +22,12 @@ def test_render_balanced_tutor_response_matches_expected_structure() -> None:
 
     expected = (
         "From a balanced tutor perspective, let's look at "
-        "How do I improve my public speaking? "
-        "This ties closely to the 'how_to' intent I detected. "
+        '"How do I improve my public speaking?" '
+        'This ties closely to the "how_to" intent I detected. '
         "Consider journaling about: Public Speaking (Explore), "
         "Practice Routine (Practice), Feedback Loops (Reflect). "
-        "Try to explore Public Speaking, practice Practice Routine, "
-        "and reflect Feedback Loops."
+        "Try to explore Public Speaking, practice the routine, "
+        "and reflect on Feedback Loops."
     )
 
     assert response == expected
@@ -42,7 +42,7 @@ def test_render_balanced_tutor_response_infers_missing_punctuation() -> None:
     )
 
     assert response.startswith(
-        "From a balanced tutor perspective, let's look at Explain matrix multiplication."
+        "From a balanced tutor perspective, let's look at \"Explain matrix multiplication.\""
     )
 
 
@@ -61,7 +61,7 @@ def test_template_dataclass_renders_using_helper() -> None:
     expected_suffix = (
         "Try to define Machine Learning, "
         "explore Supervised Learning, "
-        "and compare Generalization Error."
+        "and compare Generalization Error with related ideas."
     )
 
     assert template.render().endswith(expected_suffix)

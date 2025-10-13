@@ -29,3 +29,14 @@ def test_cli_train_and_diagnostics(tmp_path: Path) -> None:
     diag_result = runner.invoke(app, ["diagnostics", "--workspace", str(workspace)])
     assert diag_result.exit_code == 0
     assert "embedding_stats" in diag_result.stdout
+    knowledge_result = runner.invoke(
+        app,
+        [
+            "knowledge",
+            "Explain AI",
+            "--workspace",
+            str(workspace),
+        ],
+    )
+    assert knowledge_result.exit_code == 0
+    assert "\"concepts\"" in knowledge_result.stdout
