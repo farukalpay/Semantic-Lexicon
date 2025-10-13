@@ -1,0 +1,2077 @@
+{
+  "meta": {
+    "persona": "tutor",
+    "prompt_count": 100,
+    "scoring_formula": "score = 2.5 + 0.02*word_count + 0.3*topics_cap3 + 0.2*knowledge_hits_cap2"
+  },
+  "results": [
+    {
+      "index": 1,
+      "category": "mathematics",
+      "prompt": "Explain the spectral theorem for symmetric matrices in simple terms.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Explain the spectral theorem for symmetric matrices in simple terms. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 2,
+      "category": "mathematics",
+      "prompt": "Design a week-long tutoring plan for mastering partial fraction decomposition.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Design a week-long tutoring plan for mastering partial fraction decomposition. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 3,
+      "category": "mathematics",
+      "prompt": "Guide me through proving that the harmonic series diverges.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Guide me through proving that the harmonic series diverges. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 4,
+      "category": "mathematics",
+      "prompt": "What reflective questions should I ask after solving a complex analysis problem?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at What reflective questions should I ask after solving a complex analysis problem? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 5,
+      "category": "mathematics",
+      "prompt": "Compare the strengths of numerical and analytic integration for engineering tasks.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare the strengths of numerical and analytic integration for engineering tasks. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 6,
+      "category": "mathematics",
+      "prompt": "How can I connect Fourier series intuition to music production practice?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [
+        "practice->audit local energy use",
+        "practice->supervised learning",
+        "practice->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at How can I connect Fourier series intuition to music production practice? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops. Related concepts worth exploring: audit local energy use, supervised learning, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=64, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 7,
+      "category": "mathematics",
+      "prompt": "Outline a seminar on the geometry of conic sections with interactive elements.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a seminar on the geometry of conic sections with interactive elements. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 8,
+      "category": "mathematics",
+      "prompt": "Help me storyboard a lesson introducing eigenvalues to visual learners.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Help me storyboard a lesson introducing eigenvalues to visual learners. This ties closely to the 'how_to' intent I detected. Consider journaling about: Photosynthesis (Plan), Chlorophyll Function (Explore), Energy Conversion (Reflect). Try to plan Photosynthesis, explore Chlorophyll Function, and reflect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 9,
+      "category": "mathematics",
+      "prompt": "What is a creative journaling prompt about exploring non-Euclidean geometry?",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What is a creative journaling prompt about exploring non-Euclidean geometry? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 10,
+      "category": "mathematics",
+      "prompt": "Coach me on presenting a proof by induction with confidence.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on presenting a proof by induction with confidence. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 11,
+      "category": "physics",
+      "prompt": "Summarize the core assumptions behind the ideal gas law and their limitations.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "comparison",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize the core assumptions behind the ideal gas law and their limitations. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 12,
+      "category": "physics",
+      "prompt": "Draft an academic briefing on the evidence for gravitational waves.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Potential Energy",
+        "Reference Frames",
+        "Energy Transfer"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft an academic briefing on the evidence for gravitational waves. This ties closely to the 'definition' intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Explore), Energy Transfer (Connect). Try to define Potential Energy, explore Reference Frames, and connect Energy Transfer.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 13,
+      "category": "physics",
+      "prompt": "How should I prepare to explain quantum tunneling at a science fair?",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How should I prepare to explain quantum tunneling at a science fair? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 14,
+      "category": "physics",
+      "prompt": "Compare Lagrangian and Hamiltonian mechanics for advanced undergraduates.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare Lagrangian and Hamiltonian mechanics for advanced undergraduates. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 15,
+      "category": "physics",
+      "prompt": "Give me reflective prompts after a lab on conservation of angular momentum.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Give me reflective prompts after a lab on conservation of angular momentum. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 16,
+      "category": "physics",
+      "prompt": "What storytelling techniques help humanize relativity when teaching teenagers?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at What storytelling techniques help humanize relativity when teaching teenagers? This ties closely to the 'definition' intent I detected. Consider journaling about: Study Schedule (Define), Focus Blocks (Explore), Break Strategies (Compare). Try to define Study Schedule, explore Focus Blocks, and compare Break Strategies.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 17,
+      "category": "physics",
+      "prompt": "Outline practice drills for interpreting Feynman diagrams quickly.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Practice Routine",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [
+        "practice->audit local energy use",
+        "practice->supervised learning",
+        "practice->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Outline practice drills for interpreting Feynman diagrams quickly. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Practice Routine (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Practice Routine, and reflect Break Strategies. Related concepts worth exploring: audit local energy use, supervised learning, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=61, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 18,
+      "category": "physics",
+      "prompt": "In what tone can I invite curiosity about plasma physics for a community talk?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at In what tone can I invite curiosity about plasma physics for a community talk? This ties closely to the 'how_to' intent I detected. Consider journaling about: Machine Learning (Plan), Supervised Learning (Practice), Generalization Error (Reflect). Try to plan Machine Learning, practice Supervised Learning, and reflect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=67, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 19,
+      "category": "physics",
+      "prompt": "Help me critique a simulation study on dark matter distribution.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Help me critique a simulation study on dark matter distribution. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Chlorophyll Function (Practice), Energy Conversion (Reflect). Try to plan Study Schedule, practice Chlorophyll Function, and reflect Energy Conversion.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 20,
+      "category": "physics",
+      "prompt": "Suggest creative analogies for explaining entropy to poets.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest creative analogies for explaining entropy to poets. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 21,
+      "category": "chemistry",
+      "prompt": "Explain why buffer solutions resist pH changes and where the approximation breaks.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain why buffer solutions resist pH changes and where the approximation breaks. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Connect). Try to define Matrix Multiplication, explore Dot Products, and connect Linear Transformations.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 22,
+      "category": "chemistry",
+      "prompt": "Draft lab safety reflections after synthesizing aspirin.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft lab safety reflections after synthesizing aspirin. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.32,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=46, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 23,
+      "category": "chemistry",
+      "prompt": "Compare electrophilic and nucleophilic aromatic substitution with everyday metaphors.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare electrophilic and nucleophilic aromatic substitution with everyday metaphors. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 24,
+      "category": "chemistry",
+      "prompt": "How can I design a flipped-classroom module on coordination chemistry?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I design a flipped-classroom module on coordination chemistry? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 25,
+      "category": "chemistry",
+      "prompt": "Suggest interview-style questions that probe understanding of Le Ch\u00e2telier's principle.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest interview-style questions that probe understanding of Le Ch\u00e2telier's principle. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 26,
+      "category": "chemistry",
+      "prompt": "Outline a persuasive pitch for funding green catalysis research.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a persuasive pitch for funding green catalysis research. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 27,
+      "category": "chemistry",
+      "prompt": "What should I journal about after failing a titration experiment?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at What should I journal about after failing a titration experiment? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 28,
+      "category": "chemistry",
+      "prompt": "Coach me on narrating the history of the periodic table in a podcast episode.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on narrating the history of the periodic table in a podcast episode. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 29,
+      "category": "chemistry",
+      "prompt": "Describe a cross-disciplinary workshop linking electrochemistry and sustainability.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "comparison"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Describe a cross-disciplinary workshop linking electrochemistry and sustainability. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 30,
+      "category": "chemistry",
+      "prompt": "Provide a playful script for introducing chirality to middle schoolers.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Provide a playful script for introducing chirality to middle schoolers. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 31,
+      "category": "biology",
+      "prompt": "Summarize the central dogma with graduate-level nuance.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize the central dogma with graduate-level nuance. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.32,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=46, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 32,
+      "category": "biology",
+      "prompt": "How would you guide a reflective lab notebook entry on CRISPR experiments?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How would you guide a reflective lab notebook entry on CRISPR experiments? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Explore), Feedback Loops (Reflect). Try to plan Public Speaking, explore Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 33,
+      "category": "biology",
+      "prompt": "Compare innate and adaptive immunity for healthcare trainees.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare innate and adaptive immunity for healthcare trainees. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 34,
+      "category": "biology",
+      "prompt": "Design a mindfulness exercise themed around plant physiology observations.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Design a mindfulness exercise themed around plant physiology observations. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 35,
+      "category": "biology",
+      "prompt": "Coach me on debating ethical dimensions of synthetic biology in a seminar.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on debating ethical dimensions of synthetic biology in a seminar. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 36,
+      "category": "biology",
+      "prompt": "Explain microbiome diversity for a patient education brochure.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain microbiome diversity for a patient education brochure. This ties closely to the 'how_to' intent I detected. Consider journaling about: Matrix Multiplication (Plan), Dot Products (Explore), Linear Transformations (Reflect). Try to plan Matrix Multiplication, explore Dot Products, and reflect Linear Transformations.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 37,
+      "category": "biology",
+      "prompt": "What creative practice helps memorize stages of mitosis with art therapy?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "practice->audit local energy use",
+        "practice->supervised learning",
+        "practice->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What creative practice helps memorize stages of mitosis with art therapy? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: audit local energy use, supervised learning, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=64, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 38,
+      "category": "biology",
+      "prompt": "Outline a research meeting agenda on ecological resilience metrics.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Presentation Outline",
+        "Visual Storytelling",
+        "Audience Engagement"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a research meeting agenda on ecological resilience metrics. This ties closely to the 'how_to' intent I detected. Consider journaling about: Presentation Outline (Plan), Visual Storytelling (Practice), Audience Engagement (Reflect). Try to plan Presentation Outline, practice Visual Storytelling, and reflect Audience Engagement.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 39,
+      "category": "biology",
+      "prompt": "Give me poetic prompts inspired by marine biology fieldwork.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Give me poetic prompts inspired by marine biology fieldwork. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 40,
+      "category": "biology",
+      "prompt": "How can I rephrase cell signaling pathways for business stakeholders?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I rephrase cell signaling pathways for business stakeholders? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 41,
+      "category": "history",
+      "prompt": "Explain historiography's role when comparing ancient empires.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Digestive Enzymes",
+        "Substrate Interaction",
+        "Nutrient Absorption"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain historiography's role when comparing ancient empires. This ties closely to the 'definition' intent I detected. Consider journaling about: Digestive Enzymes (Define), Substrate Interaction (Explore), Nutrient Absorption (Connect). Try to define Digestive Enzymes, explore Substrate Interaction, and connect Nutrient Absorption.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 42,
+      "category": "history",
+      "prompt": "Draft a diplomatic briefing summarizing the Congress of Vienna outcomes.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft a diplomatic briefing summarizing the Congress of Vienna outcomes. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 43,
+      "category": "history",
+      "prompt": "Suggest reflective questions for visiting a civil rights museum.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest reflective questions for visiting a civil rights museum. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 44,
+      "category": "history",
+      "prompt": "Compare revolutionary rhetoric in France and Haiti with scholarly tone.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Compare revolutionary rhetoric in France and Haiti with scholarly tone. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Connect). Try to define Machine Learning, explore Supervised Learning, and connect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 45,
+      "category": "history",
+      "prompt": "Help me design a community workshop about archival storytelling.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Help me design a community workshop about archival storytelling. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 46,
+      "category": "history",
+      "prompt": "What creative writing prompts explore medieval guild life?",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "creative writing->machine learning",
+        "creative writing->reflect on sensory details",
+        "creative writing->labeled data"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What creative writing prompts explore medieval guild life? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: machine learning, reflect on sensory details, labeled data.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=61, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 47,
+      "category": "history",
+      "prompt": "Coach me on moderating a debate about decolonization narratives.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on moderating a debate about decolonization narratives. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 48,
+      "category": "history",
+      "prompt": "Outline a persuasive essay plan defending the importance of microhistory.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a persuasive essay plan defending the importance of microhistory. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 49,
+      "category": "history",
+      "prompt": "How can I adopt a celebratory tone when teaching the Harlem Renaissance?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I adopt a celebratory tone when teaching the Harlem Renaissance? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Explore), Feedback Loops (Reflect). Try to plan Public Speaking, explore Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 50,
+      "category": "history",
+      "prompt": "Summarize historiographical critiques of the Great Man theory.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize historiographical critiques of the Great Man theory. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.34,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=47, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 51,
+      "category": "literature",
+      "prompt": "Compare close reading strategies for poetry and speculative fiction.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Group Roles",
+        "Shared Goals",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare close reading strategies for poetry and speculative fiction. This ties closely to the 'how_to' intent I detected. Consider journaling about: Group Roles (Organize), Shared Goals (Practice), Break Strategies (Reflect). Try to organize Group Roles, practice Shared Goals, and reflect Break Strategies.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 52,
+      "category": "literature",
+      "prompt": "Offer reflective journaling prompts after finishing Toni Morrison's Beloved.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Offer reflective journaling prompts after finishing Toni Morrison's Beloved. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 53,
+      "category": "literature",
+      "prompt": "Explain intertextuality using examples from classical mythology.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain intertextuality using examples from classical mythology. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 54,
+      "category": "literature",
+      "prompt": "How can I coach a student to write a dialogic response to Hamlet?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I coach a student to write a dialogic response to Hamlet? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.48,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=54, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 55,
+      "category": "literature",
+      "prompt": "Draft an academic conference abstract on eco-criticism in contemporary novels.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Draft an academic conference abstract on eco-criticism in contemporary novels. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Connect). Try to define Machine Learning, explore Supervised Learning, and connect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 56,
+      "category": "literature",
+      "prompt": "Provide playful warm-ups for a creative writing circle exploring surrealism.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [
+        "creative writing->machine learning",
+        "creative writing->reflect on sensory details",
+        "creative writing->labeled data"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Provide playful warm-ups for a creative writing circle exploring surrealism. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops. Related concepts worth exploring: machine learning, reflect on sensory details, labeled data.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 57,
+      "category": "literature",
+      "prompt": "What tonal shifts help analyze satire in eighteenth-century pamphlets?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What tonal shifts help analyze satire in eighteenth-century pamphlets? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=62, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 58,
+      "category": "literature",
+      "prompt": "Outline a workshop for adapting novels into interactive media.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a workshop for adapting novels into interactive media. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 59,
+      "category": "literature",
+      "prompt": "Give tips on presenting feminist literary theory to high school teachers.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Give tips on presenting feminist literary theory to high school teachers. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.44,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=52, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 60,
+      "category": "literature",
+      "prompt": "Compose a compassionate response for a reader struggling with dense theory.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compose a compassionate response for a reader struggling with dense theory. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.44,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=52, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 61,
+      "category": "philosophy",
+      "prompt": "Summarize Kant's categorical imperative for debate club participants.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize Kant's categorical imperative for debate club participants. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 62,
+      "category": "philosophy",
+      "prompt": "Draft contemplative questions connecting Stoicism to daily mindfulness.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft contemplative questions connecting Stoicism to daily mindfulness. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 63,
+      "category": "philosophy",
+      "prompt": "Compare utilitarian and deontological ethics in public policy memos.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare utilitarian and deontological ethics in public policy memos. This ties closely to the 'definition' intent I detected. Consider journaling about: Public Speaking (Define), Practice Routine (Explore), Feedback Loops (Connect). Try to define Public Speaking, explore Practice Routine, and connect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 64,
+      "category": "philosophy",
+      "prompt": "How can I teach phenomenology through experiential exercises?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I teach phenomenology through experiential exercises? This ties closely to the 'how_to' intent I detected. Consider journaling about: Matrix Multiplication (Plan), Dot Products (Explore), Linear Transformations (Reflect). Try to plan Matrix Multiplication, explore Dot Products, and reflect Linear Transformations.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 65,
+      "category": "philosophy",
+      "prompt": "Coach me on facilitating a Socratic dialogue about personal identity.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on facilitating a Socratic dialogue about personal identity. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 66,
+      "category": "philosophy",
+      "prompt": "Suggest creative analogies for explaining metaphysics to artists.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest creative analogies for explaining metaphysics to artists. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 67,
+      "category": "philosophy",
+      "prompt": "Outline a reflective journal for a course on philosophy of science.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a reflective journal for a course on philosophy of science. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.44,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=52, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 68,
+      "category": "philosophy",
+      "prompt": "What tone should I adopt when critiquing nihilism in a podcast?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What tone should I adopt when critiquing nihilism in a podcast? This ties closely to the 'how_to' intent I detected. Consider journaling about: Machine Learning (Plan), Supervised Learning (Practice), Generalization Error (Reflect). Try to plan Machine Learning, practice Supervised Learning, and reflect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=64, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 69,
+      "category": "philosophy",
+      "prompt": "Plan a community reading group on existentialist theatre.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Group Roles",
+        "Shared Goals",
+        "Feedback Rituals"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Plan a community reading group on existentialist theatre. This ties closely to the 'how_to' intent I detected. Consider journaling about: Group Roles (Organize), Shared Goals (Practice), Feedback Rituals (Reflect). Try to organize Group Roles, practice Shared Goals, and reflect Feedback Rituals.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 70,
+      "category": "philosophy",
+      "prompt": "How do I synthesize virtue ethics for engineering students?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "comparison"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How do I synthesize virtue ethics for engineering students? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 71,
+      "category": "business",
+      "prompt": "Explain discounted cash flow for social enterprise founders.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain discounted cash flow for social enterprise founders. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 72,
+      "category": "business",
+      "prompt": "Draft an investor update focusing on ethical supply chains.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft an investor update focusing on ethical supply chains. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 73,
+      "category": "business",
+      "prompt": "Compare bootstrapping and venture capital with pragmatic tone.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare bootstrapping and venture capital with pragmatic tone. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.34,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=47, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 74,
+      "category": "business",
+      "prompt": "How can I coach a team on mindful retrospectives after product launches?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I coach a team on mindful retrospectives after product launches? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 75,
+      "category": "business",
+      "prompt": "Suggest creative ideation prompts for circular economy startups.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest creative ideation prompts for circular economy startups. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 76,
+      "category": "business",
+      "prompt": "Outline a workshop bridging design thinking and financial modelling.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "comparison"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a workshop bridging design thinking and financial modelling. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 77,
+      "category": "business",
+      "prompt": "What reflective questions should a manager ask after a failed negotiation?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What reflective questions should a manager ask after a failed negotiation? This ties closely to the 'how_to' intent I detected. Consider journaling about: Machine Learning (Plan), Supervised Learning (Practice), Generalization Error (Reflect). Try to plan Machine Learning, practice Supervised Learning, and reflect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=64, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 78,
+      "category": "business",
+      "prompt": "Summarize leadership lessons from cooperative business models.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize leadership lessons from cooperative business models. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.32,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=46, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 79,
+      "category": "business",
+      "prompt": "Coach me on narrating a turnaround strategy with empathetic storytelling.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on narrating a turnaround strategy with empathetic storytelling. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 80,
+      "category": "business",
+      "prompt": "Design a celebratory announcement for hitting a diversity hiring milestone.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Design a celebratory announcement for hitting a diversity hiring milestone. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 81,
+      "category": "technology",
+      "prompt": "Explain the difference between supervised, unsupervised, and self-supervised learning for journalists.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [
+        "supervised learning->pattern discovery",
+        "supervised learning->unsupervised learning",
+        "supervised learning->audit local energy use"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Explain the difference between supervised, unsupervised, and self-supervised learning for journalists. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Linear Transformations (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Linear Transformations. Related concepts worth exploring: pattern discovery, unsupervised learning, audit local energy use.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=64, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 82,
+      "category": "technology",
+      "prompt": "Draft practice drills for writing robust unit tests in Python.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Practice Routine",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "practice->audit local energy use",
+        "practice->supervised learning",
+        "practice->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Draft practice drills for writing robust unit tests in Python. This ties closely to the 'how_to' intent I detected. Consider journaling about: Machine Learning (Plan), Practice Routine (Explore), Generalization Error (Reflect). Try to plan Machine Learning, explore Practice Routine, and reflect Generalization Error. Related concepts worth exploring: audit local energy use, supervised learning, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=63, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 83,
+      "category": "technology",
+      "prompt": "How can I host a playful workshop on algorithmic fairness for teens?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I host a playful workshop on algorithmic fairness for teens? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.46,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=53, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 84,
+      "category": "technology",
+      "prompt": "Compare monolithic and microservice architectures for CTOs.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare monolithic and microservice architectures for CTOs. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 85,
+      "category": "technology",
+      "prompt": "Suggest reflective prompts after completing a cybersecurity tabletop exercise.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Suggest reflective prompts after completing a cybersecurity tabletop exercise. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 86,
+      "category": "technology",
+      "prompt": "Coach me on presenting human-centered AI research in a calm tone.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Photosynthesis",
+        "Chlorophyll Function",
+        "Energy Conversion"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on presenting human-centered AI research in a calm tone. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 87,
+      "category": "technology",
+      "prompt": "Outline a study plan for mastering Rust borrow checker concepts.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Shared Goals",
+        "Feedback Rituals"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a study plan for mastering Rust borrow checker concepts. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Shared Goals (Practice), Feedback Rituals (Reflect). Try to plan Study Schedule, practice Shared Goals, and reflect Feedback Rituals.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 88,
+      "category": "technology",
+      "prompt": "What creative challenges reinforce UX accessibility heuristics?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at What creative challenges reinforce UX accessibility heuristics? This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=60, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 89,
+      "category": "technology",
+      "prompt": "Summarize quantum computing hype responsibly for policy makers.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize quantum computing hype responsibly for policy makers. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 90,
+      "category": "technology",
+      "prompt": "Design an academic poster about edge computing for climate sensing.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Design an academic poster about edge computing for climate sensing. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 91,
+      "category": "wellness",
+      "prompt": "Explain how habit stacking can support sustainable exercise routines.",
+      "persona": "tutor",
+      "intents": [
+        "definition",
+        "how_to",
+        "comparison"
+      ],
+      "topics": [
+        "Matrix Multiplication",
+        "Dot Products",
+        "Linear Transformations"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Explain how habit stacking can support sustainable exercise routines. This ties closely to the 'definition' intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 92,
+      "category": "wellness",
+      "prompt": "Draft compassionate advice for managing exam stress.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Draft compassionate advice for managing exam stress. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 93,
+      "category": "wellness",
+      "prompt": "Compare restorative yoga and tai chi for burnout recovery.",
+      "persona": "tutor",
+      "intents": [
+        "comparison",
+        "definition",
+        "how_to"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Compare restorative yoga and tai chi for burnout recovery. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 94,
+      "category": "wellness",
+      "prompt": "How can I host a reflective retreat about digital minimalism?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at How can I host a reflective retreat about digital minimalism? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 95,
+      "category": "wellness",
+      "prompt": "Suggest celebratory prompts for tracking gratitude in tough semesters.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Machine Learning",
+        "Supervised Learning",
+        "Generalization Error"
+      ],
+      "knowledge_hits": [
+        "machine learning->reflect on sensory details",
+        "machine learning->creative writing",
+        "machine learning->renewable energy"
+      ],
+      "response": "From a balanced tutor perspective, let's look at Suggest celebratory prompts for tracking gratitude in tough semesters. This ties closely to the 'how_to' intent I detected. Consider journaling about: Machine Learning (Plan), Supervised Learning (Explore), Generalization Error (Reflect). Try to plan Machine Learning, explore Supervised Learning, and reflect Generalization Error. Related concepts worth exploring: reflect on sensory details, creative writing, renewable energy.",
+      "score": 5.0,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=62, topics=3, knowledge_hits=3"
+    },
+    {
+      "index": 96,
+      "category": "wellness",
+      "prompt": "Outline a peer-support workshop on navigating imposter feelings.",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "exploration",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Outline a peer-support workshop on navigating imposter feelings. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 97,
+      "category": "wellness",
+      "prompt": "Coach me on delivering a calm meditation script for beginners.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Public Speaking",
+        "Practice Routine",
+        "Feedback Loops"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Coach me on delivering a calm meditation script for beginners. This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.",
+      "score": 4.42,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=51, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 98,
+      "category": "wellness",
+      "prompt": "What creative metaphors help describe emotional resilience?",
+      "persona": "tutor",
+      "intents": [
+        "how_to",
+        "definition",
+        "exploration"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at What creative metaphors help describe emotional resilience? This ties closely to the 'definition' intent I detected. Consider journaling about: Study Schedule (Define), Focus Blocks (Explore), Break Strategies (Compare). Try to define Study Schedule, explore Focus Blocks, and compare Break Strategies.",
+      "score": 4.36,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=48, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 99,
+      "category": "wellness",
+      "prompt": "Summarize current research on sleep hygiene for new parents.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Summarize current research on sleep hygiene for new parents. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.4,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=50, topics=3, knowledge_hits=0"
+    },
+    {
+      "index": 100,
+      "category": "wellness",
+      "prompt": "Design an accountability plan for sustaining journaling habits.",
+      "persona": "tutor",
+      "intents": [
+        "exploration",
+        "how_to",
+        "definition"
+      ],
+      "topics": [
+        "Study Schedule",
+        "Focus Blocks",
+        "Break Strategies"
+      ],
+      "knowledge_hits": [],
+      "response": "From a balanced tutor perspective, let's look at Design an accountability plan for sustaining journaling habits. This ties closely to the 'how_to' intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect Break Strategies.",
+      "score": 4.38,
+      "scoring_notes": "score = 2.5 base + 0.02*word_count + 0.3*topics(up to 3) + 0.2*knowledge_hits(up to 2); word_count=49, topics=3, knowledge_hits=0"
+    }
+  ]
+}
