@@ -160,8 +160,12 @@ class DiagnosticsSuite:
         if not self.embedding_tokens:
             return None
         query = self.embedding_tokens[0]
-        neighbours = self.model.knowledge_network.neighbours(query, top_k=3)
-        return KnowledgeRetrieval(query_token=query, retrieved=[edge for edge, _ in neighbours])
+        vector = self.model.embeddings.get_embedding(query)
+        selection = self.model.knowledge_network.select_concepts(vector, top_k=3)
+        return KnowledgeRetrieval(
+            query_token=query,
+            retrieved=list(selection.concepts[:3]),
+        )
 
     def _probe_personas(self) -> list[PersonaDiagnostic]:
         diagnostics: list[PersonaDiagnostic] = []

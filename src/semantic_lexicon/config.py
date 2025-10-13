@@ -91,6 +91,24 @@ class KnowledgeConfig:
     max_relations: int = 5
     learning_rate: float = 0.05
     epochs: int = 5
+    sppmi_shift: float = 5.0
+    smoothing_gamma: float = 0.75
+    smoothing_lambda: float = 0.08
+    ppr_alpha: float = 0.12
+    knowledge_strength: float = 0.5
+    collaboration_strength: float = 0.35
+    diversity_strength: float = 0.1
+    coverage_mix: float = 0.6
+    cohesion_mix: float = 0.4
+    selection_size: int = 12
+    topic_threshold: float = 0.55
+    anchor_pool: int = 0
+    anchor_multiplier: float = 3.0
+    gate_bias: float = 0.08
+    on_topic_min_ratio: float = 0.6
+    off_topic_min_ratio: float = 0.2
+    off_topic_max_ratio: float = 0.4
+    dpp_eigen_floor: float = 1e-6
 
 
 @dataclass

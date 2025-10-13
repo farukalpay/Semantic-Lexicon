@@ -113,6 +113,8 @@ class NeuralSemanticModel:
             "relation_matrices": (self.knowledge_network.relation_matrices.tolist()),
             "config": asdict(self.config.knowledge),
         }
+        if self.knowledge_network.adjacency is not None:
+            payload["adjacency"] = self.knowledge_network.adjacency.tolist()
         with Path(path).open("w", encoding="utf8") as handle:
             json.dump(payload, handle)
 
@@ -170,6 +172,31 @@ class NeuralSemanticModel:
             dtype=float,
         )
         self.knowledge_network.config = KnowledgeConfig(**payload.get("config", {}))
+        self.knowledge_network._build_index_lookup()
+        adjacency = payload.get("adjacency")
+        if adjacency is not None:
+            self.knowledge_network.adjacency = np.asarray(adjacency, dtype=float)
+            degrees = self.knowledge_network.adjacency.sum(axis=1)
+            self.knowledge_network.degree = degrees
+            laplacian = np.diag(degrees) - self.knowledge_network.adjacency
+            self.knowledge_network.graph_laplacian = laplacian
+            if np.all(degrees == 0):
+                self.knowledge_network.transition = np.zeros_like(self.knowledge_network.adjacency)
+            else:
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    transition = np.divide(
+                        self.knowledge_network.adjacency,
+                        degrees[:, None],
+                        where=degrees[:, None] > 0,
+                    )
+                transition[np.isnan(transition)] = 0.0
+                self.knowledge_network.transition = transition
+        else:
+            self.knowledge_network.adjacency = None
+            self.knowledge_network.degree = None
+            self.knowledge_network.graph_laplacian = None
+            self.knowledge_network.transition = None
+        self.knowledge_network.similarity = self.knowledge_network._compute_similarity_matrix()
 
     # Persona ---------------------------------------------------------------------
     def persona(self, name: Optional[str] = None) -> PersonaProfile:

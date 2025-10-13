@@ -13,7 +13,15 @@ __all__ = ["BalancedTutorTemplate", "render_balanced_tutor_response"]
 
 
 _INTRO_PREFIX = "From a balanced tutor perspective, let's look at"
-_INTRO_SUFFIX = "This ties closely to the '{intent}' intent I detected."
+_INTRO_SUFFIX = 'This ties closely to the "{intent}" intent I detected.'
+
+
+_ACTION_FRAGMENT_TEMPLATES: dict[str, str] = {
+    "reflect": "reflect on {topic}",
+    "compare": "compare {topic} with related ideas",
+    "connect": "connect {topic} to what you already know",
+    "illustrate": "illustrate {topic} with a quick example",
+}
 
 
 @dataclass(frozen=True)
@@ -44,11 +52,10 @@ def render_balanced_tutor_response(
     The response is built according to the dataset pattern described in the
     documentation. The structure is::
 
-        From a balanced tutor perspective, let's look at <prompt>. This ties
-        closely to the '<intent>' intent I detected. Consider journaling about:
+        From a balanced tutor perspective, let's look at "<prompt>". This ties
+        closely to the "<intent>" intent I detected. Consider journaling about:
         <topic1> (<action1>), <topic2> (<action2>), <topic3> (<action3>). Try to
-        <action1_lower> <topic1>, <action2_lower> <topic2>, and <action3_lower>
-        <topic3>.
+        <action1_phrase>, <action2_phrase>, and <action3_phrase>.
 
     Parameters
     ----------
@@ -94,7 +101,7 @@ def _validate_topics_and_actions(
 
 
 def _format_intro(prompt: str, intent: str) -> str:
-    return f"{_INTRO_PREFIX} {prompt} {_INTRO_SUFFIX.format(intent=intent)}"
+    return f'{_INTRO_PREFIX} "{prompt}" {_INTRO_SUFFIX.format(intent=intent)}'
 
 
 def _format_journaling(pairs: Sequence[tuple[str, str]]) -> str:
@@ -103,7 +110,7 @@ def _format_journaling(pairs: Sequence[tuple[str, str]]) -> str:
 
 
 def _format_try_sentence(pairs: Sequence[tuple[str, str]]) -> str:
-    fragments = [f"{action.lower()} {topic}" for topic, action in pairs]
+    fragments = [_format_action_fragment(topic, action) for topic, action in pairs]
     if len(fragments) == 1:
         tail = fragments[0]
     elif len(fragments) == 2:
@@ -111,3 +118,18 @@ def _format_try_sentence(pairs: Sequence[tuple[str, str]]) -> str:
     else:
         tail = f"{', '.join(fragments[:-1])}, and {fragments[-1]}"
     return f"Try to {tail}."
+
+
+def _format_action_fragment(topic: str, action: str) -> str:
+    key = action.strip().lower()
+    template = _ACTION_FRAGMENT_TEMPLATES.get(key)
+    if template is not None:
+        return template.format(topic=topic)
+    action_lower = key or action.lower()
+    topic_words = topic.split()
+    if topic_words and topic_words[0].lower() == action_lower:
+        trimmed = " ".join(topic_words[1:]).strip()
+        if trimmed:
+            normalised = trimmed[0].lower() + trimmed[1:]
+            return f"{action_lower} the {normalised}"
+    return f"{action_lower} {topic}"
