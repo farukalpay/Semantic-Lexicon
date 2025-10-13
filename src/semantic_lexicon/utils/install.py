@@ -12,9 +12,9 @@ import socket
 import subprocess
 import sys
 import urllib.request
+from collections.abc import Iterable, MutableMapping, Sequence
 from pathlib import Path
-from typing import Callable, Iterable, MutableMapping, Sequence
-
+from typing import Callable
 
 DEFAULT_INDEX_URL = "https://pypi.org/simple"
 DEFAULT_WHEEL_DIR = Path.home() / ".cache" / "pip" / "wheels"
@@ -183,4 +183,3 @@ def resolve_package_installation_failure(
 
 
 __all__: Iterable[str] = ["resolve_package_installation_failure"]
-
