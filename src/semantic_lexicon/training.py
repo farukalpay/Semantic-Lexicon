@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping, Optional, cast
+from typing import Optional, cast
 
 from .config import SemanticModelConfig
 from .diagnostics import DiagnosticsResult, DiagnosticsSuite
