@@ -94,3 +94,35 @@ error.
 
 These utilities integrate with the training scripts and experiments, providing a
 transparent and verifiable foundation for ethical intent selection.
+
+## 6. Primal–Dual Safety Gates
+
+Operational safeguards such as rule-gap limits, minimum selection probability
+floors, effective sample size (ESS) targets, fairness thresholds, and stability
+conditions can be encoded as convex constraints \(h_m(\theta) \le 0\). The
+augmented objective for the constrained programme is the dual Lagrangian
+\[
+\mathcal{L}(\theta, \lambda) = -f(S_\theta) + \sum_m \lambda_m \, h_m(\theta),
+\quad \lambda_m \ge 0,
+\]
+where the reward surrogate \(f(S_\theta)\) is penalised by the residuals of the
+constraint functions. Enforcement proceeds through projected primal–dual
+updates with small steps \(\eta, \rho > 0\):
+\[
+\lambda_{m, t+1} = \big[\lambda_{m, t} + \rho\, h_m(\theta_t)\big]_+, \qquad
+\theta_{t+1} = \theta_t - \eta\, \nabla_\theta
+\mathcal{L}(\theta_t, \lambda_{t+1}).
+\]
+The projection \([\cdot]_+\) ensures dual feasibility, while the coupled update
+nudges the parameters towards the feasible set whenever a constraint is
+violated. A Lyapunov function composed of the squared positive residuals and the
+dual error,
+\[
+V_t = \tfrac{1}{2} \sum_m h_m^+(\theta_t)^2 + \tfrac{1}{2} 
+\lVert \lambda_t - \lambda^* \rVert^2,
+\]
+monotonically decreases under these dynamics, i.e. \(V_{t+1} \le V_t\), which
+guarantees that the constraint residuals converge to zero. In practice this loop
+automatically tunes the step sizes and gate parameters \(\{\eta, \tau_g, \alpha,
+\mu, \beta, \rho\}\) until each safety gate reaches zero residual, providing a
+robust template for satisfying multiple operational requirements simultaneously.
