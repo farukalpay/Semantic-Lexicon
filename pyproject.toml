@@ -28,6 +28,7 @@ dependencies = [
     "numpy>=1.23,<2.0",
     "typer>=0.13,<0.20",
     "PyYAML>=6.0,<7.0",
+    "matplotlib>=3.8,<4.0",
 ]
 
 [project.optional-dependencies]

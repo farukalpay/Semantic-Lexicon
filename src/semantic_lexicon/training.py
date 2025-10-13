@@ -73,7 +73,13 @@ class Trainer:
     def _load_intent_examples(self, path: Path) -> list[IntentExample]:
         dataset = []
         for record in read_jsonl(path):
-            dataset.append(IntentExample(text=str(record["text"]), intent=str(record["intent"])))
+            dataset.append(
+                IntentExample(
+                    text=str(record["text"]),
+                    intent=str(record["intent"]),
+                    feedback=float(record.get("feedback", 0.95)),
+                )
+            )
         return dataset
 
     def _load_knowledge_edges(self, path: Path) -> list[KnowledgeEdge]:

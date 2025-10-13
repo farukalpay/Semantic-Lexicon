@@ -141,6 +141,12 @@ class NeuralSemanticModel:
         self.intent_classifier.index_to_label = labels
         self.intent_classifier.label_to_index = {label: index for index, label in labels.items()}
         self.intent_classifier.weights = np.asarray(payload["weights"], dtype=float)
+        self.intent_classifier._feature_indices = {
+            feature: self.intent_classifier.vocabulary[feature]
+            for feature in self.intent_classifier._feature_names
+            if feature in self.intent_classifier.vocabulary
+        }
+        self.intent_classifier._finalise_weights()
 
     def _load_knowledge(self, path: Path) -> None:
         with Path(path).open("r", encoding="utf8") as handle:

@@ -1,0 +1,8 @@
+{
+  "baseline_latency_ms": 1.8275027700001374,
+  "optimised_latency_ms": 0.7261585960000048,
+  "latency_improvement_pct": 60.26497973516341,
+  "baseline_memory_kb": 4.15625,
+  "optimised_memory_kb": 27.015625,
+  "memory_reduction_pct": -550.0
+}

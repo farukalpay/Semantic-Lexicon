@@ -72,8 +72,12 @@ class IntentConfig:
     """Configuration for the intent classifier."""
 
     learning_rate: float = 0.1
-    epochs: int = 10
+    epochs: int = 30
     hidden_dim: int = 32
+    optimized: bool = True
+    cache_size: int = 2048
+    feedback_prior_weight: float = 0.5
+    feedback_step_size: float = 0.2
 
 
 @dataclass
