@@ -12,7 +12,7 @@ import socket
 import subprocess
 import sys
 import urllib.request
-from collections.abc import Iterable, MutableMapping, Sequence
+from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 from typing import Callable
 
