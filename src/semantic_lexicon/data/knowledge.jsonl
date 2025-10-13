@@ -1,3 +1,12 @@
 {"head": "artificial intelligence", "relation": "includes", "tail": "machine learning"}
 {"head": "machine learning", "relation": "related_to", "tail": "statistics"}
 {"head": "python programming", "relation": "requires", "tail": "practice"}
+{"head": "breadth-first search", "relation": "use_case", "tail": "shortest path in unweighted graphs"}
+{"head": "breadth-first search", "relation": "contrasts_with", "tail": "depth-first search"}
+{"head": "renewable energy", "relation": "first_step", "tail": "audit local energy use"}
+{"head": "renewable energy", "relation": "research", "tail": "read government energy outlook"}
+{"head": "creative writing", "relation": "prompt", "tail": "explore character motivations"}
+{"head": "creative writing", "relation": "prompt", "tail": "reflect on sensory details"}
+{"head": "supervised learning", "relation": "compare_with", "tail": "unsupervised learning"}
+{"head": "supervised learning", "relation": "focus", "tail": "labeled data"}
+{"head": "unsupervised learning", "relation": "focus", "tail": "pattern discovery"}

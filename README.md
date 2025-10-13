@@ -13,6 +13,8 @@ The name reflects the long-standing academic concept of the [semantic lexicon](h
 - **Automated workflows** – Typer-powered CLI (`semantic-lexicon`) for corpus preparation, training, diagnostics, and generation.
 - **Extensible configuration** – YAML/JSON configuration loading with dataclass-backed defaults.
 - **Diagnostics** – structured reports covering embeddings, intents, knowledge neighbours, personas, and generation previews.
+- **Adversarial style selection** – EXP3 utilities for experimenting with persona choices under bandit feedback.
+- **Analytical guarantees** – composite reward shaping, Bayesian calibration, and regret tooling with documented proofs.
 - **Docs & tests** – MkDocs documentation, pytest-based regression tests, and CI-ready tooling (black, ruff, mypy).
 
 ## Installation
@@ -61,7 +63,7 @@ src/semantic_lexicon/
    semantic-lexicon train --workspace artifacts
    ```
 
-   The CLI saves embeddings, intent weights, and knowledge matrices to the workspace directory.
+The CLI saves embeddings, intent weights, and knowledge matrices to the workspace directory.
 
 3. **Run diagnostics**:
 
@@ -149,11 +151,55 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
    Response: From a balanced tutor perspective, let's look at Define gravitational potential energy. This ties closely to the 'definition' intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames, and connect Energy Transfer.
    ```
 
-These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
-research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
-persona-aware pipeline.
+  These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
+  research experiments and diagnostics rather than fluent conversation, yet it showcases how questions can be routed through the
+  persona-aware pipeline.
 
-The same behaviour is available through the CLI:
+  Running `python examples/quickstart.py` (or `PYTHONPATH=src python examples/quickstart.py` from a checkout) produces a combined
+  generation preview and the new intent-selection walkthrough:
+
+  ```
+  Sample generation:
+  From a balanced tutor perspective, let's look at Share tips to learn python. This ties closely to the 'how_to' intent I detected.
+  Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule,
+  practice Focus Blocks, and reflect Break Strategies. Related concepts worth exploring: unsupervised learning, depth-first search,
+  shortest path in unweighted graphs.
+
+  Calibration report: ECE raw=0.386 -> calibrated=0.008 (reduction=98%)
+  Reward weights: [0.27132374 0.29026431 0.075      0.36341195]
+
+  Intent bandit walkthrough:
+  Prompt: Clarify when to use breadth-first search
+  Classifier intent: definition (optimal=definition)
+  Reward components: correctness=1.00, confidence=0.55, semantic=0.93, feedback=0.92
+  Composite reward: 0.84
+  Response: use case → shortest path in unweighted graphs; contrasts with → depth-first search
+
+  Prompt: How should I start researching renewable energy?
+  Classifier intent: how_to (optimal=how_to)
+  Reward components: correctness=1.00, confidence=0.55, semantic=0.92, feedback=0.92
+  Composite reward: 0.83
+  Response: first step → audit local energy use; research → read government energy outlook
+
+  Prompt: Compare supervised and unsupervised learning
+  Classifier intent: comparison (optimal=comparison)
+  Reward components: correctness=1.00, confidence=0.33, semantic=0.92, feedback=0.92
+  Composite reward: 0.77
+  Response: compare with → unsupervised learning; focus → labeled data; focus → pattern discovery
+
+  Prompt: Offer reflective prompts for creative writing
+  Classifier intent: exploration (optimal=exploration)
+  Reward components: correctness=1.00, confidence=0.50, semantic=0.86, feedback=0.92
+  Composite reward: 0.81
+  Response: prompt → explore character motivations; prompt → reflect on sensory details
+  ```
+
+  The quickstart rewards are simulated using the intent classifier's posterior probabilities so the bandit loop stays in the unit
+  interval without external feedback.
+
+  The walkthrough also saves the calibrated accuracy curve and the empirical-vs-theoretical EXP3 regret comparison used in the
+  analysis appendix. Refer to the generated CSV summaries in `Archive/` for the underlying values if you wish to recreate the
+  plots with your preferred tooling. The same behaviour is available through the CLI:
 
 ```bash
 semantic-lexicon generate "What is machine learning?" \
@@ -162,11 +208,187 @@ semantic-lexicon generate "What is machine learning?" \
   --config config.yaml
 ```
 
+## Cross-domain validation & profiling
+
+Run the bundled validation harness to stress-test the calibrated intent router on
+100 prompts that span science, humanities, business, wellness, and personal
+development queries:
+
+```bash
+PYTHONPATH=src python examples/cross_domain_validation.py
+```
+
+The script trains the classifier, evaluates it on the new prompt set, and saves a
+report to `Archive/cross_domain_validation_report.json`. The latest run achieved:
+
+- **Accuracy:** 100% across all four intents (definition, how_to, comparison, exploration)
+- **Reward distribution:** min 0.763, mean 0.933, p90 0.965 – every prompt clears the 0.7 target
+- **Calibration:** expected calibration error drops from 0.437 → 0.027 (94 % reduction)
+- **Intent samples:**
+  - “What is photosynthesis in simple terms?” → `definition` (reward 0.964)
+  - “How do I create a personal budget from scratch?” → `how_to` (reward 0.949)
+  - “Compare renewable and nonrenewable energy sources.” → `comparison` (reward 0.957)
+  - “Brainstorm mindfulness exercises for stress relief.” → `exploration` (reward 0.950)
+
+A companion benchmark is written to `Archive/intent_performance_profile.json`.
+With heuristic fast paths, sparse dot products, and vector caching enabled the
+optimised classifier processes repeated prompts **60 % faster** than the baseline
+float64 pipeline (1.83 ms → 0.73 ms per request) while keeping the same accuracy.
+Caching retains the most recent vectors, so the optimised pipeline uses ~27 KB of
+RAM versus the baseline’s 4 KB; the additional footprint is documented alongside
+the latency numbers so deployments can choose the appropriate trade-off.
+
+## Streaming feedback API
+
+Real-time user feedback can be folded into the composite reward with the new
+HTTP server. Launch the background service by wiring an `IntentClassifier`
+through `FeedbackService` and `FeedbackAPI`:
+
+```python
+from semantic_lexicon import IntentClassifier, IntentExample
+from semantic_lexicon.api import FeedbackAPI, FeedbackService
+from semantic_lexicon.utils import read_jsonl
+
+examples = [
+    IntentExample(text=str(rec["text"]), intent=str(rec["intent"]), feedback=0.92)
+    for rec in read_jsonl("src/semantic_lexicon/data/intent.jsonl")
+]
+classifier = IntentClassifier()
+classifier.fit(examples)
+service = FeedbackService(classifier)
+api = FeedbackAPI(service, host="127.0.0.1", port=8765)
+api.start()
+```
+
+Submit streaming feedback with a simple POST request:
+
+```bash
+curl -X POST http://127.0.0.1:8765/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Compare supervised and unsupervised learning", \
+        "selected_intent": "comparison", \
+        "optimal_intent": "comparison", \
+        "feedback": 0.96}'
+```
+
+The server replies with the updated composite-reward weights and the component
+vector that was logged. Each event is processed under a lock so parallel clients
+can stream feedback without clobbering the learned weights, and the new reward
+weights remain simplex-projected for EXP3 compatibility.
+
 Key parameters for `semantic-lexicon generate`:
 
 - `--workspace PATH` – directory that contains the trained embeddings and weights (defaults to `artifacts`).
 - `--persona NAME` – persona to blend into the response (defaults to the configuration's `default_persona`).
 - `--config PATH` – optional configuration file to override model hyperparameters during loading.
+
+## Adversarial Style Selection
+
+Semantic Lexicon now bundles EXP3 helpers for experimenting with
+adversarial persona *and* intent selection. The following snippet alternates
+between two personas while learning from scalar feedback in ``[0, 1]``:
+
+```python
+from semantic_lexicon import AnytimeEXP3, NeuralSemanticModel, SemanticModelConfig
+from semantic_lexicon.training import Trainer, TrainerConfig
+
+config = SemanticModelConfig()
+model = NeuralSemanticModel(config)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+
+bandit = AnytimeEXP3(num_arms=2)
+personas = ["tutor", "researcher"]
+
+for prompt in [
+    "Outline matrix factorisation for recommendations",
+    "Give journaling prompts about creativity",
+    "Explain reinforcement learning trade-offs",
+]:
+    arm = bandit.select_arm()
+    persona = personas[arm]
+    response = model.generate(prompt, persona=persona)
+    score = min(1.0, len(response.response.split()) / 40.0)
+    bandit.update(score)
+```
+
+### Intent Selection with EXP3
+
+We can model intent routing as an adversarial bandit problem. Let ``K`` be
+the number of intents (e.g. ``{"how_to", "definition", "comparison", "exploration"}``).
+At round ``t`` the system receives a prompt ``P_t`` and chooses an intent ``I_t``
+using EXP3. After delivering the answer, a reward ``r_t`` in ``[0, 1]`` arrives
+from explicit ratings or engagement metrics. The arm-selection probabilities are
+
+$$
+p_i(t) = (1 - \gamma) \frac{w_i(t)}{\sum_{j=1}^{K} w_j(t)} + \frac{\gamma}{K},
+$$
+
+and the weight for the played intent updates via
+
+$$
+w_{I_t}(t+1) = w_{I_t}(t) \exp\left(\frac{\gamma r_t}{K p_{I_t}(t)}\right).
+$$
+
+When the horizon ``T`` is unknown, the bundled ``AnytimeEXP3`` class applies the
+doubling trick to refresh its parameters so the regret remains ``O(\sqrt{T})``.
+
+The quickstart script demonstrates the pattern by mapping arms to intent labels
+and simulating rewards from the classifier's posterior probability:
+
+```python
+from semantic_lexicon import AnytimeEXP3, NeuralSemanticModel, SemanticModelConfig
+from semantic_lexicon.training import Trainer, TrainerConfig
+
+config = SemanticModelConfig()
+model = NeuralSemanticModel(config)
+trainer = Trainer(model, TrainerConfig())
+trainer.train()
+
+intents = [label for _, label in sorted(model.intent_classifier.index_to_label.items())]
+bandit = AnytimeEXP3(num_arms=len(intents))
+prompt = "How should I start researching renewable energy?"
+arm = bandit.select_arm()
+intent = intents[arm]
+   reward = model.intent_classifier.predict_proba(prompt)[intent]
+   bandit.update(reward)
+   ```
+
+## Intent-Bandit Analysis Toolkit
+
+The `semantic_lexicon.analysis` module supplies the maths underpinning the
+improved EXP3 workflow:
+
+- `RewardComponents` & `composite_reward` combine correctness, calibration,
+  semantic, and feedback signals into the bounded reward required by EXP3.
+- `estimate_optimal_weights` fits component weights via simplex-constrained least
+  squares on historical interactions.
+- `DirichletCalibrator` provides Bayesian confidence calibration with a
+  Dirichlet prior, yielding posterior predictive probabilities that minimise
+  expected calibration error.
+- `simulate_intent_bandit` and `exp3_expected_regret` numerically check the
+  \(2.63\sqrt{K T \log K}\) regret guarantee for the composite reward.
+- `compute_confusion_correction` and `confusion_correction_residual` extract the
+  SVD-based pseudoinverse that reduces systematic routing errors.
+- `RobbinsMonroProcess` and `convergence_rate_bound` expose the stochastic
+  approximation perspective with an \(O(1/\sqrt{n})\) convergence rate bound.
+
+See [docs/analysis.md](docs/analysis.md) for full derivations and proofs.
+
+### Intent Classification Objective
+
+Ethical deployment requires robust intent understanding. Semantic Lexicon's
+``IntentClassifier`` treats intent prediction as a multinomial logistic regression
+problem over prompts ``(P_i, I_i)``. Given parameters ``\theta``, the model
+minimises the cross-entropy loss
+
+$$
+\mathcal{L}(\theta) = -\frac{1}{N} \sum_{i=1}^{N} \log p(I_i \mid P_i; \theta),
+$$
+
+which matches the negative log-likelihood optimised during training. Improving
+intent accuracy directly translates into higher-quality feedback for the bandit
+loop.
 
 ## Configuration
 

@@ -1,0 +1,100 @@
+{"text": "What is photosynthesis in simple terms?", "intent": "definition", "domain": "science", "feedback": 0.93}
+{"text": "Define existentialism for a literature student.", "intent": "definition", "domain": "humanities", "feedback": 0.92}
+{"text": "Explain the concept of opportunity cost in economics.", "intent": "definition", "domain": "economics", "feedback": 0.94}
+{"text": "What is the Doppler effect in physics?", "intent": "definition", "domain": "science", "feedback": 0.91}
+{"text": "Clarify the meaning of plate tectonics for geography class.", "intent": "definition", "domain": "earth_science", "feedback": 0.93}
+{"text": "Define cognitive dissonance in psychology.", "intent": "definition", "domain": "psychology", "feedback": 0.92}
+{"text": "What is blockchain technology in finance?", "intent": "definition", "domain": "finance", "feedback": 0.9}
+{"text": "Explain the definition of machine learning in computing.", "intent": "definition", "domain": "technology", "feedback": 0.94}
+{"text": "Clarify what is meant by cultural relativism.", "intent": "definition", "domain": "anthropology", "feedback": 0.92}
+{"text": "Define biodiversity for environmental studies.", "intent": "definition", "domain": "environment", "feedback": 0.93}
+{"text": "What is the mitochondrion's role in biology?", "intent": "definition", "domain": "biology", "feedback": 0.91}
+{"text": "Explain the meaning of supply chain resilience.", "intent": "definition", "domain": "business", "feedback": 0.9}
+{"text": "Define mindfulness within personal development.", "intent": "definition", "domain": "personal_development", "feedback": 0.95}
+{"text": "What is the Renaissance period in European history?", "intent": "definition", "domain": "history", "feedback": 0.92}
+{"text": "Explain what is meant by data governance.", "intent": "definition", "domain": "technology", "feedback": 0.91}
+{"text": "Define narrative perspective in creative writing.", "intent": "definition", "domain": "creative_writing", "feedback": 0.93}
+{"text": "Clarify the definition of civil disobedience.", "intent": "definition", "domain": "civics", "feedback": 0.94}
+{"text": "What is stellar nucleosynthesis in astronomy?", "intent": "definition", "domain": "astronomy", "feedback": 0.9}
+{"text": "Explain the concept of social contract theory.", "intent": "definition", "domain": "philosophy", "feedback": 0.94}
+{"text": "Define ecological succession in ecology.", "intent": "definition", "domain": "ecology", "feedback": 0.93}
+{"text": "What is marginal utility in microeconomics?", "intent": "definition", "domain": "economics", "feedback": 0.92}
+{"text": "Explain the meaning of ethical hacking.", "intent": "definition", "domain": "cybersecurity", "feedback": 0.9}
+{"text": "Define homeostasis for medical students.", "intent": "definition", "domain": "medicine", "feedback": 0.95}
+{"text": "What is the golden ratio in mathematics?", "intent": "definition", "domain": "mathematics", "feedback": 0.91}
+{"text": "Explain the definition of quantum entanglement for physics club.", "intent": "definition", "domain": "science", "feedback": 0.9}
+{"text": "How do I design a study timetable for finals?", "intent": "how_to", "domain": "education", "feedback": 0.93}
+{"text": "How to brew pour-over coffee at home?", "intent": "how_to", "domain": "lifestyle", "feedback": 0.92}
+{"text": "What are the steps to conduct a literature review?", "intent": "how_to", "domain": "research", "feedback": 0.94}
+{"text": "How do I create a personal budget from scratch?", "intent": "how_to", "domain": "finance", "feedback": 0.95}
+{"text": "How to prepare a pitch deck for investors?", "intent": "how_to", "domain": "business", "feedback": 0.9}
+{"text": "How do I practice mindful breathing each morning?", "intent": "how_to", "domain": "personal_development", "feedback": 0.94}
+{"text": "How to configure a secure home Wi-Fi network?", "intent": "how_to", "domain": "technology", "feedback": 0.91}
+{"text": "What is the best way to mentor a new team member?", "intent": "how_to", "domain": "leadership", "feedback": 0.9}
+{"text": "How do I troubleshoot a failing hard drive?", "intent": "how_to", "domain": "technology", "feedback": 0.92}
+{"text": "How to organize a community beach cleanup?", "intent": "how_to", "domain": "environment", "feedback": 0.94}
+{"text": "How do I set measurable fitness goals?", "intent": "how_to", "domain": "health", "feedback": 0.93}
+{"text": "What are the steps to host a virtual workshop?", "intent": "how_to", "domain": "education", "feedback": 0.9}
+{"text": "How to plan a sustainable garden layout?", "intent": "how_to", "domain": "gardening", "feedback": 0.93}
+{"text": "How do I analyze a poem for symbolism?", "intent": "how_to", "domain": "literature", "feedback": 0.95}
+{"text": "What is the best way to practice interview responses?", "intent": "how_to", "domain": "career", "feedback": 0.91}
+{"text": "How to scaffold a lesson on fractions?", "intent": "how_to", "domain": "teaching", "feedback": 0.94}
+{"text": "How do I build a positive morning routine?", "intent": "how_to", "domain": "personal_development", "feedback": 0.95}
+{"text": "How to lead a retrospective meeting effectively?", "intent": "how_to", "domain": "project_management", "feedback": 0.92}
+{"text": "How do I document a machine learning experiment?", "intent": "how_to", "domain": "data_science", "feedback": 0.93}
+{"text": "What are the steps to register a small business?", "intent": "how_to", "domain": "business", "feedback": 0.9}
+{"text": "How to prepare for a long-distance hike?", "intent": "how_to", "domain": "outdoors", "feedback": 0.92}
+{"text": "How do I calm nerves before public speaking?", "intent": "how_to", "domain": "communication", "feedback": 0.95}
+{"text": "How to craft a compelling cover letter?", "intent": "how_to", "domain": "career", "feedback": 0.93}
+{"text": "What is the best way to record podcast audio?", "intent": "how_to", "domain": "media", "feedback": 0.9}
+{"text": "How do I coach a youth soccer practice?", "intent": "how_to", "domain": "sports", "feedback": 0.92}
+{"text": "Compare supervised and unsupervised learning in AI.", "intent": "comparison", "domain": "technology", "feedback": 0.94}
+{"text": "What is the difference between mitosis and meiosis?", "intent": "comparison", "domain": "biology", "feedback": 0.95}
+{"text": "Contrast classical and operant conditioning.", "intent": "comparison", "domain": "psychology", "feedback": 0.93}
+{"text": "Compare renewable and nonrenewable energy sources.", "intent": "comparison", "domain": "environment", "feedback": 0.92}
+{"text": "What is the difference between memoir and autobiography?", "intent": "comparison", "domain": "literature", "feedback": 0.9}
+{"text": "Compare agile versus waterfall project management.", "intent": "comparison", "domain": "business", "feedback": 0.94}
+{"text": "Contrast federalism and unitary systems of government.", "intent": "comparison", "domain": "civics", "feedback": 0.92}
+{"text": "What is the difference between arteries and veins?", "intent": "comparison", "domain": "medicine", "feedback": 0.95}
+{"text": "Compare JPEG and PNG image formats.", "intent": "comparison", "domain": "technology", "feedback": 0.91}
+{"text": "Contrast qualitative and quantitative research methods.", "intent": "comparison", "domain": "research", "feedback": 0.94}
+{"text": "Compare capitalism versus socialism in economics.", "intent": "comparison", "domain": "economics", "feedback": 0.93}
+{"text": "What is the difference between empathy and sympathy?", "intent": "comparison", "domain": "personal_development", "feedback": 0.9}
+{"text": "Compare classical and quantum encryption approaches.", "intent": "comparison", "domain": "cybersecurity", "feedback": 0.92}
+{"text": "Contrast plant and animal cell structures.", "intent": "comparison", "domain": "biology", "feedback": 0.95}
+{"text": "What is the difference between Celsius and Kelvin scales?", "intent": "comparison", "domain": "science", "feedback": 0.9}
+{"text": "Compare narrative and expository writing styles.", "intent": "comparison", "domain": "writing", "feedback": 0.93}
+{"text": "Contrast B2B and B2C marketing strategies.", "intent": "comparison", "domain": "marketing", "feedback": 0.92}
+{"text": "What is the difference between viruses and bacteria?", "intent": "comparison", "domain": "health", "feedback": 0.95}
+{"text": "Compare formative versus summative assessments.", "intent": "comparison", "domain": "education", "feedback": 0.93}
+{"text": "Contrast coaching and mentoring in leadership.", "intent": "comparison", "domain": "leadership", "feedback": 0.91}
+{"text": "Compare streaming services Hulu and Netflix for documentaries.", "intent": "comparison", "domain": "media", "feedback": 0.9}
+{"text": "What is the difference between meditation and visualization?", "intent": "comparison", "domain": "wellness", "feedback": 0.92}
+{"text": "Compare urban and rural community development challenges.", "intent": "comparison", "domain": "sociology", "feedback": 0.91}
+{"text": "Contrast cloud and on-premise data storage.", "intent": "comparison", "domain": "technology", "feedback": 0.94}
+{"text": "What is the difference between active and passive voice?", "intent": "comparison", "domain": "grammar", "feedback": 0.9}
+{"text": "Brainstorm creative ways to teach fractions to kids.", "intent": "exploration", "domain": "education", "feedback": 0.94}
+{"text": "Explore ideas for mindful evening rituals.", "intent": "exploration", "domain": "wellness", "feedback": 0.95}
+{"text": "Provide inspiration for science fair experiments.", "intent": "exploration", "domain": "science", "feedback": 0.93}
+{"text": "Share exploration prompts for journaling about gratitude.", "intent": "exploration", "domain": "personal_development", "feedback": 0.95}
+{"text": "Suggest ideas for a community art project.", "intent": "exploration", "domain": "arts", "feedback": 0.92}
+{"text": "Explore possible themes for a dystopian novel.", "intent": "exploration", "domain": "writing", "feedback": 0.93}
+{"text": "Brainstorm activities for a leadership retreat.", "intent": "exploration", "domain": "leadership", "feedback": 0.91}
+{"text": "Offer creative ideas for eco-friendly packaging.", "intent": "exploration", "domain": "business", "feedback": 0.9}
+{"text": "Explore discussion topics for a philosophy club.", "intent": "exploration", "domain": "philosophy", "feedback": 0.92}
+{"text": "Generate ideas for interdisciplinary research collaborations.", "intent": "exploration", "domain": "research", "feedback": 0.94}
+{"text": "Suggest exploration prompts for travel blogging.", "intent": "exploration", "domain": "travel", "feedback": 0.93}
+{"text": "Brainstorm conversation starters for networking events.", "intent": "exploration", "domain": "career", "feedback": 0.94}
+{"text": "Explore concepts for a mindfulness workshop.", "intent": "exploration", "domain": "wellness", "feedback": 0.95}
+{"text": "Provide ideas for interactive museum exhibits.", "intent": "exploration", "domain": "culture", "feedback": 0.9}
+{"text": "Brainstorm themes for a poetry slam night.", "intent": "exploration", "domain": "arts", "feedback": 0.93}
+{"text": "Explore reflective prompts for coaching sessions.", "intent": "exploration", "domain": "coaching", "feedback": 0.92}
+{"text": "Suggest creative ideas for STEM outreach programs.", "intent": "exploration", "domain": "education", "feedback": 0.94}
+{"text": "Provide exploration topics for personal finance journaling.", "intent": "exploration", "domain": "finance", "feedback": 0.93}
+{"text": "Brainstorm ways to inspire middle school debate teams.", "intent": "exploration", "domain": "education", "feedback": 0.92}
+{"text": "Explore activities that spark curiosity in astronomy clubs.", "intent": "exploration", "domain": "astronomy", "feedback": 0.94}
+{"text": "Suggest ideas for community health awareness campaigns.", "intent": "exploration", "domain": "health", "feedback": 0.93}
+{"text": "Brainstorm reflection prompts for career changers.", "intent": "exploration", "domain": "career", "feedback": 0.95}
+{"text": "Explore concepts for sustainable fashion projects.", "intent": "exploration", "domain": "fashion", "feedback": 0.9}
+{"text": "Provide ideas for team-building icebreakers.", "intent": "exploration", "domain": "teamwork", "feedback": 0.94}
+{"text": "Brainstorm mindfulness exercises for stress relief.", "intent": "exploration", "domain": "wellness", "feedback": 0.95}

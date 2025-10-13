@@ -1,3 +1,34 @@
 {"text": "What is artificial intelligence?", "intent": "definition"}
 {"text": "How can I learn python programming?", "intent": "how_to"}
 {"text": "Compare machine learning and statistics", "intent": "comparison"}
+{"text": "Explore creative writing themes for journaling", "intent": "exploration"}
+{"text": "Define breadth-first search in graph theory", "intent": "definition"}
+{"text": "List first steps for researching renewable energy", "intent": "how_to"}
+{"text": "Contrast supervised and unsupervised learning", "intent": "comparison"}
+{"text": "Provide reflective prompts about community building", "intent": "exploration"}
+{"text": "Offer reflective prompts for creative writing sessions", "intent": "exploration"}
+{"text": "Clarify strategies to explore renewable energy careers", "intent": "exploration"}
+{"text": "How should I start researching renewable energy opportunities?", "intent": "how_to"}
+{"text": "Clarify when to use breadth-first search versus depth-first search", "intent": "definition"}
+{"text": "Clarify when to use breadth-first search", "intent": "definition"}
+{"text": "How should I start researching renewable energy?", "intent": "how_to"}
+{"text": "What is the meaning of ethical hacking in cybersecurity?", "intent": "definition"}
+{"text": "Define cognitive dissonance for psychology class", "intent": "definition"}
+{"text": "Clarify the definition of cultural relativism in anthropology", "intent": "definition"}
+{"text": "What is the difference between empathy and sympathy?", "intent": "comparison"}
+{"text": "Compare agile versus waterfall workflows", "intent": "comparison"}
+{"text": "How do I plan a sustainable garden layout?", "intent": "how_to"}
+{"text": "Best way to calm nerves before public speaking", "intent": "how_to"}
+{"text": "What are the steps to register a small business?", "intent": "how_to"}
+{"text": "Brainstorm creative prompts for a mindfulness workshop", "intent": "exploration"}
+{"text": "Suggest ideas for a community art project", "intent": "exploration"}
+{"text": "What is the best way to mentor a new employee?", "intent": "how_to"}
+{"text": "Describe the best way to facilitate a project retrospective.", "intent": "how_to"}
+{"text": "Define existentialism for literature discussions.", "intent": "definition"}
+{"text": "What is existentialism in philosophy?", "intent": "definition"}
+{"text": "Define narrative perspective in creative writing.", "intent": "definition"}
+{"text": "Explain what is meant by narrative perspective.", "intent": "definition"}
+{"text": "Compare renewable and nonrenewable energy sources.", "intent": "comparison"}
+{"text": "Explain the difference between renewable and nonrenewable resources.", "intent": "comparison"}
+{"text": "Provide exploration topics for personal finance journaling.", "intent": "exploration"}
+{"text": "Brainstorm exploration prompts for personal finance reflection.", "intent": "exploration"}

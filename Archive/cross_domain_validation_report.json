@@ -1,0 +1,867 @@
+{
+  "accuracy": 1.0,
+  "reward_summary": {
+    "min": 0.7628701568698837,
+    "max": 0.9706918998832201,
+    "mean": 0.9327107620608223,
+    "p10": 0.7828456665068385,
+    "p25": 0.9509441733132665,
+    "median": 0.9578779900177046,
+    "p75": 0.9614136559378993,
+    "p90": 0.9650063387665718
+  },
+  "ece_before": 0.4373189266837426,
+  "ece_after": 0.02677393827486152,
+  "ece_reduction": 0.9387770877471678,
+  "domain_accuracy": {
+    "science": 1.0,
+    "humanities": 1.0,
+    "economics": 1.0,
+    "earth_science": 1.0,
+    "psychology": 1.0,
+    "finance": 1.0,
+    "technology": 1.0,
+    "anthropology": 1.0,
+    "environment": 1.0,
+    "biology": 1.0,
+    "business": 1.0,
+    "personal_development": 1.0,
+    "history": 1.0,
+    "creative_writing": 1.0,
+    "civics": 1.0,
+    "astronomy": 1.0,
+    "philosophy": 1.0,
+    "ecology": 1.0,
+    "cybersecurity": 1.0,
+    "medicine": 1.0,
+    "mathematics": 1.0,
+    "education": 1.0,
+    "lifestyle": 1.0,
+    "research": 1.0,
+    "leadership": 1.0,
+    "health": 1.0,
+    "gardening": 1.0,
+    "literature": 1.0,
+    "career": 1.0,
+    "teaching": 1.0,
+    "project_management": 1.0,
+    "data_science": 1.0,
+    "outdoors": 1.0,
+    "communication": 1.0,
+    "media": 1.0,
+    "sports": 1.0,
+    "writing": 1.0,
+    "marketing": 1.0,
+    "wellness": 1.0,
+    "sociology": 1.0,
+    "grammar": 1.0,
+    "arts": 1.0,
+    "travel": 1.0,
+    "culture": 1.0,
+    "coaching": 1.0,
+    "fashion": 1.0,
+    "teamwork": 1.0
+  },
+  "predictions": [
+    {
+      "text": "What is photosynthesis in simple terms?",
+      "domain": "science",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9635143023437676
+    },
+    {
+      "text": "Define existentialism for a literature student.",
+      "domain": "humanities",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9514241519102207
+    },
+    {
+      "text": "Explain the concept of opportunity cost in economics.",
+      "domain": "economics",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9612878808542001
+    },
+    {
+      "text": "What is the Doppler effect in physics?",
+      "domain": "science",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9558047984034772
+    },
+    {
+      "text": "Clarify the meaning of plate tectonics for geography class.",
+      "domain": "earth_science",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9559129323469318
+    },
+    {
+      "text": "Define cognitive dissonance in psychology.",
+      "domain": "psychology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9550555819056519
+    },
+    {
+      "text": "What is blockchain technology in finance?",
+      "domain": "finance",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9527087891126247
+    },
+    {
+      "text": "Explain the definition of machine learning in computing.",
+      "domain": "technology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9577874369454451
+    },
+    {
+      "text": "Clarify what is meant by cultural relativism.",
+      "domain": "anthropology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9542060754860409
+    },
+    {
+      "text": "Define biodiversity for environmental studies.",
+      "domain": "environment",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9586037584876919
+    },
+    {
+      "text": "What is the mitochondrion's role in biology?",
+      "domain": "biology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9558047984034772
+    },
+    {
+      "text": "Explain the meaning of supply chain resilience.",
+      "domain": "business",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.942995023723822
+    },
+    {
+      "text": "Define mindfulness within personal development.",
+      "domain": "personal_development",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.960783186335402
+    },
+    {
+      "text": "What is the Renaissance period in European history?",
+      "domain": "history",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9594066361471913
+    },
+    {
+      "text": "Explain what is meant by data governance.",
+      "domain": "technology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9495961995525
+    },
+    {
+      "text": "Define narrative perspective in creative writing.",
+      "domain": "creative_writing",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.957807913229755
+    },
+    {
+      "text": "Clarify the definition of civil disobedience.",
+      "domain": "civics",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9593451277764397
+    },
+    {
+      "text": "What is stellar nucleosynthesis in astronomy?",
+      "domain": "astronomy",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9527087891126247
+    },
+    {
+      "text": "Explain the concept of social contract theory.",
+      "domain": "philosophy",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9582675069286193
+    },
+    {
+      "text": "Define ecological succession in ecology.",
+      "domain": "ecology",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9623655154336375
+    },
+    {
+      "text": "What is marginal utility in microeconomics?",
+      "domain": "economics",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9599124646000532
+    },
+    {
+      "text": "Explain the meaning of ethical hacking.",
+      "domain": "cybersecurity",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9424465910367987
+    },
+    {
+      "text": "Define homeostasis for medical students.",
+      "domain": "medicine",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9658074339751204
+    },
+    {
+      "text": "What is the golden ratio in mathematics?",
+      "domain": "mathematics",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9558047984034772
+    },
+    {
+      "text": "Explain the definition of quantum entanglement for physics club.",
+      "domain": "science",
+      "expected": "definition",
+      "predicted": "definition",
+      "confidence": 1.0,
+      "reward": 0.9433335337297954
+    },
+    {
+      "text": "How do I design a study timetable for finals?",
+      "domain": "education",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9610624056466004
+    },
+    {
+      "text": "How to brew pour-over coffee at home?",
+      "domain": "lifestyle",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9575952325172856
+    },
+    {
+      "text": "What are the steps to conduct a literature review?",
+      "domain": "research",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9635404904011878
+    },
+    {
+      "text": "How do I create a personal budget from scratch?",
+      "domain": "finance",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9673150703399249
+    },
+    {
+      "text": "How to prepare a pitch deck for investors?",
+      "domain": "business",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9511441991372294
+    },
+    {
+      "text": "How do I practice mindful breathing each morning?",
+      "domain": "personal_development",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9614411206830243
+    },
+    {
+      "text": "How to configure a secure home Wi-Fi network?",
+      "domain": "technology",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9559683960255687
+    },
+    {
+      "text": "What is the best way to mentor a new team member?",
+      "domain": "leadership",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 0.4668181630529821,
+      "reward": 0.7933961637603646
+    },
+    {
+      "text": "How do I troubleshoot a failing hard drive?",
+      "domain": "technology",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9583478746246579
+    },
+    {
+      "text": "How to organize a community beach cleanup?",
+      "domain": "environment",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9645239427548209
+    },
+    {
+      "text": "How do I set measurable fitness goals?",
+      "domain": "health",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9597957755496498
+    },
+    {
+      "text": "What are the steps to host a virtual workshop?",
+      "domain": "education",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9505097509484204
+    },
+    {
+      "text": "How to plan a sustainable garden layout?",
+      "domain": "gardening",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9599386526574736
+    },
+    {
+      "text": "How do I analyze a poem for symbolism?",
+      "domain": "literature",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9682660811340289
+    },
+    {
+      "text": "What is the best way to practice interview responses?",
+      "domain": "career",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 0.446313387476638,
+      "reward": 0.7897232187850755
+    },
+    {
+      "text": "How to scaffold a lesson on fractions?",
+      "domain": "teaching",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9667739092567114
+    },
+    {
+      "text": "How do I build a positive morning routine?",
+      "domain": "personal_development",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9691533878558006
+    },
+    {
+      "text": "How to lead a retrospective meeting effectively?",
+      "domain": "project_management",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9595702337692829
+    },
+    {
+      "text": "How do I document a machine learning experiment?",
+      "domain": "data_science",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9586454721367228
+    },
+    {
+      "text": "What are the steps to register a small business?",
+      "domain": "business",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.949248753764464
+    },
+    {
+      "text": "How to prepare for a long-distance hike?",
+      "domain": "outdoors",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9583478746246579
+    },
+    {
+      "text": "How do I calm nerves before public speaking?",
+      "domain": "communication",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9646254929378495
+    },
+    {
+      "text": "How to craft a compelling cover letter?",
+      "domain": "career",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9631720715129972
+    },
+    {
+      "text": "What is the best way to record podcast audio?",
+      "domain": "media",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 0.446313387476638,
+      "reward": 0.7861213810413612
+    },
+    {
+      "text": "How do I coach a youth soccer practice?",
+      "domain": "sports",
+      "expected": "how_to",
+      "predicted": "how_to",
+      "confidence": 1.0,
+      "reward": 0.9583478746246579
+    },
+    {
+      "text": "Compare supervised and unsupervised learning in AI.",
+      "domain": "technology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9645702683251645
+    },
+    {
+      "text": "What is the difference between mitosis and meiosis?",
+      "domain": "biology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7808793455884548
+    },
+    {
+      "text": "Contrast classical and operant conditioning.",
+      "domain": "psychology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9614045010228576
+    },
+    {
+      "text": "Compare renewable and nonrenewable energy sources.",
+      "domain": "environment",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9599978478141193
+    },
+    {
+      "text": "What is the difference between memoir and autobiography?",
+      "domain": "literature",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7628701568698837
+    },
+    {
+      "text": "Compare agile versus waterfall project management.",
+      "domain": "business",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9579480668056543
+    },
+    {
+      "text": "Contrast federalism and unitary systems of government.",
+      "domain": "civics",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9545760235952043
+    },
+    {
+      "text": "What is the difference between arteries and veins?",
+      "domain": "medicine",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7808793455884548
+    },
+    {
+      "text": "Compare JPEG and PNG image formats.",
+      "domain": "technology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9582203864069052
+    },
+    {
+      "text": "Contrast qualitative and quantitative research methods.",
+      "domain": "research",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9650063387665718
+    },
+    {
+      "text": "Compare capitalism versus socialism in economics.",
+      "domain": "economics",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.954696073748099
+    },
+    {
+      "text": "What is the difference between empathy and sympathy?",
+      "domain": "personal_development",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36709458315047516,
+      "reward": 0.764384775688167
+    },
+    {
+      "text": "Compare classical and quantum encryption approaches.",
+      "domain": "cybersecurity",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9618222241506196
+    },
+    {
+      "text": "Contrast plant and animal cell structures.",
+      "domain": "biology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9686081765102861
+    },
+    {
+      "text": "What is the difference between Celsius and Kelvin scales?",
+      "domain": "science",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7628701568698837
+    },
+    {
+      "text": "Compare narrative and expository writing styles.",
+      "domain": "writing",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9590840383712893
+    },
+    {
+      "text": "Contrast B2B and B2C marketing strategies.",
+      "domain": "marketing",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9578026632791434
+    },
+    {
+      "text": "What is the difference between viruses and bacteria?",
+      "domain": "health",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7808793455884548
+    },
+    {
+      "text": "Compare formative versus summative assessments.",
+      "domain": "education",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9573849401513814
+    },
+    {
+      "text": "Contrast coaching and mentoring in leadership.",
+      "domain": "leadership",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9509741858514902
+    },
+    {
+      "text": "Compare streaming services Hulu and Netflix for documentaries.",
+      "domain": "media",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9508541356985956
+    },
+    {
+      "text": "What is the difference between meditation and visualization?",
+      "domain": "wellness",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7700738323573122
+    },
+    {
+      "text": "Compare urban and rural community development challenges.",
+      "domain": "sociology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9544559734423099
+    },
+    {
+      "text": "Contrast cloud and on-premise data storage.",
+      "domain": "technology",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 1.0,
+      "reward": 0.9650063387665718
+    },
+    {
+      "text": "What is the difference between active and passive voice?",
+      "domain": "grammar",
+      "expected": "comparison",
+      "predicted": "comparison",
+      "confidence": 0.36083998035460724,
+      "reward": 0.7628701568698837
+    },
+    {
+      "text": "Brainstorm creative ways to teach fractions to kids.",
+      "domain": "education",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9548659206503176
+    },
+    {
+      "text": "Explore ideas for mindful evening rituals.",
+      "domain": "wellness",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9637879500533415
+    },
+    {
+      "text": "Provide inspiration for science fair experiments.",
+      "domain": "science",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9604179064994216
+    },
+    {
+      "text": "Share exploration prompts for journaling about gratitude.",
+      "domain": "personal_development",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 0.3892955695512082,
+      "reward": 0.7830641466088811
+    },
+    {
+      "text": "Suggest ideas for a community art project.",
+      "domain": "arts",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9546507187191906
+    },
+    {
+      "text": "Explore possible themes for a dystopian novel.",
+      "domain": "writing",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9593410086761862
+    },
+    {
+      "text": "Brainstorm activities for a leadership retreat.",
+      "domain": "leadership",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9532020678963877
+    },
+    {
+      "text": "Offer creative ideas for eco-friendly packaging.",
+      "domain": "business",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9485354954450436
+    },
+    {
+      "text": "Explore discussion topics for a philosophy club.",
+      "domain": "philosophy",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9557391709324721
+    },
+    {
+      "text": "Generate ideas for interdisciplinary research collaborations.",
+      "domain": "research",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9622404541888726
+    },
+    {
+      "text": "Suggest exploration prompts for travel blogging.",
+      "domain": "travel",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 0.39518801571998935,
+      "reward": 0.778343191623787
+    },
+    {
+      "text": "Brainstorm conversation starters for networking events.",
+      "domain": "career",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9640197442431357
+    },
+    {
+      "text": "Explore concepts for a mindfulness workshop.",
+      "domain": "wellness",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9665446841636147
+    },
+    {
+      "text": "Provide ideas for interactive museum exhibits.",
+      "domain": "culture",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9480589896466858
+    },
+    {
+      "text": "Brainstorm themes for a poetry slam night.",
+      "domain": "arts",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9593410086761862
+    },
+    {
+      "text": "Explore reflective prompts for coaching sessions.",
+      "domain": "coaching",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9598742720978819
+    },
+    {
+      "text": "Suggest creative ideas for STEM outreach programs.",
+      "domain": "education",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9629428464199005
+    },
+    {
+      "text": "Provide exploration topics for personal finance journaling.",
+      "domain": "finance",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 0.38440106468562396,
+      "reward": 0.7737508467058505
+    },
+    {
+      "text": "Brainstorm ways to inspire middle school debate teams.",
+      "domain": "education",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9479196184843914
+    },
+    {
+      "text": "Explore activities that spark curiosity in astronomy clubs.",
+      "domain": "astronomy",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9533440039175567
+    },
+    {
+      "text": "Suggest ideas for community health awareness campaigns.",
+      "domain": "health",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9579626416210496
+    },
+    {
+      "text": "Brainstorm reflection prompts for career changers.",
+      "domain": "career",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9706918998832201
+    },
+    {
+      "text": "Explore concepts for sustainable fashion projects.",
+      "domain": "fashion",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.946517749140698
+    },
+    {
+      "text": "Provide ideas for team-building icebreakers.",
+      "domain": "teamwork",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9624663406215427
+    },
+    {
+      "text": "Brainstorm mindfulness exercises for stress relief.",
+      "domain": "wellness",
+      "expected": "exploration",
+      "predicted": "exploration",
+      "confidence": 1.0,
+      "reward": 0.9660681783652569
+    }
+  ]
+}

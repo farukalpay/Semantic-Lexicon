@@ -5,10 +5,12 @@ repo_url: https://github.com/example/semantic-lexicon
 nav:
   - Home: index.md
   - User Guide: user-guide.md
+  - Analysis Appendix: analysis.md
   - API Reference:
       - Configuration: api/config.md
       - Model: api/model.md
       - CLI: api/cli.md
+      - Algorithms: api/algorithms.md
 theme:
   name: material
 markdown_extensions:
