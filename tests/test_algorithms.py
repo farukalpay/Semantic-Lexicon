@@ -160,3 +160,33 @@ def test_topic_pure_retriever_reports_high_purity(topic_dataset: TopicDataset) -
         purity = retriever.purity_at_k(query_id, k=2)
         assert purity == pytest.approx(1.0)
     assert retriever.gate_sparsity <= 1.0
+
+
+def _summarise_retrieval(
+    retriever: TopicPureRetriever,
+    dataset: TopicDataset,
+    k: int,
+) -> tuple[list[tuple[str, ...]], dict[str, float], float]:
+    topk_sets: list[tuple[str, ...]] = []
+    purities: dict[str, float] = {}
+    for query_id in dataset["query_ids"]:
+        topk = retriever.top_k_for_query_id(query_id, k=k)
+        topk_sets.append(tuple(concept_id for concept_id, _ in topk))
+        purities[query_id] = retriever.purity_at_k(query_id, k=k)
+    return topk_sets, purities, retriever.triplet_violation_rate
+
+
+def test_topic_pure_retriever_is_deterministic(topic_dataset: TopicDataset) -> None:
+    retriever_first = _train_topic_retriever(topic_dataset)
+    retriever_second = _train_topic_retriever(topic_dataset)
+
+    topk_first, purities_first, violation_first = _summarise_retrieval(
+        retriever_first, topic_dataset, k=2
+    )
+    topk_second, purities_second, violation_second = _summarise_retrieval(
+        retriever_second, topic_dataset, k=2
+    )
+
+    assert topk_first == topk_second
+    assert purities_first == purities_second
+    assert violation_first == pytest.approx(violation_second, abs=0.0)

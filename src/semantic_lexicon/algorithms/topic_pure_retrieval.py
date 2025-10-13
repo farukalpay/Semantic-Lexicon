@@ -26,10 +26,18 @@ tests are modest, so a straightforward numpy-based optimiser is sufficient.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections import abc
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, TypeAlias, cast
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+FloatArray: TypeAlias = "NDArray[np.float64]"
+IntArray: TypeAlias = "NDArray[np.int_]"
+AnyArray: TypeAlias = "NDArray[np.generic]"
 
 EPSILON = 1e-8
 
@@ -42,23 +50,23 @@ def _ensure_rng(seed: int | np.random.Generator | None) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
-def _normalise_rows(matrix: np.ndarray) -> np.ndarray:
+def _normalise_rows(matrix: FloatArray) -> FloatArray:
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     norms = np.maximum(norms, EPSILON)
     return matrix / norms
 
 
-def _symmetric_outer(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+def _symmetric_outer(u: FloatArray, v: FloatArray) -> FloatArray:
     return 0.5 * (np.outer(u, v) + np.outer(v, u))
 
 
-def _project_to_psd(matrix: np.ndarray) -> np.ndarray:
+def _project_to_psd(matrix: FloatArray) -> FloatArray:
     eigvals, eigvecs = np.linalg.eigh(matrix)
     eigvals = np.clip(eigvals, 0.0, None)
     return (eigvecs * eigvals) @ eigvecs.T
 
 
-def _compute_covariance(matrix: np.ndarray) -> np.ndarray:
+def _compute_covariance(matrix: FloatArray) -> FloatArray:
     if matrix.shape[0] <= 1:
         return np.eye(matrix.shape[1])
     centered = matrix - np.mean(matrix, axis=0, keepdims=True)
@@ -67,20 +75,20 @@ def _compute_covariance(matrix: np.ndarray) -> np.ndarray:
 
 
 def _kmeans(
-    matrix: np.ndarray,
+    matrix: FloatArray,
     num_clusters: int,
     rng: np.random.Generator,
     max_iter: int = 100,
     tol: float = 1e-4,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[IntArray, FloatArray]:
     if num_clusters <= 0:
         raise ValueError("num_clusters must be positive")
     num_clusters = min(num_clusters, matrix.shape[0])
     if num_clusters == 0:
         raise ValueError("matrix must contain at least one vector")
     indices = rng.choice(matrix.shape[0], size=num_clusters, replace=False)
-    centroids = matrix[indices].copy()
-    labels = np.zeros(matrix.shape[0], dtype=int)
+    centroids: FloatArray = matrix[indices].copy()
+    labels: IntArray = np.zeros(matrix.shape[0], dtype=int)
     for _ in range(max_iter):
         diff = matrix[:, None, :] - centroids[None, :, :]
         distances = np.linalg.norm(diff, axis=2)
@@ -140,17 +148,17 @@ class TopicPureRetriever:
         self.rng = _ensure_rng(config.random_state)
         self.concept_ids_: tuple[str, ...] | None = None
         self.query_ids_: tuple[str, ...] | None = None
-        self.mean_: np.ndarray | None = None
-        self.whitener_: np.ndarray | None = None
-        self.persona_vector_: np.ndarray | None = None
-        self.concept_embeddings_: np.ndarray | None = None
-        self.query_embeddings_: np.ndarray | None = None
-        self.query_representations_: np.ndarray | None = None
-        self.M_: np.ndarray | None = None
-        self.gate_: np.ndarray | None = None
+        self.mean_: FloatArray | None = None
+        self.whitener_: FloatArray | None = None
+        self.persona_vector_: FloatArray | None = None
+        self.concept_embeddings_: FloatArray | None = None
+        self.query_embeddings_: FloatArray | None = None
+        self.query_representations_: FloatArray | None = None
+        self.M_: FloatArray | None = None
+        self.gate_: FloatArray | None = None
         self.history_: list[TrainingStats] = []
-        self.concept_labels_: np.ndarray | None = None
-        self.query_labels_: np.ndarray | None = None
+        self.concept_labels_: AnyArray | None = None
+        self.query_labels_: AnyArray | None = None
         self._concept_index: dict[str, int] = {}
         self._query_index: dict[str, int] = {}
         self.pre_whiten_condition_number_: float | None = None
@@ -161,18 +169,20 @@ class TopicPureRetriever:
     # ------------------------------------------------------------------
     def fit(
         self,
-        concept_ids: Sequence[str],
-        concept_embeddings: np.ndarray,
-        query_ids: Sequence[str],
-        query_embeddings: np.ndarray,
-        concept_labels: Sequence[str] | None = None,
-        query_labels: Sequence[str] | None = None,
-        persona: np.ndarray | None = None,
+        concept_ids: abc.Sequence[str],
+        concept_embeddings: FloatArray,
+        query_ids: abc.Sequence[str],
+        query_embeddings: FloatArray,
+        concept_labels: abc.Sequence[str] | None = None,
+        query_labels: abc.Sequence[str] | None = None,
+        persona: FloatArray | None = None,
     ) -> TopicPureRetriever:
         """Fit the metric and gate using the provided embeddings."""
 
-        concept_embeddings = np.asarray(concept_embeddings, dtype=float)
-        query_embeddings = np.asarray(query_embeddings, dtype=float)
+        concept_embeddings = cast("FloatArray", np.asarray(concept_embeddings, dtype=float))
+        query_embeddings = cast("FloatArray", np.asarray(query_embeddings, dtype=float))
+        if not isinstance(concept_ids, abc.Sequence) or not isinstance(query_ids, abc.Sequence):
+            raise TypeError("concept_ids and query_ids must be sequences")
         if concept_embeddings.ndim != 2 or query_embeddings.ndim != 2:
             raise ValueError("Embeddings must be two-dimensional arrays")
         if concept_embeddings.shape[1] != query_embeddings.shape[1]:
@@ -187,11 +197,19 @@ class TopicPureRetriever:
         self._concept_index = {cid: i for i, cid in enumerate(self.concept_ids_)}
         self._query_index = {qid: i for i, qid in enumerate(self.query_ids_)}
 
-        self._preprocess_embeddings(concept_embeddings, query_embeddings, persona)
+        persona_array: FloatArray | None
+        if persona is None:
+            persona_array = None
+        else:
+            persona_array = cast("FloatArray", np.asarray(persona, dtype=float))
+
+        self._preprocess_embeddings(concept_embeddings, query_embeddings, persona_array)
 
         if concept_labels is None:
             concept_labels_array, centroids = self._cluster_concepts()
         else:
+            if not isinstance(concept_labels, (abc.Sequence, np.ndarray)):
+                raise TypeError("concept_labels must be a sequence when provided")
             concept_labels_array = np.asarray(concept_labels)
             centroids = self._cluster_centroids_from_labels(concept_labels_array)
         if concept_labels_array.shape[0] != len(self.concept_ids_):
@@ -201,6 +219,8 @@ class TopicPureRetriever:
         if query_labels is None:
             self.query_labels_ = self._assign_query_labels(centroids)
         else:
+            if not isinstance(query_labels, (abc.Sequence, np.ndarray)):
+                raise TypeError("query_labels must be a sequence when provided")
             query_labels_array = np.asarray(query_labels)
             if query_labels_array.shape[0] != len(self.query_ids_):
                 raise ValueError("Query labels must match the number of queries")
@@ -216,6 +236,10 @@ class TopicPureRetriever:
         k: int | None = None,
     ) -> list[tuple[str, float]]:
         self._validate_fitted()
+        if self.query_representations_ is None:
+            raise RuntimeError("Query representations missing")
+        if self.concept_ids_ is None:
+            raise RuntimeError("Concept identifiers missing")
         if query_id not in self._query_index:
             raise KeyError(f"Unknown query id: {query_id}")
         idx = self._query_index[query_id]
@@ -228,18 +252,25 @@ class TopicPureRetriever:
 
     def top_k(
         self,
-        query_embedding: np.ndarray,
-        persona: np.ndarray | None = None,
+        query_embedding: FloatArray,
+        persona: FloatArray | None = None,
         k: int | None = None,
     ) -> list[tuple[str, float]]:
         """Retrieve top-k concepts for an arbitrary query embedding."""
 
         self._validate_fitted()
+        if self.concept_ids_ is None:
+            raise RuntimeError("Concept identifiers missing")
         query_embedding = np.asarray(query_embedding, dtype=float)
         if query_embedding.ndim != 1:
             raise ValueError("query_embedding must be a one-dimensional vector")
         z = self._apply_whitening(query_embedding[None, :])[0]
-        persona_vector = self.persona_vector_ if persona is None else self._whiten_persona(persona)
+        if persona is None:
+            if self.persona_vector_ is None:
+                raise RuntimeError("Persona vector missing")
+            persona_vector = self.persona_vector_
+        else:
+            persona_vector = self._whiten_persona(persona)
         representation = self._build_representation(z, persona_vector)
         scores = self._score_representation(representation)
         order = np.argsort(scores)[::-1]
@@ -251,6 +282,8 @@ class TopicPureRetriever:
         """Compute the topic purity diagnostic for ``query_id``."""
 
         self._validate_fitted()
+        if self.concept_ids_ is None:
+            raise RuntimeError("Concept identifiers missing")
         if self.query_labels_ is None or self.concept_labels_ is None:
             raise ValueError("Purity requires labels or clustered assignments")
         top = self.top_k_for_query_id(query_id, k)
@@ -265,6 +298,8 @@ class TopicPureRetriever:
     @property
     def gate_sparsity(self) -> float:
         self._validate_fitted()
+        if self.gate_ is None:
+            raise RuntimeError("Gate vector missing")
         non_zero = np.count_nonzero(self.gate_ > 1e-6)
         return non_zero / float(self.gate_.size)
 
@@ -278,10 +313,19 @@ class TopicPureRetriever:
     # Internal helpers
     # ------------------------------------------------------------------
     def _validate_fitted(self) -> None:
-        if self.concept_embeddings_ is None or self.M_ is None or self.gate_ is None:
+        if (
+            self.concept_ids_ is None
+            or self.query_ids_ is None
+            or self.concept_embeddings_ is None
+            or self.query_representations_ is None
+            or self.M_ is None
+            or self.gate_ is None
+        ):
             raise RuntimeError("TopicPureRetriever must be fitted before use")
 
     def _resolve_k(self, k: int | None) -> int:
+        if self.concept_ids_ is None:
+            raise RuntimeError("Concept identifiers missing")
         size = len(self.concept_ids_)
         target = self.config.k if k is None else k
         if target <= 0:
@@ -290,9 +334,9 @@ class TopicPureRetriever:
 
     def _preprocess_embeddings(
         self,
-        concept_embeddings: np.ndarray,
-        query_embeddings: np.ndarray,
-        persona: np.ndarray | None,
+        concept_embeddings: FloatArray,
+        query_embeddings: FloatArray,
+        persona: FloatArray | None,
     ) -> None:
         self.mean_ = np.mean(concept_embeddings, axis=0)
         cov = _compute_covariance(concept_embeddings)
@@ -315,22 +359,28 @@ class TopicPureRetriever:
         self.post_whiten_condition_number_ = float(np.linalg.cond(cov_after))
 
         if persona is None:
-            self.persona_vector_ = np.zeros(concept_embeddings.shape[1])
+            self.persona_vector_ = cast(
+                "FloatArray", np.zeros(concept_embeddings.shape[1], dtype=float)
+            )
         else:
             self.persona_vector_ = self._whiten_persona(persona)
 
-    def _apply_whitening(self, matrix: np.ndarray) -> np.ndarray:
+    def _apply_whitening(self, matrix: FloatArray) -> FloatArray:
+        if self.mean_ is None or self.whitener_ is None:
+            raise RuntimeError("Whitening parameters missing")
         centered = matrix - self.mean_
         return centered @ self.whitener_.T
 
-    def _whiten_persona(self, persona: np.ndarray) -> np.ndarray:
-        persona = np.asarray(persona, dtype=float)
+    def _whiten_persona(self, persona: FloatArray) -> FloatArray:
+        persona = cast("FloatArray", np.asarray(persona, dtype=float))
         if persona.ndim != 1:
             raise ValueError("persona vector must be one-dimensional")
+        if self.mean_ is None or self.whitener_ is None:
+            raise RuntimeError("Whitening parameters missing")
         whitened = (persona - self.mean_) @ self.whitener_.T
         return whitened
 
-    def _cluster_concepts(self) -> tuple[np.ndarray, np.ndarray]:
+    def _cluster_concepts(self) -> tuple[IntArray, FloatArray]:
         if self.concept_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before clustering")
         num_clusters = self.config.cluster_count
@@ -339,17 +389,17 @@ class TopicPureRetriever:
         labels, centroids = _kmeans(self.concept_embeddings_, num_clusters, self.rng)
         return labels, centroids
 
-    def _cluster_centroids_from_labels(self, labels: np.ndarray) -> np.ndarray:
+    def _cluster_centroids_from_labels(self, labels: AnyArray) -> FloatArray:
         if self.concept_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before clustering")
         label_set = np.unique(labels)
-        centroids = []
+        centroids: list[FloatArray] = []
         for label in label_set:
             members = self.concept_embeddings_[labels == label]
             centroids.append(np.mean(members, axis=0))
         return np.vstack(centroids)
 
-    def _assign_query_labels(self, centroids: np.ndarray) -> np.ndarray:
+    def _assign_query_labels(self, centroids: FloatArray) -> IntArray:
         if self.query_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before assigning labels")
         diff = self.query_embeddings_[:, None, :] - centroids[None, :, :]
@@ -376,6 +426,8 @@ class TopicPureRetriever:
     def _optimise(self) -> None:
         if self.concept_embeddings_ is None or self.query_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before optimisation")
+        if self.persona_vector_ is None:
+            raise RuntimeError("Persona vector missing")
         d = self.concept_embeddings_.shape[1]
         self.M_ = np.eye(d)
         self.gate_ = np.ones(d)
@@ -440,15 +492,21 @@ class TopicPureRetriever:
             raise RuntimeError("Query embeddings missing")
         self.query_representations_ = self._build_representations(self.query_embeddings_)
 
-    def _build_representations(self, base_vectors: np.ndarray) -> np.ndarray:
+    def _build_representations(self, base_vectors: FloatArray) -> FloatArray:
+        if self.persona_vector_ is None or self.gate_ is None:
+            raise RuntimeError("Persona or gate parameters missing")
         persona = self.persona_vector_
         representations = (base_vectors + persona) * self.gate_
         return representations
 
-    def _build_representation(self, base_vector: np.ndarray, persona: np.ndarray) -> np.ndarray:
+    def _build_representation(self, base_vector: FloatArray, persona: FloatArray) -> FloatArray:
+        if self.gate_ is None:
+            raise RuntimeError("Gate vector missing")
         return (base_vector + persona) * self.gate_
 
-    def _score_representation(self, representation: np.ndarray) -> np.ndarray:
+    def _score_representation(self, representation: FloatArray) -> FloatArray:
+        if self.M_ is None or self.concept_embeddings_ is None:
+            raise RuntimeError("Scoring parameters missing")
         return representation @ self.M_ @ self.concept_embeddings_.T
 
 
