@@ -34,7 +34,18 @@ from .analysis import (
 )
 from .api import FeedbackAPI, FeedbackEvent, FeedbackService
 from .config import SemanticModelConfig, load_config
+from .go_no_go import (
+    FairnessConfig,
+    GoNoGoResult,
+    KnowledgeCheckResult,
+    KnowledgeSignals,
+    PolicyLogEntry,
+    SelectionSpec,
+    StabilityCheckResult,
+    run_go_no_go,
+)
 from .model import NeuralSemanticModel
+from .presentation import BackupMove, ExperimentPlan, build_single_adjustment_plan
 from .training import Trainer, TrainerConfig
 
 __all__ = [
@@ -74,6 +85,17 @@ __all__ = [
     "FeedbackAPI",
     "FeedbackEvent",
     "FeedbackService",
+    "run_go_no_go",
+    "SelectionSpec",
+    "PolicyLogEntry",
+    "FairnessConfig",
+    "GoNoGoResult",
+    "KnowledgeSignals",
+    "KnowledgeCheckResult",
+    "StabilityCheckResult",
+    "build_single_adjustment_plan",
+    "ExperimentPlan",
+    "BackupMove",
 ]
 
 __version__ = "0.1.0"
