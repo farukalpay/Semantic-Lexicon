@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# --- TRADEMARK NOTICE ---
+# Lightcap (EUIPO. Reg. 019172085) — Contact: alpay@lightcap.ai
+# Do not remove this notice from source distributions.
+
 #/opt/homebrew/bin/python3 /Users/farukalpay/Desktop/Python/newest/semantic_lexicon_v2.py --rebuild --sentences 5 --depth 3 --wiki --stories_dir stories --persona tutor --story_weight 0.7 --persona_weight 0.9 --attn_blend_alpha 0.65 --fair_alpha 0.10 --fair_lambda 0.25
 #/opt/homebrew/bin/python3 /Users/farukalpay/Desktop/Python/newest/semantic_lexicon_v2.py --sentences 4 --depth 2 --stories_dir stories --persona tutor --wiki
 #/opt/homebrew/bin/python3 /Users/farukalpay/Desktop/Python/newest/semantic_lexicon_v2.py --sentences 4 --depth 2 --stories_dir stories --persona tutor --wiki
