@@ -24,9 +24,7 @@ def compute_confusion_correction(
     return np.asarray(t, dtype=np.float64)
 
 
-def confusion_correction_residual(
-    confusion: np.ndarray, transform: np.ndarray
-) -> float:
+def confusion_correction_residual(confusion: np.ndarray, transform: np.ndarray) -> float:
     """Return the Frobenius norm of ``C T - I`` to quantify residual error."""
 
     c = np.asarray(confusion, dtype=np.float64)

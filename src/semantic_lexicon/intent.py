@@ -384,18 +384,14 @@ class IntentClassifier:
         self._reward_history = list(zip(history, realised))
         self._recompute_reward_weights()
 
-    def _apply_systematic_correction(
-        self, probs: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def _apply_systematic_correction(self, probs: NDArray[np.float64]) -> NDArray[np.float64]:
         if self._correction_matrix is None:
             return probs
         correction = np.asarray(self._correction_matrix, dtype=np.float64)
         corrected = correction @ probs
         return np.clip(corrected, 0.0, None)
 
-    def _apply_dirichlet_calibration(
-        self, probs: NDArray[np.float64]
-    ) -> NDArray[np.float64]:
+    def _apply_dirichlet_calibration(self, probs: NDArray[np.float64]) -> NDArray[np.float64]:
         if self._calibrator is None:
             return probs
         calibrated = self._posterior_mix(probs)
@@ -493,9 +489,7 @@ class IntentClassifier:
             bump("definition", 1.1)
         return np.asarray(bias, dtype=np.float64) if changed else None
 
-    def _fast_path_distribution(
-        self, features: dict[str, float]
-    ) -> Optional[NDArray[np.float64]]:
+    def _fast_path_distribution(self, features: dict[str, float]) -> Optional[NDArray[np.float64]]:
         if not features:
             return None
         mapping = {

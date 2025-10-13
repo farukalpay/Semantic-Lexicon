@@ -127,5 +127,3 @@ def _coerce_numeric(value: object, default: float) -> float:
     if value is None:
         return default
     raise TypeError(f"Numeric field must be float-compatible, received {type(value)!r}")
-
-
