@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 
-def compute_confusion_correction(confusion: np.ndarray, damping: float = 1e-6) -> np.ndarray:
+def compute_confusion_correction(
+    confusion: np.ndarray, damping: float = 1e-6
+) -> NDArray[np.float64]:
     """Return the transformation matrix that minimises ``||C T - I||_F``.
 
     The solution is the Moore-Penrose pseudoinverse ``C^+``; we stabilise the
@@ -16,12 +19,14 @@ def compute_confusion_correction(confusion: np.ndarray, damping: float = 1e-6) -
     if c.ndim != 2 or c.shape[0] != c.shape[1]:
         raise ValueError("confusion must be a square matrix")
     u, s, vt = np.linalg.svd(c, full_matrices=False)
-    s_inv = np.array([1.0 / (val + damping) for val in s])
+    s_inv = 1.0 / (s + damping)
     t = vt.T @ np.diag(s_inv) @ u.T
-    return t
+    return np.asarray(t, dtype=np.float64)
 
 
-def confusion_correction_residual(confusion: np.ndarray, transform: np.ndarray) -> float:
+def confusion_correction_residual(
+    confusion: np.ndarray, transform: np.ndarray
+) -> float:
     """Return the Frobenius norm of ``C T - I`` to quantify residual error."""
 
     c = np.asarray(confusion, dtype=np.float64)

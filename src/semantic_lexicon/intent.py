@@ -46,19 +46,19 @@ class IntentClassifier:
         self.label_to_index: dict[str, int] = {}
         self.index_to_label: dict[int, str] = {}
         self.vocabulary: dict[str, int] = {}
-        self.weights: Optional[NDArray[np.float64]] = None
-        self._weights_for_inference: Optional[np.ndarray] = None
+        self.weights: Optional[np.ndarray] = None
+        self._weights_for_inference: Optional[NDArray[np.float64]] = None
         self._calibrator: Optional[DirichletCalibrator] = None
-        self._correction_matrix: Optional[np.ndarray] = None
-        self._posterior_predictive: Optional[np.ndarray] = None
-        self._reward_weights: Optional[np.ndarray] = None
+        self._correction_matrix: Optional[NDArray[np.float64]] = None
+        self._posterior_predictive: Optional[NDArray[np.float64]] = None
+        self._reward_weights: Optional[NDArray[np.float64]] = None
         self._reward_history: list[tuple[RewardComponents, float]] = []
         self._reward_prior = np.array([0.45, 0.25, 0.15, 0.15], dtype=np.float64)
-        self._intent_centroids: dict[int, np.ndarray] = {}
+        self._intent_centroids: dict[int, NDArray[np.float64]] = {}
         self._ece_before: Optional[float] = None
         self._ece_after: Optional[float] = None
         self._epoch_accuracy: list[float] = []
-        self._conditional_accuracy: Optional[np.ndarray] = None
+        self._conditional_accuracy: Optional[NDArray[np.float64]] = None
         self._feature_indices: dict[str, int] = {}
         self.optimized = bool(self.config.optimized)
         self.cache_size = max(int(self.config.cache_size), 0)
@@ -191,33 +191,36 @@ class IntentClassifier:
         weights = self._weights_for_inference
         if weights is None:
             raise ValueError("Classifier has not been trained")
-        features = self._feature_activations(text) if self.optimized else None
-        fast = self._fast_path_distribution(features) if self.optimized else None
+        weights64 = np.asarray(weights, dtype=np.float64)
+        features = self._feature_activations(text)
+        fast: Optional[NDArray[np.float64]] = (
+            self._fast_path_distribution(features) if self.optimized else None
+        )
         vector: Optional[np.ndarray] = None
         used_fast = fast is not None
         if used_fast:
-            probs = fast
+            assert fast is not None  # narrow type for mypy
+            probs: NDArray[np.float64] = np.asarray(fast, dtype=np.float64)
         else:
             vector, computed_features = self._vectorise_with_features(text)
-            if features is None:
-                features = computed_features
+            features = computed_features
             if self.optimized:
                 indices = np.nonzero(vector)[0]
                 if indices.size == 0:
-                    logits = np.zeros(len(self.index_to_label), dtype=np.float32)
+                    logits = np.zeros(len(self.index_to_label), dtype=np.float64)
                 else:
-                    values = np.asarray(vector[indices], dtype=np.float32)
-                    weights_slice = np.asarray(weights[indices], dtype=np.float32)
+                    values = np.asarray(vector[indices], dtype=np.float64)
+                    weights_slice = np.asarray(weights64[indices], dtype=np.float64)
                     logits = weights_slice.T @ values
-                logits = np.asarray(logits, dtype=np.float64)
-                probs = self._softmax(logits[np.newaxis, :])[0]
+                logits64 = np.asarray(logits, dtype=np.float64)
+                probs = self._softmax(logits64[np.newaxis, :])[0]
             else:
-                logits = np.asarray(vector @ weights, dtype=np.float64)
+                logits = np.asarray(vector @ weights64, dtype=np.float64)
                 probs = self._softmax(logits[np.newaxis, :])[0]
         if not used_fast:
             probs = self._apply_systematic_correction(probs)
             probs = self._apply_dirichlet_calibration(probs)
-        probs = project_to_simplex(probs)
+        probs = project_to_simplex(np.asarray(probs, dtype=np.float64))
         if vector is None:
             similarities = np.zeros(len(self.index_to_label), dtype=float)
         else:
@@ -245,7 +248,7 @@ class IntentClassifier:
         """Return the composite reward for ``selected_intent`` on ``text``."""
 
         components = self.reward_components(text, selected_intent, optimal_intent, feedback)
-        return composite_reward(components, self.reward_weights)
+        return composite_reward(components, self.reward_weights.tolist())
 
     def reward_components(
         self,
@@ -278,7 +281,7 @@ class IntentClassifier:
         selected_intent: str,
         optimal_intent: str,
         feedback: float,
-    ) -> np.ndarray:
+    ) -> NDArray[np.float64]:
         """Update the reward weights with a new feedback observation."""
 
         components = self.reward_components(text, selected_intent, optimal_intent, feedback)
@@ -287,12 +290,12 @@ class IntentClassifier:
         return self.reward_weights
 
     @property
-    def reward_weights(self) -> np.ndarray:
+    def reward_weights(self) -> NDArray[np.float64]:
         """Return the learned composite reward weights."""
 
         if self._reward_weights is None:
-            return np.full(4, 0.25)
-        return self._reward_weights.copy()
+            return np.full(4, 0.25, dtype=np.float64)
+        return np.asarray(self._reward_weights, dtype=np.float64).copy()
 
     def set_cache_enabled(self, enabled: bool) -> None:
         """Toggle the inference cache used during vectorisation."""
@@ -332,7 +335,8 @@ class IntentClassifier:
         self._calibrator = DirichletCalibrator(alpha=[1.0] * num_labels)
         for label in labels:
             self._calibrator.update(int(label))
-        self._posterior_predictive = self._calibrator.posterior_predictive().predictive
+        posterior = self._calibrator.posterior_predictive().predictive
+        self._posterior_predictive = np.asarray(posterior, dtype=np.float64)
 
         confusion = np.zeros((num_labels, num_labels), dtype=np.float64)
         predicted_indices = np.argmax(probs, axis=1)
@@ -349,8 +353,11 @@ class IntentClassifier:
             if column.sum() == 0.0 and column_sums[0, col] > 0.0:
                 column = conditional[:, col]
             combined[:, col] = project_to_simplex(column)
-        self._correction_matrix = combined
-        self._conditional_accuracy = np.clip(np.diag(conditional), 0.0, 1.0)
+        self._correction_matrix = np.asarray(combined, dtype=np.float64)
+        self._conditional_accuracy = np.asarray(
+            np.clip(np.diag(conditional), 0.0, 1.0),
+            dtype=np.float64,
+        )
 
         corrected_probs = np.clip((self._correction_matrix @ probs.T).T, 0.0, None)
         calibrated = np.array([self._posterior_mix(row) for row in corrected_probs])
@@ -377,35 +384,43 @@ class IntentClassifier:
         self._reward_history = list(zip(history, realised))
         self._recompute_reward_weights()
 
-    def _apply_systematic_correction(self, probs: np.ndarray) -> np.ndarray:
+    def _apply_systematic_correction(
+        self, probs: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         if self._correction_matrix is None:
             return probs
-        corrected = self._correction_matrix @ probs
+        correction = np.asarray(self._correction_matrix, dtype=np.float64)
+        corrected = correction @ probs
         return np.clip(corrected, 0.0, None)
 
-    def _apply_dirichlet_calibration(self, probs: np.ndarray) -> np.ndarray:
+    def _apply_dirichlet_calibration(
+        self, probs: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         if self._calibrator is None:
             return probs
         calibrated = self._posterior_mix(probs)
         return np.clip(calibrated, 0.0, None)
 
-    def _posterior_mix(self, probs: np.ndarray) -> np.ndarray:
+    def _posterior_mix(self, probs: NDArray[np.float64]) -> NDArray[np.float64]:
         posterior = self._posterior_predictive
         adjusted = np.asarray(probs, dtype=np.float64)
         if self._conditional_accuracy is not None:
-            adjusted = project_to_simplex(np.maximum(adjusted, self._conditional_accuracy))
+            adjusted = project_to_simplex(
+                np.maximum(adjusted, np.asarray(self._conditional_accuracy, dtype=np.float64))
+            )
         if posterior is None and self._calibrator is not None:
             posterior = self._calibrator.posterior_predictive().predictive
         if posterior is None:
             return adjusted
-        weighted = adjusted * posterior
+        posterior_array = np.asarray(posterior, dtype=np.float64)
+        weighted = adjusted * posterior_array
         weighted = np.clip(weighted, 0.0, None)
         total = weighted.sum()
         if total == 0.0:
-            weighted = posterior
+            weighted = posterior_array
         else:
             weighted /= total
-        return weighted
+        return np.asarray(weighted, dtype=np.float64)
 
     def _vectorise_text(self, text: str) -> np.ndarray:
         vector, _ = self._vectorise_with_features(text)
@@ -448,11 +463,11 @@ class IntentClassifier:
             features["__feat_question_mark"] = 1.0
         return features
 
-    def _intent_bias(self, features: dict[str, float]) -> Optional[np.ndarray]:
+    def _intent_bias(self, features: dict[str, float]) -> Optional[NDArray[np.float64]]:
         if not features:
             return None
         num_labels = len(self.index_to_label)
-        bias = np.ones(num_labels, dtype=float)
+        bias = np.ones(num_labels, dtype=np.float64)
         changed = False
 
         def bump(intent: str, factor: float) -> None:
@@ -476,9 +491,11 @@ class IntentClassifier:
             bump("exploration", 1.35)
         if features.get("__feat_question_mark") and not features.get("__feat_how_to_phrase"):
             bump("definition", 1.1)
-        return bias if changed else None
+        return np.asarray(bias, dtype=np.float64) if changed else None
 
-    def _fast_path_distribution(self, features: dict[str, float]) -> Optional[np.ndarray]:
+    def _fast_path_distribution(
+        self, features: dict[str, float]
+    ) -> Optional[NDArray[np.float64]]:
         if not features:
             return None
         mapping = {
@@ -517,40 +534,43 @@ class IntentClassifier:
         if self.optimized:
             optimised_weights = np.asarray(self.weights, dtype=np.float16)
             self.weights = optimised_weights
-            self._weights_for_inference = optimised_weights.copy()
+            self._weights_for_inference = np.asarray(optimised_weights, dtype=np.float64)
         else:
             precise = np.asarray(self.weights, dtype=np.float64)
             self.weights = precise
             self._weights_for_inference = precise.copy()
 
-    def _blend_reward_weights(self, learned: np.ndarray) -> np.ndarray:
+    def _blend_reward_weights(self, learned: NDArray[np.float64]) -> NDArray[np.float64]:
         prior_weight = float(np.clip(self.config.feedback_prior_weight, 0.0, 1.0))
         candidate = project_to_simplex(
             (1.0 - prior_weight) * learned + prior_weight * self._reward_prior
         )
         if self._reward_weights is None:
-            return candidate
+            return np.asarray(candidate, dtype=np.float64)
         step = float(np.clip(self.config.feedback_step_size, 0.0, 1.0))
         updated = (1.0 - step) * self._reward_weights + step * candidate
-        return project_to_simplex(updated)
+        return project_to_simplex(np.asarray(updated, dtype=np.float64))
 
     def _recompute_reward_weights(self) -> None:
         if not self._reward_history:
             return
         components, rewards = zip(*self._reward_history)
-        learned = estimate_optimal_weights(list(components), list(rewards))
+        learned = np.asarray(
+            estimate_optimal_weights(list(components), list(rewards)),
+            dtype=np.float64,
+        )
         self._reward_weights = self._blend_reward_weights(learned)
 
     def _compute_intent_centroids(
         self, matrix: NDArray[np.float64], labels: NDArray[np.int_]
-    ) -> dict[int, np.ndarray]:
-        centroids: dict[int, np.ndarray] = {}
+    ) -> dict[int, NDArray[np.float64]]:
+        centroids: dict[int, NDArray[np.float64]] = {}
         for index in range(len(self.label_to_index)):
             mask = labels == index
             if not np.any(mask):
-                centroids[index] = np.zeros(matrix.shape[1], dtype=float)
+                centroids[index] = np.zeros(matrix.shape[1], dtype=np.float64)
                 continue
-            centroid = matrix[mask].mean(axis=0)
+            centroid = np.asarray(matrix[mask].mean(axis=0), dtype=np.float64)
             centroids[index] = centroid
         return centroids
 
