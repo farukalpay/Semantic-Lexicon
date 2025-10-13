@@ -102,23 +102,22 @@ floors, effective sample size (ESS) targets, fairness thresholds, and stability
 conditions can be encoded as convex constraints \(h_m(\theta) \le 0\). The
 augmented objective for the constrained programme is the dual Lagrangian
 \[
-\mathcal{L}(\theta, \lambda) = -f(S_\theta) + \sum_m \lambda_m \, h_m(\theta),
+\mathcal{L}(\theta, \lambda) = f(\theta) + \sum_m \lambda_m \, h_m(\theta),
 \quad \lambda_m \ge 0,
 \]
-where the reward surrogate \(f(S_\theta)\) is penalised by the residuals of the
-constraint functions. Enforcement proceeds through projected primal–dual
-updates with small steps \(\eta, \rho > 0\):
+where \(f\) denotes the scalar gate-loss surrogate we wish to minimise. The
+projected primal–dual method used in `semantic_lexicon.safety` mirrors the
+textbook iteration:
 \[
-\lambda_{m, t+1} = \big[\lambda_{m, t} + \rho\, h_m(\theta_t)\big]_+, \qquad
-\theta_{t+1} = \theta_t - \eta\, \nabla_\theta
-\mathcal{L}(\theta_t, \lambda_{t+1}).
+\theta_{t+1} = \Pi_{\Theta}\bigl(\theta_t - \eta \, \nabla_\theta \mathcal{L}(\theta_t, \lambda_t)\bigr), \qquad
+\lambda_{m, t+1} = \big[\lambda_{m, t} + \rho\, h_m(\theta_{t+1})\big]_+.
 \]
-The projection \([\cdot]_+\) ensures dual feasibility, while the coupled update
-nudges the parameters towards the feasible set whenever a constraint is
-violated. A Lyapunov function composed of the squared positive residuals and the
-dual error,
+The primal update takes a gradient descent step on the Lagrangian before
+projecting onto the feasible box \(\Theta\) (if present), while the dual update
+ascends on the constraint violation produced by the fresh primal iterate. A
+Lyapunov function composed of the squared positive residuals and the dual error,
 \[
-V_t = \tfrac{1}{2} \sum_m h_m^+(\theta_t)^2 + \tfrac{1}{2} 
+V_t = \tfrac{1}{2} \sum_m h_m^+(\theta_t)^2 + \tfrac{1}{2}
 \lVert \lambda_t - \lambda^* \rVert^2,
 \]
 monotonically decreases under these dynamics, i.e. \(V_{t+1} \le V_t\), which
@@ -126,3 +125,22 @@ guarantees that the constraint residuals converge to zero. In practice this loop
 automatically tunes the step sizes and gate parameters \(\{\eta, \tau_g, \alpha,
 \mu, \beta, \rho\}\) until each safety gate reaches zero residual, providing a
 robust template for satisfying multiple operational requirements simultaneously.
+
+## 7. Consistency Check for a Three-Proposition Logic
+
+To illustrate how the specification reacts to contradictory rule sets, consider
+the propositional system with statements \(X, Y, Z\) and axioms
+\(X \Rightarrow Y\), \(Y \Rightarrow Z\), and \(\neg Z\). A formal inference
+shows that both \(X\) and \(Y\) must be false.
+
+1. The implication \(Y \Rightarrow Z\) together with \(\neg Z\) yields
+   \(\neg Y\) by **modus tollens**: if \(Y\) were true, then so would \(Z\),
+   contradicting the axiom \(\neg Z\).
+2. The implication \(X \Rightarrow Y\) and the newly derived \(\neg Y\) again
+   give \(\neg X\) via modus tollens: a true \(X\) would force \(Y\) to be
+   true, contradicting \(\neg Y\).
+
+Consequently the only models of the axiom set assign the value “false” to both
+\(X\) and \(Y\), while \(Z\) is explicitly false. This minimal derivation uses
+standard rules of inference and doubles as a template for verifying logical
+consistency in the tooling that monitors specification documents.
