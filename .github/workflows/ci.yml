@@ -25,7 +25,9 @@ jobs:
           ruff check src tests
           ruff format --check src tests
       - name: Type check
-        run: mypy src
+        run: |
+          mypy src tests/test_algorithms.py
+          mypy --config-file mypy-strict.ini
       - name: Test
         run: pytest
       - name: Build docs

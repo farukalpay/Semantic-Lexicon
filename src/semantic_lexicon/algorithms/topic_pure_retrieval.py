@@ -22,24 +22,49 @@ The workflow is:
 
 The implementation favours clarity over raw performance—the dataset sizes used in the
 tests are modest, so a straightforward numpy-based optimiser is sufficient.
+
+Helper routines `_normalise_rows`, `_compute_covariance`, and `_project_to_psd` accept
+``float64`` inputs and always return ``float64`` arrays. Label encoders convert any
+string labels into contiguous ``int64`` identifiers so downstream metrics and
+constraints operate on a consistent numeric domain.
 """
 
 from __future__ import annotations
 
 from collections import abc
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
 if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
-FloatArray: TypeAlias = "NDArray[np.float64]"
-IntArray: TypeAlias = "NDArray[np.int_]"
-AnyArray: TypeAlias = "NDArray[np.generic]"
+    from ._typing import FloatArray, IntArray
+else:  # pragma: no cover - runtime aliases for type checkers
+    FloatArray = Any
+    IntArray = Any
 
 EPSILON = 1e-8
+
+
+def _normalise_rows(matrix: FloatArray) -> FloatArray:
+    """Return a row-normalised float64 matrix.
+
+    Parameters
+    ----------
+    matrix:
+        A two-dimensional ``float64`` array whose rows will be scaled to unit
+        length.
+
+    Returns
+    -------
+    FloatArray
+        The normalised matrix with ``float64`` dtype preserved.
+    """
+
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    norms = np.maximum(norms, EPSILON)
+    normalised = (matrix / norms).astype(np.float64, copy=False)
+    return cast("FloatArray", normalised)
 
 
 def _ensure_rng(seed: int | np.random.Generator | None) -> np.random.Generator:
@@ -50,31 +75,60 @@ def _ensure_rng(seed: int | np.random.Generator | None) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
-def _normalise_rows(matrix: FloatArray) -> FloatArray:
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms = np.maximum(norms, EPSILON)
-    normalised = matrix / norms
-    return cast("FloatArray", normalised)
-
-
 def _symmetric_outer(u: FloatArray, v: FloatArray) -> FloatArray:
+    """Compute a symmetric outer product with float64 precision."""
+
     symmetric = 0.5 * (np.outer(u, v) + np.outer(v, u))
-    return cast("FloatArray", symmetric)
+    return cast("FloatArray", symmetric.astype(np.float64, copy=False))
 
 
 def _project_to_psd(matrix: FloatArray) -> FloatArray:
+    """Project ``matrix`` onto the PSD cone while preserving ``float64`` dtype."""
+
     eigvals, eigvecs = np.linalg.eigh(matrix)
     eigvals = np.clip(eigvals, 0.0, None)
     projected = (eigvecs * eigvals) @ eigvecs.T
-    return cast("FloatArray", projected)
+    projected = 0.5 * (projected + projected.T)
+    return cast("FloatArray", projected.astype(np.float64, copy=False))
 
 
 def _compute_covariance(matrix: FloatArray) -> FloatArray:
+    """Compute the float64 covariance matrix of ``matrix`` rows."""
+
     if matrix.shape[0] <= 1:
-        return cast("FloatArray", np.eye(matrix.shape[1], dtype=float))
+        return cast("FloatArray", np.eye(matrix.shape[1], dtype=np.float64))
     centered = matrix - np.mean(matrix, axis=0, keepdims=True)
     cov = centered.T @ centered / float(matrix.shape[0])
-    return cast("FloatArray", cov)
+    return cast("FloatArray", cov.astype(np.float64, copy=False))
+
+
+def _standardise_labels(
+    labels: np.ndarray[Any, np.dtype[np.generic]],
+) -> tuple[IntArray, dict[object, int]]:
+    """Encode arbitrary labels as contiguous ``int64`` identifiers."""
+
+    flat = np.asarray(labels)
+    if flat.ndim != 1:
+        raise ValueError("Labels must be a one-dimensional array")
+    ordered_unique = list(dict.fromkeys(flat.tolist()))
+    mapping = {label: idx for idx, label in enumerate(ordered_unique)}
+    encoded = np.array([mapping[label] for label in flat.tolist()], dtype=np.int64)
+    return cast("IntArray", encoded), mapping
+
+
+def _encode_with_mapping(
+    labels: np.ndarray[Any, np.dtype[np.generic]], mapping: abc.Mapping[object, int]
+) -> IntArray:
+    """Map ``labels`` to ``int64`` ids using ``mapping``."""
+
+    flat = np.asarray(labels)
+    if flat.ndim != 1:
+        raise ValueError("Labels must be a one-dimensional array")
+    try:
+        encoded = np.array([mapping[label] for label in flat.tolist()], dtype=np.int64)
+    except KeyError as error:  # pragma: no cover - defensive for unexpected inputs
+        raise ValueError(f"Unknown label encountered: {error.args[0]!r}") from error
+    return cast("IntArray", encoded)
 
 
 def _kmeans(
@@ -90,8 +144,8 @@ def _kmeans(
     if num_clusters == 0:
         raise ValueError("matrix must contain at least one vector")
     indices = rng.choice(matrix.shape[0], size=num_clusters, replace=False)
-    centroids: FloatArray = matrix[indices].copy()
-    labels: IntArray = np.zeros(matrix.shape[0], dtype=int)
+    centroids = matrix[indices].astype(np.float64, copy=True)
+    labels = np.zeros(matrix.shape[0], dtype=np.int64)
     for _ in range(max_iter):
         diff = matrix[:, None, :] - centroids[None, :, :]
         distances = np.linalg.norm(diff, axis=2)
@@ -116,7 +170,9 @@ def _kmeans(
             members = matrix[labels == k]
             if members.size:
                 centroids[k] = np.mean(members, axis=0)
-    return labels, centroids
+    return cast("IntArray", labels.astype(np.int64, copy=False)), cast(
+        "FloatArray", centroids.astype(np.float64, copy=False)
+    )
 
 
 @dataclass(slots=True)
@@ -160,12 +216,15 @@ class TopicPureRetriever:
         self.M_: FloatArray | None = None
         self.gate_: FloatArray | None = None
         self.history_: list[TrainingStats] = []
-        self.concept_labels_: AnyArray | None = None
-        self.query_labels_: AnyArray | None = None
+        self.concept_labels_: IntArray | None = None
+        self.query_labels_: IntArray | None = None
+        self.label_mapping_: dict[object, int] | None = None
         self._concept_index: dict[str, int] = {}
         self._query_index: dict[str, int] = {}
         self.pre_whiten_condition_number_: float | None = None
         self.post_whiten_condition_number_: float | None = None
+        self.whitened_concepts_: FloatArray | None = None
+        self.whitened_queries_: FloatArray | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -182,8 +241,8 @@ class TopicPureRetriever:
     ) -> TopicPureRetriever:
         """Fit the metric and gate using the provided embeddings."""
 
-        concept_embeddings = cast("FloatArray", np.asarray(concept_embeddings, dtype=float))
-        query_embeddings = cast("FloatArray", np.asarray(query_embeddings, dtype=float))
+        concept_embeddings = cast("FloatArray", np.asarray(concept_embeddings, dtype=np.float64))
+        query_embeddings = cast("FloatArray", np.asarray(query_embeddings, dtype=np.float64))
         if not isinstance(concept_ids, abc.Sequence) or not isinstance(query_ids, abc.Sequence):
             raise TypeError("concept_ids and query_ids must be sequences")
         if concept_embeddings.ndim != 2 or query_embeddings.ndim != 2:
@@ -204,16 +263,22 @@ class TopicPureRetriever:
         if persona is None:
             persona_array = None
         else:
-            persona_array = cast("FloatArray", np.asarray(persona, dtype=float))
+            persona_array = cast("FloatArray", np.asarray(persona, dtype=np.float64))
 
         self._preprocess_embeddings(concept_embeddings, query_embeddings, persona_array)
 
         if concept_labels is None:
             concept_labels_array, centroids = self._cluster_concepts()
+            concept_labels_array = cast(
+                "IntArray", concept_labels_array.astype(np.int64, copy=False)
+            )
+            unique_labels = [int(label) for label in np.unique(concept_labels_array)]
+            self.label_mapping_ = {label: label for label in unique_labels}
         else:
             if not isinstance(concept_labels, (abc.Sequence, np.ndarray)):
                 raise TypeError("concept_labels must be a sequence when provided")
-            concept_labels_array = np.asarray(concept_labels)
+            concept_labels_array, label_mapping = _standardise_labels(np.asarray(concept_labels))
+            self.label_mapping_ = label_mapping
             centroids = self._cluster_centroids_from_labels(concept_labels_array)
         if concept_labels_array.shape[0] != len(self.concept_ids_):
             raise ValueError("Concept labels must match the number of concepts")
@@ -227,7 +292,9 @@ class TopicPureRetriever:
             query_labels_array = np.asarray(query_labels)
             if query_labels_array.shape[0] != len(self.query_ids_):
                 raise ValueError("Query labels must match the number of queries")
-            self.query_labels_ = query_labels_array
+            if self.label_mapping_ is None:
+                raise RuntimeError("Label mapping missing")
+            self.query_labels_ = _encode_with_mapping(query_labels_array, self.label_mapping_)
 
         self._optimise()
         self._refresh_query_representations()
@@ -264,7 +331,7 @@ class TopicPureRetriever:
         self._validate_fitted()
         if self.concept_ids_ is None:
             raise RuntimeError("Concept identifiers missing")
-        query_embedding = np.asarray(query_embedding, dtype=float)
+        query_embedding = np.asarray(query_embedding, dtype=np.float64)
         if query_embedding.ndim != 1:
             raise ValueError("query_embedding must be a one-dimensional vector")
         z = self._apply_whitening(query_embedding[None, :])[0]
@@ -351,7 +418,11 @@ class TopicPureRetriever:
         self.whitener_ = inv_sqrt
 
         whitened_concepts = self._apply_whitening(concept_embeddings)
+        whitened_concepts -= np.mean(whitened_concepts, axis=0, keepdims=True)
         whitened_queries = self._apply_whitening(query_embeddings)
+        whitened_queries -= np.mean(whitened_queries, axis=0, keepdims=True)
+        self.whitened_concepts_ = whitened_concepts
+        self.whitened_queries_ = whitened_queries
 
         self.concept_embeddings_ = _normalise_rows(whitened_concepts)
         self.query_embeddings_ = _normalise_rows(whitened_queries)
@@ -363,7 +434,7 @@ class TopicPureRetriever:
 
         if persona is None:
             self.persona_vector_ = cast(
-                "FloatArray", np.zeros(concept_embeddings.shape[1], dtype=float)
+                "FloatArray", np.zeros(concept_embeddings.shape[1], dtype=np.float64)
             )
         else:
             self.persona_vector_ = self._whiten_persona(persona)
@@ -372,16 +443,17 @@ class TopicPureRetriever:
         if self.mean_ is None or self.whitener_ is None:
             raise RuntimeError("Whitening parameters missing")
         centered = matrix - self.mean_
-        return centered @ self.whitener_.T
+        whitened = (centered @ self.whitener_.T).astype(np.float64, copy=False)
+        return cast("FloatArray", whitened)
 
     def _whiten_persona(self, persona: FloatArray) -> FloatArray:
-        persona = cast("FloatArray", np.asarray(persona, dtype=float))
+        persona = cast("FloatArray", np.asarray(persona, dtype=np.float64))
         if persona.ndim != 1:
             raise ValueError("persona vector must be one-dimensional")
         if self.mean_ is None or self.whitener_ is None:
             raise RuntimeError("Whitening parameters missing")
-        whitened = (persona - self.mean_) @ self.whitener_.T
-        return whitened
+        whitened = ((persona - self.mean_) @ self.whitener_.T).astype(np.float64, copy=False)
+        return cast("FloatArray", whitened)
 
     def _cluster_concepts(self) -> tuple[IntArray, FloatArray]:
         if self.concept_embeddings_ is None:
@@ -392,22 +464,26 @@ class TopicPureRetriever:
         labels, centroids = _kmeans(self.concept_embeddings_, num_clusters, self.rng)
         return labels, centroids
 
-    def _cluster_centroids_from_labels(self, labels: AnyArray) -> FloatArray:
+    def _cluster_centroids_from_labels(self, labels: IntArray) -> FloatArray:
         if self.concept_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before clustering")
-        label_set = np.unique(labels)
-        centroids: list[FloatArray] = []
-        for label in label_set:
-            members = self.concept_embeddings_[labels == label]
-            centroids.append(np.mean(members, axis=0))
-        return np.vstack(centroids)
+        if labels.size == 0:
+            raise ValueError("Cannot build centroids with no labels")
+        num_clusters = int(labels.max()) + 1
+        centroids = np.zeros((num_clusters, self.concept_embeddings_.shape[1]), dtype=np.float64)
+        for cluster in range(num_clusters):
+            members = self.concept_embeddings_[labels == cluster]
+            if members.size == 0:
+                raise ValueError(f"Label {cluster} is missing concept assignments")
+            centroids[cluster] = np.mean(members, axis=0)
+        return cast("FloatArray", centroids)
 
     def _assign_query_labels(self, centroids: FloatArray) -> IntArray:
         if self.query_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before assigning labels")
         diff = self.query_embeddings_[:, None, :] - centroids[None, :, :]
         distances = np.linalg.norm(diff, axis=2)
-        assignments = np.argmin(distances, axis=1)
+        assignments = np.argmin(distances, axis=1).astype(np.int64)
         return cast("IntArray", assignments)
 
     def _build_triplets(self) -> list[tuple[int, int, int]]:

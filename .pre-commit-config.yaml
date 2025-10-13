@@ -19,6 +19,12 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+      - id: mypy
+        name: mypy src tests/test_algorithms.py
+        entry: mypy src tests/test_algorithms.py
+        language: system
+        types: [python]
+        pass_filenames: false
       - id: mypy-strict
         name: mypy --config-file mypy-strict.ini
         entry: mypy --config-file mypy-strict.ini
