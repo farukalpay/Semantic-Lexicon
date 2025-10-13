@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from semantic_lexicon.algorithms import AnytimeEXP3, EXP3, EXP3Config
+from semantic_lexicon.algorithms import EXP3, AnytimeEXP3, EXP3Config
 
 
 def test_exp3_initialises_uniform_probabilities() -> None:
@@ -46,7 +46,7 @@ def test_anytime_exp3_doubles_epoch_horizon() -> None:
     horizons = []
     for _ in range(4):
         horizons.append(agent.epoch_horizon)
-        arm = agent.select_arm()
+        agent.select_arm()
         agent.update(0.0)
     assert horizons == [1, 2, 2, 4]
 

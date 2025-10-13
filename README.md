@@ -165,7 +165,7 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
   Intent bandit walkthrough:
   Prompt: Clarify when to use breadth-first search
-  Selected intent: definition (reward=0.33)
+  Selected intent: how_to (reward=0.33)
   Response: From a balanced tutor perspective, let's look at Clarify when to use breadth-first search. This ties closely to the 'definition' intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion.
 
   Prompt: How should I start researching renewable energy?
@@ -173,7 +173,7 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
   Response: From a balanced tutor perspective, let's look at How should I start researching renewable energy? This ties closely to the 'how_to' intent I detected. Consider journaling about: Public Speaking (Plan), Practice Routine (Practice), Feedback Loops (Reflect). Try to plan Public Speaking, practice Practice Routine, and reflect Feedback Loops.
 
   Prompt: Compare supervised and unsupervised learning
-  Selected intent: how_to (reward=0.24)
+  Selected intent: comparison (reward=0.55)
   Response: From a balanced tutor perspective, let's look at Compare supervised and unsupervised learning. This ties closely to the 'definition' intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error. Related concepts worth exploring: artificial intelligence, statistics, practice.
 
   Prompt: Offer reflective prompts for creative writing

@@ -6,6 +6,8 @@ selection.  Rewards are simulated using the classifier's posterior
 probabilities so the example can run without an external feedback loop.
 """
 
+import numpy as np
+
 from semantic_lexicon import AnytimeEXP3, NeuralSemanticModel, SemanticModelConfig
 from semantic_lexicon.training import Trainer, TrainerConfig
 
@@ -21,7 +23,7 @@ def run_intent_bandit(model: NeuralSemanticModel) -> None:
     """Showcase EXP3-driven intent selection for a small prompt batch."""
 
     intents = [label for _, label in sorted(model.intent_classifier.index_to_label.items())]
-    bandit = AnytimeEXP3(num_arms=len(intents))
+    bandit = AnytimeEXP3(num_arms=len(intents), rng=np.random.default_rng(7))
     prompts = [
         "Clarify when to use breadth-first search",
         "How should I start researching renewable energy?",

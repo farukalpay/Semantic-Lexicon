@@ -1,6 +1,6 @@
 """Semantic Lexicon package."""
 
-from .algorithms import AnytimeEXP3, EXP3, EXP3Config
+from .algorithms import EXP3, AnytimeEXP3, EXP3Config
 from .config import SemanticModelConfig, load_config
 from .model import NeuralSemanticModel
 from .training import Trainer, TrainerConfig

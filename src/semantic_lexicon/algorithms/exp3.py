@@ -8,6 +8,7 @@ selection setting described in the project documentation where two
 personality "styles" compete, but the code supports an arbitrary number
 of arms.
 """
+
 from __future__ import annotations
 
 import math
