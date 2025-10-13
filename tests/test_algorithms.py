@@ -13,6 +13,8 @@ from semantic_lexicon.algorithms import (
     TopicPureRetriever,
 )
 
+TopicDataset = dict[str, np.ndarray | list[str]]
+
 
 def test_exp3_initialises_uniform_probabilities() -> None:
     config = EXP3Config(num_arms=2, horizon=8, rng=np.random.default_rng(0))
@@ -70,7 +72,7 @@ def test_anytime_exp3_resets_distribution_between_epochs() -> None:
 
 
 @pytest.fixture
-def topic_dataset() -> dict[str, np.ndarray | list[str]]:
+def topic_dataset() -> TopicDataset:
     concept_ids = [f"c{i}" for i in range(6)]
     query_ids = [f"q{i}" for i in range(4)]
     concept_embeddings = np.array(
@@ -105,7 +107,7 @@ def topic_dataset() -> dict[str, np.ndarray | list[str]]:
     }
 
 
-def _train_topic_retriever(dataset: dict[str, np.ndarray | list[str]]) -> TopicPureRetriever:
+def _train_topic_retriever(dataset: TopicDataset) -> TopicPureRetriever:
     config = TopicPureRetrievalConfig(
         k=2,
         margin=0.4,
@@ -128,7 +130,7 @@ def _train_topic_retriever(dataset: dict[str, np.ndarray | list[str]]) -> TopicP
     return retriever
 
 
-def test_topic_pure_retriever_aligns_hits_with_topic(topic_dataset: dict[str, np.ndarray | list[str]]) -> None:
+def test_topic_pure_retriever_aligns_hits_with_topic(topic_dataset: TopicDataset) -> None:
     retriever = _train_topic_retriever(topic_dataset)
     concept_labels = topic_dataset["concept_labels"]
     query_labels = topic_dataset["query_labels"]
@@ -141,7 +143,7 @@ def test_topic_pure_retriever_aligns_hits_with_topic(topic_dataset: dict[str, np
     assert retriever.triplet_violation_rate < 0.2
 
 
-def test_topic_pure_retriever_normalises_embeddings(topic_dataset: dict[str, np.ndarray | list[str]]) -> None:
+def test_topic_pure_retriever_normalises_embeddings(topic_dataset: TopicDataset) -> None:
     retriever = _train_topic_retriever(topic_dataset)
     concept_norms = np.linalg.norm(retriever.concept_embeddings_, axis=1)
     query_norms = np.linalg.norm(retriever.query_embeddings_, axis=1)
@@ -152,7 +154,7 @@ def test_topic_pure_retriever_normalises_embeddings(topic_dataset: dict[str, np.
     assert np.all((retriever.gate_ >= -1e-8) & (retriever.gate_ <= 1.0 + 1e-8))
 
 
-def test_topic_pure_retriever_reports_high_purity(topic_dataset: dict[str, np.ndarray | list[str]]) -> None:
+def test_topic_pure_retriever_reports_high_purity(topic_dataset: TopicDataset) -> None:
     retriever = _train_topic_retriever(topic_dataset)
     for query_id in topic_dataset["query_ids"]:
         purity = retriever.purity_at_k(query_id, k=2)

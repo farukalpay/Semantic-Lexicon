@@ -26,8 +26,8 @@ tests are modest, so a straightforward numpy-based optimiser is sufficient.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -72,7 +72,7 @@ def _kmeans(
     rng: np.random.Generator,
     max_iter: int = 100,
     tol: float = 1e-4,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     if num_clusters <= 0:
         raise ValueError("num_clusters must be positive")
     num_clusters = min(num_clusters, matrix.shape[0])
@@ -82,7 +82,8 @@ def _kmeans(
     centroids = matrix[indices].copy()
     labels = np.zeros(matrix.shape[0], dtype=int)
     for _ in range(max_iter):
-        distances = np.linalg.norm(matrix[:, None, :] - centroids[None, :, :], axis=2)
+        diff = matrix[:, None, :] - centroids[None, :, :]
+        distances = np.linalg.norm(diff, axis=2)
         new_labels = np.argmin(distances, axis=1)
         if np.all(new_labels == labels):
             break
@@ -118,7 +119,7 @@ class TopicPureRetrievalConfig:
     learning_rate: float = 0.05
     epochs: int = 100
     negative_samples: int = 5
-    cluster_count: Optional[int] = None
+    cluster_count: int | None = None
     random_state: int | np.random.Generator | None = None
 
 
@@ -137,8 +138,8 @@ class TopicPureRetriever:
     def __init__(self, config: TopicPureRetrievalConfig):
         self.config = config
         self.rng = _ensure_rng(config.random_state)
-        self.concept_ids_: Tuple[str, ...] | None = None
-        self.query_ids_: Tuple[str, ...] | None = None
+        self.concept_ids_: tuple[str, ...] | None = None
+        self.query_ids_: tuple[str, ...] | None = None
         self.mean_: np.ndarray | None = None
         self.whitener_: np.ndarray | None = None
         self.persona_vector_: np.ndarray | None = None
@@ -147,11 +148,11 @@ class TopicPureRetriever:
         self.query_representations_: np.ndarray | None = None
         self.M_: np.ndarray | None = None
         self.gate_: np.ndarray | None = None
-        self.history_: List[TrainingStats] = []
+        self.history_: list[TrainingStats] = []
         self.concept_labels_: np.ndarray | None = None
         self.query_labels_: np.ndarray | None = None
-        self._concept_index: Dict[str, int] = {}
-        self._query_index: Dict[str, int] = {}
+        self._concept_index: dict[str, int] = {}
+        self._query_index: dict[str, int] = {}
         self.pre_whiten_condition_number_: float | None = None
         self.post_whiten_condition_number_: float | None = None
 
@@ -164,10 +165,10 @@ class TopicPureRetriever:
         concept_embeddings: np.ndarray,
         query_ids: Sequence[str],
         query_embeddings: np.ndarray,
-        concept_labels: Optional[Sequence[str]] = None,
-        query_labels: Optional[Sequence[str]] = None,
-        persona: Optional[np.ndarray] = None,
-    ) -> "TopicPureRetriever":
+        concept_labels: Sequence[str] | None = None,
+        query_labels: Sequence[str] | None = None,
+        persona: np.ndarray | None = None,
+    ) -> TopicPureRetriever:
         """Fit the metric and gate using the provided embeddings."""
 
         concept_embeddings = np.asarray(concept_embeddings, dtype=float)
@@ -212,8 +213,8 @@ class TopicPureRetriever:
     def top_k_for_query_id(
         self,
         query_id: str,
-        k: Optional[int] = None,
-    ) -> List[Tuple[str, float]]:
+        k: int | None = None,
+    ) -> list[tuple[str, float]]:
         self._validate_fitted()
         if query_id not in self._query_index:
             raise KeyError(f"Unknown query id: {query_id}")
@@ -228,9 +229,9 @@ class TopicPureRetriever:
     def top_k(
         self,
         query_embedding: np.ndarray,
-        persona: Optional[np.ndarray] = None,
-        k: Optional[int] = None,
-    ) -> List[Tuple[str, float]]:
+        persona: np.ndarray | None = None,
+        k: int | None = None,
+    ) -> list[tuple[str, float]]:
         """Retrieve top-k concepts for an arbitrary query embedding."""
 
         self._validate_fitted()
@@ -246,7 +247,7 @@ class TopicPureRetriever:
         top = order[:k]
         return [(self.concept_ids_[i], float(scores[i])) for i in top]
 
-    def purity_at_k(self, query_id: str, k: Optional[int] = None) -> float:
+    def purity_at_k(self, query_id: str, k: int | None = None) -> float:
         """Compute the topic purity diagnostic for ``query_id``."""
 
         self._validate_fitted()
@@ -280,7 +281,7 @@ class TopicPureRetriever:
         if self.concept_embeddings_ is None or self.M_ is None or self.gate_ is None:
             raise RuntimeError("TopicPureRetriever must be fitted before use")
 
-    def _resolve_k(self, k: Optional[int]) -> int:
+    def _resolve_k(self, k: int | None) -> int:
         size = len(self.concept_ids_)
         target = self.config.k if k is None else k
         if target <= 0:
@@ -291,10 +292,9 @@ class TopicPureRetriever:
         self,
         concept_embeddings: np.ndarray,
         query_embeddings: np.ndarray,
-        persona: Optional[np.ndarray],
+        persona: np.ndarray | None,
     ) -> None:
         self.mean_ = np.mean(concept_embeddings, axis=0)
-        centered = concept_embeddings - self.mean_
         cov = _compute_covariance(concept_embeddings)
         cov += EPSILON * np.eye(cov.shape[0])
         self.pre_whiten_condition_number_ = float(np.linalg.cond(cov))
@@ -330,7 +330,7 @@ class TopicPureRetriever:
         whitened = (persona - self.mean_) @ self.whitener_.T
         return whitened
 
-    def _cluster_concepts(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _cluster_concepts(self) -> tuple[np.ndarray, np.ndarray]:
         if self.concept_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before clustering")
         num_clusters = self.config.cluster_count
@@ -352,14 +352,15 @@ class TopicPureRetriever:
     def _assign_query_labels(self, centroids: np.ndarray) -> np.ndarray:
         if self.query_embeddings_ is None:
             raise RuntimeError("Embeddings must be preprocessed before assigning labels")
-        distances = np.linalg.norm(self.query_embeddings_[:, None, :] - centroids[None, :, :], axis=2)
+        diff = self.query_embeddings_[:, None, :] - centroids[None, :, :]
+        distances = np.linalg.norm(diff, axis=2)
         assignments = np.argmin(distances, axis=1)
         return assignments
 
-    def _build_triplets(self) -> List[Tuple[int, int, int]]:
+    def _build_triplets(self) -> list[tuple[int, int, int]]:
         if self.query_labels_ is None or self.concept_labels_ is None:
             raise RuntimeError("Labels must be available for triplet construction")
-        triplets: List[Tuple[int, int, int]] = []
+        triplets: list[tuple[int, int, int]] = []
         for q_idx, label in enumerate(self.query_labels_):
             positive_indices = np.where(self.concept_labels_ == label)[0]
             negative_indices = np.where(self.concept_labels_ != label)[0]
@@ -406,10 +407,9 @@ class TopicPureRetriever:
                     Me_neg = self.M_ @ e_neg
                     grad_g += z_plus * (Me_neg - Me_pos)
 
-            reg_loss = (
-                self.config.lambda_reg * float(np.linalg.norm(self.M_ - identity) ** 2)
-                + self.config.beta_reg * float(np.sum(np.abs(self.gate_)))
-            )
+            reg_loss = self.config.lambda_reg * float(
+                np.linalg.norm(self.M_ - identity) ** 2
+            ) + self.config.beta_reg * float(np.sum(np.abs(self.gate_)))
             violation_rate = violations / float(len(triplets)) if triplets else 0.0
 
             grad_M += 2 * self.config.lambda_reg * (self.M_ - identity)
@@ -457,4 +457,3 @@ __all__ = [
     "TopicPureRetriever",
     "TrainingStats",
 ]
-
