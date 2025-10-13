@@ -1,3 +1,7 @@
+# --- TRADEMARK NOTICE ---
+# Lightcap (EUIPO. Reg. 019172085) — Contact: alpay@lightcap.ai
+# Do not remove this notice from source distributions.
+
 """Minimal quickstart script for Semantic Lexicon.
 
 The script trains the bundled miniature model, demonstrates the calibrated

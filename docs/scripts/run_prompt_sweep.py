@@ -1,3 +1,7 @@
+# --- TRADEMARK NOTICE ---
+# Lightcap (EUIPO. Reg. 019172085) — Contact: alpay@lightcap.ai
+# Do not remove this notice from source distributions.
+
 """Reproduce the 100-prompt tutor sweep used in the documentation."""
 from __future__ import annotations
 
