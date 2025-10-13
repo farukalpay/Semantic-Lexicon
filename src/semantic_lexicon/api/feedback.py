@@ -49,7 +49,7 @@ class FeedbackService:
         selected_intent: str,
         optimal_intent: str,
         feedback: float,
-    ) -> dict[str, float]:
+    ) -> dict[str, object]:
         """Update classifier weights and return the new composite reward weights."""
 
         with self._lock:

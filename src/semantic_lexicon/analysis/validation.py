@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -59,18 +59,45 @@ def _default_validation_path() -> Path:
     return Path(__file__).resolve().parents[1] / "data" / "cross_domain_validation.jsonl"
 
 
+def _coerce_to_str(value: object, field: str, *, default: str | None = None) -> str:
+    if isinstance(value, str):
+        return value
+    if value is None and default is not None:
+        return default
+    msg = f"Expected string for '{field}', received {type(value)!r}"
+    raise TypeError(msg)
+
+
+def _coerce_feedback(value: object) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError as exc:  # pragma: no cover - defensive
+            raise TypeError("Feedback must be numeric") from exc
+    if value is None:
+        return 0.9
+    raise TypeError(f"Feedback must be numeric, received {type(value)!r}")
+
+
 def load_validation_records(path: Path | None = None) -> list[ValidationRecord]:
     """Load labelled prompts for evaluation."""
 
     path = path or _default_validation_path()
     records: list[ValidationRecord] = []
     for raw in read_jsonl(path):
+        mapping = cast(Mapping[str, object], raw)
         records.append(
             ValidationRecord(
-                text=str(raw["text"]),
-                intent=str(raw["intent"]),
-                domain=str(raw.get("domain", "unknown")),
-                feedback=float(raw.get("feedback", 0.9)),
+                text=_coerce_to_str(mapping.get("text"), "text"),
+                intent=_coerce_to_str(mapping.get("intent"), "intent"),
+                domain=_coerce_to_str(
+                    mapping.get("domain"),
+                    "domain",
+                    default="unknown",
+                ),
+                feedback=_coerce_feedback(mapping.get("feedback", 0.9)),
             )
         )
     if not records:
@@ -94,9 +121,16 @@ def evaluate_classifier(
     predictions: list[PredictionSummary] = []
     domain_hits: dict[str, list[bool]] = {}
     for record in records:
-        probabilities = classifier.predict_proba(record.text)
-        predicted_intent = max(probabilities, key=probabilities.get)
-        reward = classifier.reward(record.text, predicted_intent, record.intent, record.feedback)
+        probabilities: dict[str, float] = classifier.predict_proba(record.text)
+        predicted_intent = max(probabilities.items(), key=lambda item: item[1])[0]
+        reward = float(
+            classifier.reward(
+                record.text,
+                predicted_intent,
+                record.intent,
+                record.feedback,
+            )
+        )
         rewards.append(reward)
         predictions.append(
             PredictionSummary(
@@ -105,7 +139,7 @@ def evaluate_classifier(
                 expected=record.intent,
                 predicted=predicted_intent,
                 confidence=float(probabilities[predicted_intent]),
-                reward=float(reward),
+                reward=reward,
             )
         )
         is_correct = predicted_intent == record.intent

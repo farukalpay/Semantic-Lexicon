@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from .config import SemanticModelConfig
 from .diagnostics import DiagnosticsResult, DiagnosticsSuite
@@ -71,27 +71,23 @@ class Trainer:
         self.model.train_knowledge(knowledge)
 
     def _load_intent_examples(self, path: Path) -> list[IntentExample]:
-        dataset = []
+        dataset: list[IntentExample] = []
         for record in read_jsonl(path):
-            dataset.append(
-                IntentExample(
-                    text=str(record["text"]),
-                    intent=str(record["intent"]),
-                    feedback=float(record.get("feedback", 0.95)),
-                )
-            )
+            mapping = cast(Mapping[str, object], record)
+            text = _require_str(mapping, "text")
+            intent = _require_str(mapping, "intent")
+            feedback = _coerce_numeric(mapping.get("feedback", 0.95), 0.95)
+            dataset.append(IntentExample(text=text, intent=intent, feedback=feedback))
         return dataset
 
     def _load_knowledge_edges(self, path: Path) -> list[KnowledgeEdge]:
-        dataset = []
+        dataset: list[KnowledgeEdge] = []
         for record in read_jsonl(path):
-            dataset.append(
-                KnowledgeEdge(
-                    head=str(record["head"]),
-                    relation=str(record["relation"]),
-                    tail=str(record["tail"]),
-                )
-            )
+            mapping = cast(Mapping[str, object], record)
+            head = _require_str(mapping, "head")
+            relation = _require_str(mapping, "relation")
+            tail = _require_str(mapping, "tail")
+            dataset.append(KnowledgeEdge(head=head, relation=relation, tail=tail))
         return dataset
 
     # Diagnostics -----------------------------------------------------------------
@@ -111,3 +107,23 @@ def train_from_config(
     trainer = Trainer(model, trainer_config)
     trainer.train()
     return model
+
+
+def _require_str(mapping: Mapping[str, object], key: str) -> str:
+    value = mapping.get(key)
+    if isinstance(value, str):
+        return value
+    raise TypeError(f"Expected string for '{key}', received {type(value)!r}")
+
+
+def _coerce_numeric(value: object, default: float) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError as exc:  # pragma: no cover - defensive
+            raise TypeError("Numeric field must be parseable as float") from exc
+    if value is None:
+        return default
+    raise TypeError(f"Numeric field must be float-compatible, received {type(value)!r}")
