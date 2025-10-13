@@ -6,9 +6,12 @@ import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
+from numpy.typing import NDArray
+
+FloatArray = NDArray[np.float64]
 
 
 @dataclass(frozen=True)
@@ -80,7 +83,7 @@ class PolicyCheckResult:
     mode: Literal["price", "congestion"] | None
     min_probability: float
     min_floor: float
-    policies: tuple[np.ndarray, ...] = field(default_factory=tuple)
+    policies: tuple[FloatArray, ...] = field(default_factory=tuple)
     floors: tuple[float, ...] = field(default_factory=tuple)
 
 
@@ -149,13 +152,14 @@ def _coerce_count(value: float | None, default: int) -> int:
 
 
 def _check_group_bounds(spec: SelectionSpec) -> GroupCheckResult:
-    selection = list(spec.selected)
-    membership: dict[str, set[str]] = {}
+    selection = [str(item) for item in spec.selected]
+    membership: dict[str, tuple[str, ...]] = {}
     for concept, groups in spec.group_membership.items():
-        membership[str(concept)] = {str(group) for group in groups}
+        cleaned = tuple(str(group) for group in groups if str(group))
+        membership[str(concept)] = cleaned
     counts: dict[str, int] = {group: 0 for group in spec.group_bounds}
     for concept in selection:
-        groups = membership.get(concept, set())
+        groups = membership.get(concept, ())
         for group in groups:
             if group in counts:
                 counts[group] = counts.get(group, 0) + 1
@@ -165,7 +169,7 @@ def _check_group_bounds(spec: SelectionSpec) -> GroupCheckResult:
     for group, (lower, upper) in spec.group_bounds.items():
         actual = counts.get(group, 0)
         lower_bound = _coerce_count(lower, 0)
-        if 0 < lower < 1:
+        if lower is not None and 0 < lower < 1:
             lower_bound = int(math.ceil(lower * total))
         upper_bound = _coerce_count(upper, total)
         if upper is not None and 0 < upper < 1:
@@ -178,14 +182,14 @@ def _check_group_bounds(spec: SelectionSpec) -> GroupCheckResult:
     return GroupCheckResult(feasible=feasible, violations=violations)
 
 
-def _softmax(logits: np.ndarray) -> np.ndarray:
-    shifted = logits - np.max(logits)
-    exps = np.exp(shifted)
+def _softmax(logits: FloatArray) -> FloatArray:
+    shifted = np.asarray(logits - np.max(logits), dtype=float)
+    exps = np.asarray(np.exp(shifted), dtype=float)
     denom = float(np.sum(exps)) or 1.0
-    return exps / denom
+    return cast(FloatArray, np.asarray(exps / denom, dtype=float))
 
 
-def _policy_distribution(entry: PolicyLogEntry) -> tuple[np.ndarray, float]:
+def _policy_distribution(entry: PolicyLogEntry) -> tuple[FloatArray, float]:
     scores = np.asarray(entry.scores, dtype=float)
     if scores.ndim != 1 or scores.size == 0:
         msg = "Scores must be a one-dimensional non-empty sequence"
@@ -207,17 +211,20 @@ def _policy_distribution(entry: PolicyLogEntry) -> tuple[np.ndarray, float]:
         msg = "Knowledge weight must lie in [0, 1]"
         raise ValueError(msg)
     temperature = max(float(entry.temperature), 1e-6)
-    logits = (scores - penalty + entry.knowledge_weight * prior) / temperature
-    base = _softmax(logits)
+    logits = np.asarray(
+        (scores - penalty + entry.knowledge_weight * prior) / temperature,
+        dtype=float,
+    )
+    base = _softmax(cast(FloatArray, logits))
     K = float(scores.size)
     policy = (1.0 - entry.epsilon) * base + entry.epsilon / K
     floor = entry.epsilon / K
-    return policy, float(floor)
+    return cast(FloatArray, np.asarray(policy, dtype=float)), float(floor)
 
 
 def _aggregate_metrics(
     logs: Sequence[PolicyLogEntry],
-    policies: Sequence[np.ndarray],
+    policies: Sequence[FloatArray],
     floors: Sequence[float],
     fairness: FairnessConfig | None,
     baseline_value: float,
@@ -356,7 +363,7 @@ def _check_policy(logs: Sequence[PolicyLogEntry]) -> PolicyCheckResult:
     mode = modes.pop()
     min_probability = float("inf")
     min_floor = float("inf")
-    policies: list[np.ndarray] = []
+    policies: list[FloatArray] = []
     floors: list[float] = []
     for entry in logs:
         try:

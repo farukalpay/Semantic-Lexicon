@@ -9,14 +9,17 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from .config import KnowledgeConfig
 from .logging import configure_logging
 
 LOGGER = configure_logging(logger_name=__name__)
+
+FloatArray = NDArray[np.float64]
 
 
 @dataclass(frozen=True)
@@ -40,6 +43,20 @@ class KnowledgeSelection:
     gate_mean: float
 
 
+@dataclass(frozen=True)
+class _GreedyCandidate:
+    """Payload captured while evaluating a greedy candidate."""
+
+    coverage: FloatArray
+    coverage_sum: float
+    cohesion_num: float
+    cohesion_den: float
+    collab_map: dict[int, float]
+    delta_collab: float
+    feature_vector: FloatArray
+    delta_div: float
+
+
 class KnowledgeNetwork:
     """A light-weight knowledge graph with simple scoring functions."""
 
@@ -47,14 +64,14 @@ class KnowledgeNetwork:
         self.config = config or KnowledgeConfig()
         self.entities: dict[str, int] = {}
         self.relations: dict[str, int] = {}
-        self.embeddings: Optional[np.ndarray] = None
-        self.relation_matrices: Optional[np.ndarray] = None
+        self.embeddings: Optional[FloatArray] = None
+        self.relation_matrices: Optional[FloatArray] = None
         self.index_to_entity: list[str] = []
-        self.adjacency: Optional[np.ndarray] = None
-        self.degree: Optional[np.ndarray] = None
-        self.graph_laplacian: Optional[np.ndarray] = None
-        self.transition: Optional[np.ndarray] = None
-        self.similarity: Optional[np.ndarray] = None
+        self.adjacency: Optional[FloatArray] = None
+        self.degree: Optional[FloatArray] = None
+        self.graph_laplacian: Optional[FloatArray] = None
+        self.transition: Optional[FloatArray] = None
+        self.similarity: Optional[FloatArray] = None
         self._concept_groups: dict[str, set[str]] = {}
         self._group_bounds: dict[str, tuple[Optional[float], Optional[float]]] = {}
 
@@ -80,8 +97,9 @@ class KnowledgeNetwork:
         entity_dim = len(self.entities)
         relation_dim = len(self.relations)
         rng = np.random.default_rng(0)
-        self.embeddings = rng.normal(0, 0.1, size=(entity_dim, self.config.max_relations))
-        self.relation_matrices = rng.normal(
+        embeddings = rng.normal(0, 0.1, size=(entity_dim, self.config.max_relations))
+        self.embeddings = cast(FloatArray, np.asarray(embeddings, dtype=float))
+        relation_tensors = rng.normal(
             0,
             0.1,
             size=(
@@ -90,6 +108,7 @@ class KnowledgeNetwork:
                 self.config.max_relations,
             ),
         )
+        self.relation_matrices = cast(FloatArray, np.asarray(relation_tensors, dtype=float))
         learning_rate = self.config.learning_rate
         for epoch in range(self.config.epochs):
             total_loss = 0.0
@@ -321,15 +340,16 @@ class KnowledgeNetwork:
             transition[np.isnan(transition)] = 0.0
             self.transition = transition
 
-    def _compute_similarity_matrix(self) -> Optional[np.ndarray]:
+    def _compute_similarity_matrix(self) -> Optional[FloatArray]:
         if self.embeddings is None:
             if self.adjacency is None:
                 return None
             max_value = float(np.max(self.adjacency)) if self.adjacency.size else 0.0
             if max_value <= 0:
-                return np.zeros_like(self.adjacency)
-            return self.adjacency / max_value
-        matrix = self.embeddings
+                return cast(FloatArray, np.zeros_like(self.adjacency))
+            scaled = self.adjacency / max_value
+            return cast(FloatArray, np.asarray(scaled, dtype=float))
+        matrix = np.asarray(self.embeddings, dtype=float)
         if matrix.size == 0:
             return None
         norms = np.linalg.norm(matrix, axis=1, keepdims=True)
@@ -339,37 +359,38 @@ class KnowledgeNetwork:
         similarity = similarity / norms.T
         similarity = np.clip(similarity, 0.0, 1.0)
         np.fill_diagonal(similarity, 1.0)
-        return similarity
+        return cast(FloatArray, np.asarray(similarity, dtype=float))
 
-    def _align_prompt_vector(self, vector: np.ndarray) -> np.ndarray:
+    def _align_prompt_vector(self, vector: np.ndarray) -> FloatArray:
         target_dim = self.embeddings.shape[1] if self.embeddings is not None else vector.size
         if vector.size == target_dim:
-            return vector
+            return cast(FloatArray, np.asarray(vector, dtype=float))
         if vector.size > target_dim:
-            return vector[:target_dim]
+            return cast(FloatArray, np.asarray(vector[:target_dim], dtype=float))
         padded = np.zeros(target_dim, dtype=float)
         padded[: vector.size] = vector
-        return padded
+        return cast(FloatArray, padded)
 
-    def _compute_relevance(self, prompt_vector: np.ndarray) -> np.ndarray:
+    def _compute_relevance(self, prompt_vector: np.ndarray) -> FloatArray:
         if self.embeddings is None:
-            return np.zeros(len(self.entities), dtype=float)
+            return cast(FloatArray, np.zeros(len(self.entities), dtype=float))
         prompt_norm = float(np.linalg.norm(prompt_vector))
         if prompt_norm == 0.0:
-            return np.zeros(len(self.entities), dtype=float)
+            return cast(FloatArray, np.zeros(len(self.entities), dtype=float))
         entity_norms = np.linalg.norm(self.embeddings, axis=1)
         denom = entity_norms * prompt_norm
         denom = np.where(denom == 0, 1.0, denom)
         relevance = (self.embeddings @ prompt_vector) / denom
-        return np.clip(relevance, -1.0, 1.0)
+        clipped = np.clip(relevance, -1.0, 1.0)
+        return cast(FloatArray, np.asarray(clipped, dtype=float))
 
-    def _smoothed_relevance(self, relevance: np.ndarray) -> np.ndarray:
+    def _smoothed_relevance(self, relevance: np.ndarray) -> FloatArray:
         if (
             self.graph_laplacian is None
             or self.graph_laplacian.size == 0
             or self.config.smoothing_lambda <= 0
         ):
-            return relevance
+            return cast(FloatArray, np.asarray(relevance, dtype=float))
         n = relevance.shape[0]
         identity = np.eye(n)
         matrix = identity + self.config.smoothing_lambda * self.graph_laplacian
@@ -377,7 +398,7 @@ class KnowledgeNetwork:
             smoothed = np.linalg.solve(matrix, relevance)
         except np.linalg.LinAlgError:
             smoothed = np.linalg.pinv(matrix) @ relevance
-        return np.asarray(smoothed, dtype=float)
+        return cast(FloatArray, np.asarray(smoothed, dtype=float))
 
     def _topic_weights(self, relevance: np.ndarray) -> np.ndarray:
         scaled = 0.5 * (np.asarray(relevance, dtype=float) + 1.0)
@@ -410,20 +431,20 @@ class KnowledgeNetwork:
         anchors = candidates[order[:pool_size]]
         if anchors.size == 0 and relevance.size:
             anchors = np.array([int(np.argmax(relevance))], dtype=int)
-        return anchors
+        return np.asarray(anchors, dtype=int)
 
     def _compute_anchor_gates(
         self,
         similarity: np.ndarray,
         anchors: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[FloatArray, FloatArray]:
         n = similarity.shape[0]
         if n == 0:
-            zero = np.zeros(0, dtype=float)
+            zero = cast(FloatArray, np.zeros(0, dtype=float))
             return zero, zero
         if anchors.size == 0:
-            ones = np.ones(n, dtype=float)
-            return ones, np.ones(n, dtype=float)
+            ones = cast(FloatArray, np.ones(n, dtype=float))
+            return ones, cast(FloatArray, np.ones(n, dtype=float))
         matrix = np.asarray(similarity, dtype=float)
         with np.errstate(invalid="ignore"):
             row_sums = matrix.sum(axis=1)
@@ -438,6 +459,7 @@ class KnowledgeNetwork:
             fundamental = np.linalg.inv(system)
         except np.linalg.LinAlgError:
             fundamental = np.linalg.pinv(system)
+        fundamental = np.asarray(fundamental, dtype=float)
         rho = np.zeros(n, dtype=float)
         for anchor in anchors.tolist():
             column = (1.0 - alpha) * fundamental[:, anchor]
@@ -445,32 +467,36 @@ class KnowledgeNetwork:
         rho = np.clip(rho, 0.0, 1.0)
         tau_g = max(float(self.config.gate_bias), 1e-8)
         gates = rho / (rho + tau_g)
-        return np.clip(gates, 0.0, 1.0), rho
+        clipped = np.clip(gates, 0.0, 1.0)
+        return (
+            cast(FloatArray, np.asarray(clipped, dtype=float)),
+            cast(FloatArray, np.asarray(rho, dtype=float)),
+        )
 
     def _compute_collaboration_matrix(
         self,
         similarity: np.ndarray,
         gates: np.ndarray,
         topic_mask: np.ndarray,
-    ) -> np.ndarray:
+    ) -> FloatArray:
         n = similarity.shape[0]
         matrix = np.zeros((n, n), dtype=float)
         off_indices = np.where(~topic_mask)[0]
         on_indices = np.where(topic_mask)[0]
         if off_indices.size == 0 or on_indices.size == 0:
-            return matrix
+            return cast(FloatArray, matrix)
         for off_idx in off_indices.tolist():
             for on_idx in on_indices.tolist():
                 value = float(gates[off_idx]) * float(similarity[off_idx, on_idx])
                 if value > 0.0:
                     matrix[off_idx, on_idx] = value
-        return matrix
+        return cast(FloatArray, matrix)
 
     @staticmethod
-    def _cohesion_matrix(similarity: np.ndarray) -> np.ndarray:
+    def _cohesion_matrix(similarity: np.ndarray) -> FloatArray:
         matrix = np.asarray(similarity, dtype=float).copy()
         np.fill_diagonal(matrix, 0.0)
-        return matrix
+        return cast(FloatArray, matrix)
 
     @staticmethod
     def _cohesion_value(numerator: float, denominator: float) -> float:
@@ -478,10 +504,10 @@ class KnowledgeNetwork:
             return 0.0
         return numerator / denominator
 
-    def _dpp_feature_map(self, similarity: np.ndarray) -> np.ndarray:
+    def _dpp_feature_map(self, similarity: np.ndarray) -> FloatArray:
         matrix = np.asarray(similarity, dtype=float)
         if matrix.size == 0:
-            return np.zeros((0, 0), dtype=float)
+            return cast(FloatArray, np.zeros((0, 0), dtype=float))
         sym = 0.5 * (matrix + matrix.T)
         try:
             eigenvalues, eigenvectors = np.linalg.eigh(sym)
@@ -492,16 +518,16 @@ class KnowledgeNetwork:
         floor = max(float(self.config.dpp_eigen_floor), 0.0)
         mask = eigenvalues > floor
         if not np.any(mask):
-            return np.zeros((sym.shape[0], 0), dtype=float)
+            return cast(FloatArray, np.zeros((sym.shape[0], 0), dtype=float))
         selected = eigenvalues[mask]
         scaled = np.sqrt(selected)
         features = eigenvectors[:, mask] * scaled
-        return np.asarray(features, dtype=float)
+        return cast(FloatArray, np.asarray(features, dtype=float))
 
     @staticmethod
-    def _cholesky_rank_one_update(cholesky: np.ndarray, vector: np.ndarray) -> np.ndarray:
+    def _cholesky_rank_one_update(cholesky: np.ndarray, vector: np.ndarray) -> FloatArray:
         if vector.size == 0:
-            return cholesky
+            return cast(FloatArray, np.asarray(cholesky, dtype=float))
         L = np.asarray(cholesky, dtype=float).copy()
         w = np.asarray(vector, dtype=float).copy()
         n = L.shape[0]
@@ -516,7 +542,7 @@ class KnowledgeNetwork:
             if k + 1 < n:
                 L[k + 1 :, k] = (L[k + 1 :, k] + s * w[k + 1 :]) / c
                 w[k + 1 :] = c * w[k + 1 :] - s * L[k + 1 :, k]
-        return L
+        return cast(FloatArray, L)
 
     def _knowledge_weights(self) -> tuple[float, float]:
         weights = np.asarray(
@@ -657,7 +683,7 @@ class KnowledgeNetwork:
         selected_on: list[int] = []
         selected_off: list[int] = []
         feature_dim = feature_map.shape[1] if feature_map.ndim == 2 else 0
-        chol = np.eye(feature_dim, dtype=float) if feature_dim else np.eye(0)
+        chol = np.eye(feature_dim, dtype=float) if feature_dim else np.eye(0, dtype=float)
         logdet_value = 0.0
         selected_counts = {group: 0 for group in group_bounds}
         remaining_counts = {group: len(group_members.get(group, set())) for group in group_bounds}
@@ -679,7 +705,7 @@ class KnowledgeNetwork:
 
         while len(selected) < top_k and available:
             best_idx: Optional[int] = None
-            best_payload: Optional[dict[str, object]] = None
+            best_payload: Optional[_GreedyCandidate] = None
             best_score = float("-inf")
             for idx in list(available):
                 if not is_feasible(idx):
@@ -718,7 +744,11 @@ class KnowledgeNetwork:
                     candidate_collab_map[idx] = best_bridge
                     delta_collab += best_bridge
                 knowledge_delta = lambda_cov * delta_cov + lambda_coh * delta_coh
-                feature_vector = feature_map[idx] if feature_dim else np.zeros(0, dtype=float)
+                feature_vector = (
+                    np.asarray(feature_map[idx], dtype=float)
+                    if feature_dim
+                    else np.zeros(0, dtype=float)
+                )
                 if feature_dim:
                     try:
                         solution = np.linalg.solve(chol, feature_vector)
@@ -731,35 +761,35 @@ class KnowledgeNetwork:
                 if score > best_score:
                     best_score = score
                     best_idx = idx
-                    best_payload = {
-                        "coverage": candidate_cov,
-                        "coverage_sum": candidate_cov_sum,
-                        "cohesion_num": candidate_cohesion_num,
-                        "cohesion_den": candidate_cohesion_den,
-                        "collab_map": candidate_collab_map,
-                        "delta_collab": delta_collab,
-                        "feature_vector": feature_vector,
-                        "delta_div": delta_div,
-                    }
+                    best_payload = _GreedyCandidate(
+                        coverage=cast(FloatArray, np.asarray(candidate_cov, dtype=float)),
+                        coverage_sum=float(candidate_cov_sum),
+                        cohesion_num=float(candidate_cohesion_num),
+                        cohesion_den=float(candidate_cohesion_den),
+                        collab_map=dict(candidate_collab_map),
+                        delta_collab=float(delta_collab),
+                        feature_vector=cast(FloatArray, np.asarray(feature_vector, dtype=float)),
+                        delta_div=float(delta_div),
+                    )
             if best_idx is None or best_payload is None:
                 break
             idx = best_idx
             selected.append(idx)
             available.remove(idx)
-            coverage_state = np.asarray(best_payload["coverage"], dtype=float)
-            coverage_sum = float(best_payload["coverage_sum"])
-            cohesion_numerator = float(best_payload["cohesion_num"])
-            cohesion_denominator = float(best_payload["cohesion_den"])
-            collab_map = dict(best_payload["collab_map"])
+            coverage_state = np.asarray(best_payload.coverage, dtype=float)
+            coverage_sum = float(best_payload.coverage_sum)
+            cohesion_numerator = float(best_payload.cohesion_num)
+            cohesion_denominator = float(best_payload.cohesion_den)
+            collab_map = dict(best_payload.collab_map)
             if topic_mask[idx]:
                 selected_on.append(idx)
             else:
                 selected_off.append(idx)
-            collaboration_total += float(best_payload["delta_collab"])
+            collaboration_total += float(best_payload.delta_collab)
             if feature_dim:
-                feature_vector = np.asarray(best_payload["feature_vector"], dtype=float)
+                feature_vector = np.asarray(best_payload.feature_vector, dtype=float)
                 chol = self._cholesky_rank_one_update(chol, feature_vector)
-                logdet_value += float(best_payload["delta_div"])
+                logdet_value += float(best_payload.delta_div)
             for group in group_bounds:
                 if idx in group_members.get(group, set()):
                     selected_counts[group] = selected_counts.get(group, 0) + 1
@@ -767,7 +797,7 @@ class KnowledgeNetwork:
         if not selected:
             return (
                 np.asarray([], dtype=int),
-                coverage_state,
+                cast(FloatArray, np.asarray(coverage_state, dtype=float)),
                 0.0,
                 0.0,
                 0.0,
@@ -777,7 +807,7 @@ class KnowledgeNetwork:
         average_coverage = float(coverage_state.sum() / max(n, 1))
         return (
             np.asarray(selected, dtype=int),
-            coverage_state,
+            cast(FloatArray, np.asarray(coverage_state, dtype=float)),
             average_coverage,
             logdet_value,
             cohesion_numerator,
