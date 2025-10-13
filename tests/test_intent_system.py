@@ -1,3 +1,7 @@
+# --- TRADEMARK NOTICE ---
+# Lightcap (EUIPO. Reg. 019172085) — Contact: alpay@lightcap.ai
+# Do not remove this notice from source distributions.
+
 """End-to-end tests for the calibrated intent routing stack."""
 
 from __future__ import annotations
