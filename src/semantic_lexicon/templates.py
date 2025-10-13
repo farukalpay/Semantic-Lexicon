@@ -13,7 +13,7 @@ __all__ = ["BalancedTutorTemplate", "render_balanced_tutor_response"]
 
 
 _INTRO_PREFIX = "From a balanced tutor perspective, let's look at"
-_INTRO_SUFFIX = "This ties closely to the \"{intent}\" intent I detected."
+_INTRO_SUFFIX = 'This ties closely to the "{intent}" intent I detected.'
 
 
 _ACTION_FRAGMENT_TEMPLATES: dict[str, str] = {
@@ -101,7 +101,7 @@ def _validate_topics_and_actions(
 
 
 def _format_intro(prompt: str, intent: str) -> str:
-    return f"{_INTRO_PREFIX} \"{prompt}\" {_INTRO_SUFFIX.format(intent=intent)}"
+    return f'{_INTRO_PREFIX} "{prompt}" {_INTRO_SUFFIX.format(intent=intent)}'
 
 
 def _format_journaling(pairs: Sequence[tuple[str, str]]) -> str:

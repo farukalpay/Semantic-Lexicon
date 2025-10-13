@@ -7,9 +7,9 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -244,10 +244,7 @@ class KnowledgeNetwork:
         cohesion = self._cohesion_value(cohesion_numerator, cohesion_denominator)
         collaboration = float(collaboration_value)
         coverage_total = float(coverage_average)
-        knowledge_raw = (
-            lambda_cov * coverage_total
-            + lambda_coh * cohesion
-        )
+        knowledge_raw = lambda_cov * coverage_total + lambda_coh * cohesion
         relevance_total = float(gated_relevance[indices].sum()) if len(indices) else 0.0
         diversity_total = float(diversity_value)
         gate_mean = float(gates[indices].mean()) if len(indices) else 0.0
@@ -663,9 +660,7 @@ class KnowledgeNetwork:
         chol = np.eye(feature_dim, dtype=float) if feature_dim else np.eye(0)
         logdet_value = 0.0
         selected_counts = {group: 0 for group in group_bounds}
-        remaining_counts = {
-            group: len(group_members.get(group, set())) for group in group_bounds
-        }
+        remaining_counts = {group: len(group_members.get(group, set())) for group in group_bounds}
 
         def is_feasible(idx: int) -> bool:
             slots_after = top_k - (len(selected) + 1)
@@ -697,9 +692,7 @@ class KnowledgeNetwork:
                 candidate_cohesion_num = cohesion_numerator + 2.0 * connection
                 candidate_cohesion_den = cohesion_denominator + float(cohesion_degrees[idx])
                 current_cohesion = (
-                    cohesion_numerator / cohesion_denominator
-                    if cohesion_denominator > 0
-                    else 0.0
+                    cohesion_numerator / cohesion_denominator if cohesion_denominator > 0 else 0.0
                 )
                 new_cohesion = (
                     candidate_cohesion_num / candidate_cohesion_den
@@ -770,9 +763,7 @@ class KnowledgeNetwork:
             for group in group_bounds:
                 if idx in group_members.get(group, set()):
                     selected_counts[group] = selected_counts.get(group, 0) + 1
-                    remaining_counts[group] = max(
-                        0, remaining_counts.get(group, 0) - 1
-                    )
+                    remaining_counts[group] = max(0, remaining_counts.get(group, 0) - 1)
         if not selected:
             return (
                 np.asarray([], dtype=int),

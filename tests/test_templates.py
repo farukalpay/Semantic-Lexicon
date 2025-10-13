@@ -42,7 +42,7 @@ def test_render_balanced_tutor_response_infers_missing_punctuation() -> None:
     )
 
     assert response.startswith(
-        "From a balanced tutor perspective, let's look at \"Explain matrix multiplication.\""
+        'From a balanced tutor perspective, let\'s look at "Explain matrix multiplication."'
     )
 
 

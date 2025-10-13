@@ -178,7 +178,8 @@ class NeuralSemanticModel:
             self.knowledge_network.adjacency = np.asarray(adjacency, dtype=float)
             degrees = self.knowledge_network.adjacency.sum(axis=1)
             self.knowledge_network.degree = degrees
-            self.knowledge_network.graph_laplacian = np.diag(degrees) - self.knowledge_network.adjacency
+            laplacian = np.diag(degrees) - self.knowledge_network.adjacency
+            self.knowledge_network.graph_laplacian = laplacian
             if np.all(degrees == 0):
                 self.knowledge_network.transition = np.zeros_like(self.knowledge_network.adjacency)
             else:

@@ -633,9 +633,7 @@ def _build_related_topics(
     pieces: list[str] = []
     pieces.append(f"Knowledge focus: {focus}.")
     if related:
-        pieces.append(
-            "Related concepts worth exploring: " + ", ".join(related) + "."
-        )
+        pieces.append("Related concepts worth exploring: " + ", ".join(related) + ".")
     message = " ".join(pieces)
     hits = [focus, *related, f"K_raw={selection.knowledge_raw:.3f}"]
     return message, hits, selection

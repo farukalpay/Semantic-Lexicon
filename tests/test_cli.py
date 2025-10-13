@@ -39,4 +39,4 @@ def test_cli_train_and_diagnostics(tmp_path: Path) -> None:
         ],
     )
     assert knowledge_result.exit_code == 0
-    assert "\"concepts\"" in knowledge_result.stdout
+    assert '"concepts"' in knowledge_result.stdout

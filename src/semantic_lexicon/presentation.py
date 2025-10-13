@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 __all__ = [
     "ExperimentPlan",
@@ -67,8 +67,7 @@ def build_single_adjustment_plan() -> tuple[ExperimentPlan, list[BackupMove]]:
         BackupMove(
             label="Energy checkpoints",
             description=(
-                "Use tonight's 40 minutes to add two checkpoints that predict a"
-                " strong closer."
+                "Use tonight's 40 minutes to add two checkpoints that predict a strong closer."
             ),
             protocol=(
                 "Run two 15-minute partial rehearsals: stop after slide 5 and"
@@ -76,7 +75,7 @@ def build_single_adjustment_plan() -> tuple[ExperimentPlan, list[BackupMove]]:
                 "At each stop, rate breath control, vocal brightness, and whether"
                 " you can restate the closing promise without notes (1/0).",
                 "If the second checkpoint scores lower than the first on two of"
-                " three metrics, script a micro-reset before the finale."
+                " three metrics, script a micro-reset before the finale.",
             ),
         ),
         BackupMove(
@@ -117,10 +116,9 @@ def build_single_adjustment_plan() -> tuple[ExperimentPlan, list[BackupMove]]:
                 "Raise a desk lamp to 120 lux aimed at eye level; before speaking"
                 " run three 4-7-8 breaths facing the light.",
                 "Record a one-minute warm-up both before and after; tally filler"
-                " words to confirm the drop."
+                " words to confirm the drop.",
             ),
         ),
     ]
 
     return experiment, backups
-

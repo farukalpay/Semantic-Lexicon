@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, Mapping, Sequence
+from typing import Literal
 
 import numpy as np
 
@@ -522,5 +523,3 @@ def run_go_no_go(
         stability=stability_result,
         knowledge=knowledge_result,
     )
-
-
