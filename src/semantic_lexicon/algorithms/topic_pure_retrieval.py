@@ -53,25 +53,28 @@ def _ensure_rng(seed: int | np.random.Generator | None) -> np.random.Generator:
 def _normalise_rows(matrix: FloatArray) -> FloatArray:
     norms = np.linalg.norm(matrix, axis=1, keepdims=True)
     norms = np.maximum(norms, EPSILON)
-    return matrix / norms
+    normalised = matrix / norms
+    return cast("FloatArray", normalised)
 
 
 def _symmetric_outer(u: FloatArray, v: FloatArray) -> FloatArray:
-    return 0.5 * (np.outer(u, v) + np.outer(v, u))
+    symmetric = 0.5 * (np.outer(u, v) + np.outer(v, u))
+    return cast("FloatArray", symmetric)
 
 
 def _project_to_psd(matrix: FloatArray) -> FloatArray:
     eigvals, eigvecs = np.linalg.eigh(matrix)
     eigvals = np.clip(eigvals, 0.0, None)
-    return (eigvecs * eigvals) @ eigvecs.T
+    projected = (eigvecs * eigvals) @ eigvecs.T
+    return cast("FloatArray", projected)
 
 
 def _compute_covariance(matrix: FloatArray) -> FloatArray:
     if matrix.shape[0] <= 1:
-        return np.eye(matrix.shape[1])
+        return cast("FloatArray", np.eye(matrix.shape[1], dtype=float))
     centered = matrix - np.mean(matrix, axis=0, keepdims=True)
     cov = centered.T @ centered / float(matrix.shape[0])
-    return cov
+    return cast("FloatArray", cov)
 
 
 def _kmeans(
@@ -405,7 +408,7 @@ class TopicPureRetriever:
         diff = self.query_embeddings_[:, None, :] - centroids[None, :, :]
         distances = np.linalg.norm(diff, axis=2)
         assignments = np.argmin(distances, axis=1)
-        return assignments
+        return cast("IntArray", assignments)
 
     def _build_triplets(self) -> list[tuple[int, int, int]]:
         if self.query_labels_ is None or self.concept_labels_ is None:
