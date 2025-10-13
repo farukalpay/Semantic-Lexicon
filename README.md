@@ -409,16 +409,102 @@ PYTHONPATH=src python examples/cross_domain_validation.py
 ```
 
 The script trains the classifier, evaluates it on the new prompt set, and saves a
-report to `Archive/cross_domain_validation_report.json`. The latest run achieved:
+report to `Archive/cross_domain_validation_report.json`. We report
+\(\mathrm{Last}(\mathcal{R})\) and the corresponding content address \(h_{j^\star}\)
+as defined in §4.
 
-- **Accuracy:** 100% across all four intents (definition, how_to, comparison, exploration)
-- **Reward distribution:** min 0.763, mean 0.933, p90 0.965 – every prompt clears the 0.7 target
-- **Calibration:** expected calibration error drops from 0.437 → 0.027 (94 % reduction)
-- **Intent samples:**
-  - “What is photosynthesis in simple terms?” → `definition` (reward 0.964)
-  - “How do I create a personal budget from scratch?” → `how_to` (reward 0.949)
-  - “Compare renewable and nonrenewable energy sources.” → `comparison` (reward 0.957)
-  - “Brainstorm mindfulness exercises for stress relief.” → `exploration` (reward 0.950)
+Runs are archived in `Archive/topic_pure_retrieval_runs.json`.
+
+### §1 Core objects
+
+```math
+\begin{aligned}
+&\mathbb{R}^d,\ d\in\mathbb{N}.\\
+&\mathcal{C}=\{c_i\}_{i=1}^{N},\ E[c]\in\mathbb{R}^d.\\
+&z:\mathcal{Q}\to \mathbb{R}^d.\\
+&p\in\mathbb{R}^d\ \text{(use } p=0 \text{ if not applicable)}.\\
+&g\in[0,1]^d,\quad M\succeq 0\in\mathbb{R}^{d\times d}.\\
+&W=\Sigma^{-1/2}.
+\end{aligned}
+```
+
+#### Scoring and retrieval
+
+```math
+r(q)=\operatorname{diag}(g)\,\big(z(q)+p\big),\qquad
+s(q,c)=\big(Wr(q)\big)^{\!\top} M \big(WE[c]\big),\qquad
+S_k(q)=\operatorname*{arg\,topk}_{c\in\mathcal{C}} s(q,c).
+```
+
+### §2 Evaluation archive and identifiers
+
+```math
+R_j=\big(\Theta_j,\ \mathcal{D}_j,\ \mathcal{T}_j,\ \mathbf{m}_j,\ t_j\big).
+```
+
+```math
+h_j=\mathsf{H}\!\big(\Theta_j,\,\mathcal{D}_j,\,\mathcal{T}_j\big),\quad
+\text{with } \mathsf{H}:{\{0,1\}^\ast}\to\{0,1\}^{256} \text{ collision-resistant.}
+```
+
+### §3 Metrics
+
+```math
+\text{Purity@}k(q)=\frac{1}{k}\sum_{c\in S_k(q)}\mathbf{1}\{y(c)=y(q)\}.
+```
+
+```math
+\mathsf{TVR}=\mathbb{P}\big[s(q,c^+)\le s(q,c^-)\big],\qquad
+\mathsf{GS}=\frac{\|g\|_0}{d},\qquad
+\kappa(\Sigma)=\frac{\lambda_{\max}(\Sigma)}{\lambda_{\min}(\Sigma)}.
+```
+
+```math
+\mathbf{m}_j=\big(\ \overline{\text{Purity@}5},\ \overline{\text{Purity@}10},\ \mathsf{TVR},\ \mathsf{GS},\ \kappa(\Sigma)\ \big)_j,\quad
+\overline{\cdot}\ \text{averages over } \mathcal{D}_j.
+```
+
+### §4 README functionals
+
+```math
+\mathrm{Last}(\mathcal{R})=\mathbf{m}_{j^\star},\quad j^\star=\arg\max_j t_j.
+```
+
+```math
+\mathrm{Best}_{f,w}(\mathcal{R})=\mathbf{m}_{\arg\max_j f(w\odot \mathbf{m}_j)},\quad w\in\mathbb{R}_{\ge 0}^m,\ f:\mathbb{R}^m\to\mathbb{R}\ \text{monotone}.
+```
+
+```math
+\mathrm{Mean}(\mathcal{R})=\frac{1}{n}\sum_{j=1}^{n}\mathbf{m}_j,\quad n=|\mathcal{R}|.
+```
+
+```math
+\Delta(\mathcal{R})=\mathbf{m}_{j^\star}-\mathbf{m}_{j^\star-1}\quad (\text{defined if } n\ge 2).
+```
+
+```math
+\big(h_{j^\star},\,\mathrm{Last}(\mathcal{R})\big)=\Big(\mathtt{845d7c3479535bdc83f7ed403e5b3695f242cc4561c807421f5c70d0c941291b},\ (0.6,0.5,0.0,1.0,371.6768300721485)\Big).
+```
+
+### §5 Example prompt I/O
+
+```math
+\mathcal{Q}^\star=\{q_0,q_1,q_2,q_3\},\qquad k=2.
+```
+
+```math
+\Pi_k(q)=\big(S_k(q),\ s(q, S_k(q))\big).
+```
+
+```math
+\text{Examples}(\mathcal{Q}^\star;\ h)=\Big\{\,\big(q,\ \Pi_k^{(h)}(q)\big)\ :\ q\in \mathcal{Q}^\star \Big\},\quad h=\mathtt{845d7c3479535bdc83f7ed403e5b3695f242cc4561c807421f5c70d0c941291b}.
+```
+
+### §6 Guarantees
+
+- Lossless history: \(j\mapsto R_j\) is injective; the README exposes \(\{\mathbf{m}_j\}\) via \((h_{j^\star},\mathrm{Last}(\mathcal{R}))\).
+- Determinism: for fixed \(h\) and \(q\), \(\Pi_k^{(h)}(q)\) is unique.
+- Stability: \(P(P(M))=P(M),\ M\succeq 0\Rightarrow P(M)=M,\ P(M)\succeq 0\).
 
 A companion benchmark is written to `Archive/intent_performance_profile.json`.
 With heuristic fast paths, sparse dot products, and vector caching enabled the

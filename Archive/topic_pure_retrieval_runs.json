@@ -1,0 +1,170 @@
+[
+  {
+    "dataset": {
+      "concept_embeddings": [
+        [
+          1.0,
+          0.1,
+          0.0
+        ],
+        [
+          0.95,
+          -0.05,
+          0.05
+        ],
+        [
+          1.05,
+          0.05,
+          -0.02
+        ],
+        [
+          0.0,
+          1.0,
+          0.1
+        ],
+        [
+          0.05,
+          0.95,
+          -0.05
+        ],
+        [
+          -0.05,
+          1.1,
+          0.0
+        ]
+      ],
+      "concept_ids": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5"
+      ],
+      "concept_labels": [
+        "A",
+        "A",
+        "A",
+        "B",
+        "B",
+        "B"
+      ],
+      "query_embeddings": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.9,
+          0.1,
+          0.05
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.1,
+          0.9,
+          -0.02
+        ]
+      ],
+      "query_ids": [
+        "q0",
+        "q1",
+        "q2",
+        "q3"
+      ],
+      "query_labels": [
+        "A",
+        "A",
+        "B",
+        "B"
+      ]
+    },
+    "examples": {
+      "k": 2,
+      "projections": [
+        {
+          "concepts": [
+            "c2",
+            "c0"
+          ],
+          "query_id": "q0",
+          "scores": [
+            0.8115025952845758,
+            0.7258999328904759
+          ]
+        },
+        {
+          "concepts": [
+            "c0",
+            "c2"
+          ],
+          "query_id": "q1",
+          "scores": [
+            0.6438029814969912,
+            0.47985705254201205
+          ]
+        },
+        {
+          "concepts": [
+            "c5",
+            "c4"
+          ],
+          "query_id": "q2",
+          "scores": [
+            1.0795198709671827,
+            0.6755803503446736
+          ]
+        },
+        {
+          "concepts": [
+            "c5",
+            "c4"
+          ],
+          "query_id": "q3",
+          "scores": [
+            0.8968152211499728,
+            0.8652258410203475
+          ]
+        }
+      ]
+    },
+    "hash": "845d7c3479535bdc83f7ed403e5b3695f242cc4561c807421f5c70d0c941291b",
+    "metrics_order": [
+      "Purity@5",
+      "Purity@10",
+      "TripletViolationRate",
+      "GateSparsity",
+      "ConditionNumber"
+    ],
+    "metrics_vector": [
+      0.6,
+      0.5,
+      0.0,
+      1.0,
+      371.6768300721485
+    ],
+    "test_battery": [
+      "Purity@5",
+      "Purity@10",
+      "TripletViolationRate",
+      "GateSparsity",
+      "ConditionNumber"
+    ],
+    "theta": {
+      "beta_reg": 0.001,
+      "epochs": 80,
+      "k": 2,
+      "lambda_reg": 0.005,
+      "learning_rate": 0.1,
+      "margin": 0.4,
+      "negative_samples": 2,
+      "random_state": 0
+    },
+    "timestamp": 1760380189.0610468
+  }
+]
