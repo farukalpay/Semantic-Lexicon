@@ -1,0 +1,1 @@
+Agents: Please do not generate or commit PNG assets unless explicitly requested. All visual outputs should be omitted by default.
