@@ -263,32 +263,32 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
    ```
    Prompt: How do I improve my public speaking?
-   Response: From a balanced tutor perspective, let's look at "How do I improve my public speaking?" This ties closely to the "how_to" intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice the routine, and reflect on Feedback Loops. Knowledge focus: artificial intelligence. Related concepts worth exploring: explore character motivations, read government energy outlook, reflect on sensory details.
-   Knowledge: ['artificial intelligence', 'explore character motivations', 'read government energy outlook', 'reflect on sensory details', 'K_raw=0.587']
+   Response: From a balanced tutor perspective, let's look at "How do I improve my public speaking?" This ties closely to the "how_to" intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice the routine, and reflect on Feedback Loops. Knowledge focus: practice short talks on camera. Related concepts worth exploring: collect feedback from trusted listeners, rehearse transitions and openings, track energy and pacing cues.
+   Knowledge: ['practice short talks on camera', 'collect feedback from trusted listeners', 'rehearse transitions and openings', 'track energy and pacing cues', 'K_raw=0.832']
 
    Prompt: Explain matrix multiplication
-   Response: From a balanced tutor perspective, let's look at "Explain matrix multiplication." This ties closely to the "definition" intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations with related ideas. Knowledge focus: artificial intelligence. Related concepts worth exploring: read government energy outlook, reflect on sensory details, explore character motivations.
-   Knowledge: ['artificial intelligence', 'read government energy outlook', 'reflect on sensory details', 'explore character motivations', 'K_raw=0.545']
+   Response: From a balanced tutor perspective, let's look at "Explain matrix multiplication." This ties closely to the "definition" intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations with related ideas. Knowledge focus: review the row-by-column rule. Related concepts worth exploring: connect matrix products to linear transformations, practice multiplying 2x2 and 3x3 matrices, interpret column space changes.
+   Knowledge: ['review the row-by-column rule', 'connect matrix products to linear transformations', 'practice multiplying 2x2 and 3x3 matrices', 'interpret column space changes', 'K_raw=0.821']
 
    Prompt: What is machine learning?
-   Response: From a balanced tutor perspective, let's look at "What is machine learning?" This ties closely to the "definition" intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error with related ideas. Knowledge focus: machine learning. Related concepts worth exploring: explore character motivations, audit local energy use, read government energy outlook.
-   Knowledge: ['machine learning', 'explore character motivations', 'audit local energy use', 'read government energy outlook', 'K_raw=0.584']
+   Response: From a balanced tutor perspective, let's look at "What is machine learning?" This ties closely to the "definition" intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error with related ideas. Knowledge focus: machine learning. Related concepts worth exploring: unsupervised learning, supervised learning.
+   Knowledge: ['machine learning', 'unsupervised learning', 'supervised learning', 'K_raw=0.815']
 
    Prompt: Tips for staying productive while studying
-   Response: From a balanced tutor perspective, let's look at "Tips for staying productive while studying." This ties closely to the "how_to" intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect on Break Strategies. Knowledge focus: artificial intelligence. Related concepts worth exploring: explore character motivations, creative writing, read government energy outlook.
-   Knowledge: ['artificial intelligence', 'explore character motivations', 'creative writing', 'read government energy outlook', 'K_raw=0.587']
+   Response: From a balanced tutor perspective, let's look at "Tips for staying productive while studying." This ties closely to the "how_to" intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect on Break Strategies. Knowledge focus: design focus blocks with clear targets. Related concepts worth exploring: batch similar study tasks together, schedule renewal breaks, log end-of-day reflections.
+   Knowledge: ['design focus blocks with clear targets', 'batch similar study tasks together', 'schedule renewal breaks', 'log end-of-day reflections', 'K_raw=0.829']
 
    Prompt: Clarify the concept of photosynthesis
-   Response: From a balanced tutor perspective, let's look at "Clarify the concept of photosynthesis." This ties closely to the "definition" intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion to what you already know. Knowledge focus: artificial intelligence. Related concepts worth exploring: read government energy outlook, reflect on sensory details, explore character motivations.
-   Knowledge: ['artificial intelligence', 'read government energy outlook', 'reflect on sensory details', 'explore character motivations', 'K_raw=0.576']
+   Response: From a balanced tutor perspective, let's look at "Clarify the concept of photosynthesis." This ties closely to the "definition" intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion to what you already know. Knowledge focus: map light-dependent and light-independent stages. Related concepts worth exploring: highlight the role of chlorophyll, trace energy conversion to glucose, connect photosynthesis to cellular respiration.
+   Knowledge: ['map light-dependent and light-independent stages', 'highlight the role of chlorophyll', 'trace energy conversion to glucose', 'connect photosynthesis to cellular respiration', 'K_raw=0.832']
 
    Prompt: How can I organize my research presentation effectively?
-   Response: From a balanced tutor perspective, let's look at "How can I organize my research presentation effectively?" This ties closely to the "how_to" intent I detected. Consider journaling about: Presentation Outline (Plan), Visual Storytelling (Design), Audience Engagement (Practice). Try to plan Presentation Outline, design Visual Storytelling, and practice Audience Engagement. Knowledge focus: artificial intelligence. Related concepts worth exploring: explore character motivations, read government energy outlook, creative writing.
-   Knowledge: ['artificial intelligence', 'explore character motivations', 'read government energy outlook', 'creative writing', 'K_raw=0.545']
+   Response: From a balanced tutor perspective, let's look at "How can I organize my research presentation effectively?" This ties closely to the "how_to" intent I detected. Consider journaling about: Presentation Outline (Plan), Visual Storytelling (Design), Audience Engagement (Practice). Try to plan Presentation Outline, design Visual Storytelling, and practice Audience Engagement. Knowledge focus: draft a clear narrative arc. Related concepts worth exploring: storyboard slides around key findings, practice delivery with timed sections, prepare audience engagement prompts.
+   Knowledge: ['draft a clear narrative arc', 'storyboard slides around key findings', 'practice delivery with timed sections', 'prepare audience engagement prompts', 'K_raw=0.829']
 
    Prompt: Define gravitational potential energy
-   Response: From a balanced tutor perspective, let's look at "Define gravitational potential energy." This ties closely to the "definition" intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames with a quick example, and connect Energy Transfer to what you already know. Knowledge focus: artificial intelligence. Related concepts worth exploring: explore character motivations, read government energy outlook, creative writing.
-   Knowledge: ['artificial intelligence', 'explore character motivations', 'read government energy outlook', 'creative writing', 'K_raw=0.587']
+   Response: From a balanced tutor perspective, let's look at "Define gravitational potential energy." This ties closely to the "definition" intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames with a quick example, and connect Energy Transfer to what you already know. Knowledge focus: define reference height explicitly. Related concepts worth exploring: illustrate energy transfer scenarios, compare gravitational and elastic potential energy, relate potential changes to work.
+   Knowledge: ['define reference height explicitly', 'illustrate energy transfer scenarios', 'compare gravitational and elastic potential energy', 'relate potential changes to work', 'K_raw=0.832']
    ```
 
   These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
@@ -300,37 +300,39 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
   ```
   Sample generation:
-  From a balanced tutor perspective, let's look at Share tips to learn python. This ties closely to the 'how_to' intent I detected.
-  Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule,
-  practice Focus Blocks, and reflect Break Strategies. Related concepts worth exploring: unsupervised learning, depth-first search,
-  shortest path in unweighted graphs.
+    Prompt: Share tips to learn python
+    Persona: tutor
+    Response: From a balanced tutor perspective, let's look at "Share tips to learn python." This ties closely to the "how_to" intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect on Break Strategies. Knowledge focus: schedule focused practice blocks. Related concepts worth exploring: work through bite-sized python projects, review core syntax and standard library patterns, reflect on debugging takeaways.
+    Journaling topics: Study Schedule, Focus Blocks, Break Strategies
+    Knowledge concepts: schedule focused practice blocks, work through bite-sized python projects, review core syntax and standard library patterns, reflect on debugging takeaways
+    Knowledge scores: relevance=3.956, coverage=0.865, cohesion=0.776, collaboration=0.349, diversity=6.867, K_raw=0.829, gate_mean=0.736
 
-  Calibration report: ECE raw=0.386 -> calibrated=0.008 (reduction=98%)
-  Reward weights: [0.27132374 0.29026431 0.075      0.36341195]
+  Calibration report: ECE raw=0.437 -> calibrated=0.027 (reduction=94%)
+  Reward weights: [0.2666619 0.2923091 0.075     0.366029 ]
 
   Intent bandit walkthrough:
   Prompt: Clarify when to use breadth-first search
   Classifier intent: definition (optimal=definition)
-  Reward components: correctness=1.00, confidence=0.55, semantic=0.93, feedback=0.92
-  Composite reward: 0.84
+  Reward components: correctness=1.00, confidence=1.00, semantic=0.80, feedback=0.92
+  Composite reward: 0.96
   Response: use case → shortest path in unweighted graphs; contrasts with → depth-first search
 
   Prompt: How should I start researching renewable energy?
   Classifier intent: how_to (optimal=how_to)
-  Reward components: correctness=1.00, confidence=0.55, semantic=0.92, feedback=0.92
-  Composite reward: 0.83
+  Reward components: correctness=1.00, confidence=0.45, semantic=0.80, feedback=0.92
+  Composite reward: 0.80
   Response: first step → audit local energy use; research → read government energy outlook
 
   Prompt: Compare supervised and unsupervised learning
   Classifier intent: comparison (optimal=comparison)
-  Reward components: correctness=1.00, confidence=0.33, semantic=0.92, feedback=0.92
-  Composite reward: 0.77
+  Reward components: correctness=1.00, confidence=1.00, semantic=0.84, feedback=0.92
+  Composite reward: 0.96
   Response: compare with → unsupervised learning; focus → labeled data; focus → pattern discovery
 
   Prompt: Offer reflective prompts for creative writing
   Classifier intent: exploration (optimal=exploration)
-  Reward components: correctness=1.00, confidence=0.50, semantic=0.86, feedback=0.92
-  Composite reward: 0.81
+  Reward components: correctness=1.00, confidence=0.42, semantic=0.80, feedback=0.92
+  Composite reward: 0.79
   Response: prompt → explore character motivations; prompt → reflect on sensory details
   ```
 
@@ -340,6 +342,24 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
   The walkthrough also saves the calibrated accuracy curve and the empirical-vs-theoretical EXP3 regret comparison used in the
   analysis appendix. Refer to the generated CSV summaries in `Archive/` for the underlying values if you wish to recreate the
   plots with your preferred tooling. The same behaviour is available through the CLI:
+
+### Fixed-Point Ladders Companion
+
+The research brief that motivated the README examples now has a full mathematical companion in
+[`docs/articles/fixed-point-ladders.md`](docs/articles/fixed-point-ladders.md). The article walks through:
+
+- **Parts A–C (Foundations & Logic):** proofs of the lattice background, the Knaster–Tarski theorem, Kleene iteration, and
+  µ-calculus semantics, all illustrated with the reachability operator that powers the persona-aware knowledge search.
+- **Parts D–H (Shortcuts & Optimisation):** contraction-based accelerations, closure operators for finite-time stabilisation,
+  and multi-objective "best layer" selection rules that mirror the reward-shaping heuristics used in the quickstart bandit demo.
+- **Parts I (Reflection):** a diagrammatic summary that ties the layer-by-layer iterations back to the automation loops in this
+  repository, making it easy to map the abstract ladders onto concrete CLI behaviours.
+
+Each section keeps the ladder visual from the README and annotates it with the corresponding proofs or calculations so the
+math-heavy readers can cross-check the guarantees while experimenting with the code.
+
+  For a dedicated, math-forward treatment of the fixed-point ladders referenced above, consult
+  [docs/articles/fixed-point-ladders.md](docs/articles/fixed-point-ladders.md).
 
 ```bash
 semantic-lexicon generate "What is machine learning?" \
@@ -381,9 +401,9 @@ Runs are archived in `Archive/topic_pure_retrieval_runs.json`.
 #### Scoring and retrieval
 
 ```math
-r(q)=\operatorname{diag}(g)\,\big(z(q)+p\big),\qquad
+r(q)=\mathrm{diag}(g)\,\big(z(q)+p\big),\qquad
 s(q,c)=\big(Wr(q)\big)^{\!\top} M \big(WE[c]\big),\qquad
-S_k(q)=\operatorname*{arg\,topk}_{c\in\mathcal{C}} s(q,c).
+S_k(q)=\mathop{\mathrm{arg\,topk}}_{c\in\mathcal{C}} s(q,c).
 ```
 
 ### §2 Evaluation archive and identifiers

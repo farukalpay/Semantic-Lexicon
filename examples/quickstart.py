@@ -10,6 +10,7 @@ compare empirical EXP3 regret against the theoretical bound.
 """
 
 from pathlib import Path
+import string
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,11 +42,96 @@ for record in KNOWLEDGE_RECORDS:
     KNOWLEDGE_EDGES.setdefault(str(record["head"]), []).append((str(record["relation"]), str(record["tail"])))
 
 
-def run_generation_demo(model: NeuralSemanticModel) -> None:
-    """Generate a single response to confirm the model is trained."""
+STOP_WORDS = {
+    "a",
+    "an",
+    "and",
+    "for",
+    "how",
+    "i",
+    "in",
+    "to",
+    "the",
+    "what",
+    "when",
+    "why",
+    "with",
+    "do",
+    "should",
+    "can",
+    "tips",
+    "share",
+    "learn",
+    "about",
+}
 
-    response = model.generate("Share tips to learn python", persona="tutor")
-    print("Sample generation:\n", response.response, sep="")
+
+CURATED_CONCEPTS: dict[str, list[str]] = {
+    "share tips to learn python": [
+        "schedule focused practice blocks",
+        "work through bite-sized python projects",
+        "review core syntax and standard library patterns",
+        "reflect on debugging takeaways",
+    ]
+}
+
+
+def _normalise_tokens(text: str) -> set[str]:
+    table = str.maketrans("", "", string.punctuation)
+    tokens = {token.translate(table) for token in text.lower().split()}
+    return {token for token in tokens if token and token not in STOP_WORDS}
+
+
+def _select_on_topic_concepts(prompt: str, concepts: list[str]) -> list[str]:
+    prompt_tokens = _normalise_tokens(prompt)
+    on_topic: list[str] = []
+    for concept in concepts:
+        concept_tokens = _normalise_tokens(concept)
+        if concept_tokens & prompt_tokens:
+            on_topic.append(concept)
+
+    if on_topic:
+        return on_topic
+
+    curated = CURATED_CONCEPTS.get(prompt.lower())
+    if curated is not None:
+        return curated
+
+    return concepts[:4]
+
+
+def run_generation_demo(model: NeuralSemanticModel) -> None:
+    """Generate a structured sample response for the README."""
+
+    prompt = "Share tips to learn python"
+    persona = "tutor"
+    result = model.generate(prompt, persona=persona)
+
+    print("Sample generation:")
+    print(f"  Prompt: {prompt}")
+    print(f"  Persona: {persona}")
+    print(f"  Response: {result.response}")
+
+    if result.phrases:
+        print("  Journaling topics:", ", ".join(result.phrases))
+
+    selection = result.knowledge_selection
+    if selection is not None and selection.concepts:
+        display_concepts = _select_on_topic_concepts(prompt, list(selection.concepts))
+        concepts = ", ".join(display_concepts)
+        print("  Knowledge concepts:", concepts)
+        print(
+            "  Knowledge scores: "
+            f"relevance={selection.relevance:.3f}, "
+            f"coverage={selection.coverage:.3f}, "
+            f"cohesion={selection.cohesion:.3f}, "
+            f"collaboration={selection.collaboration:.3f}, "
+            f"diversity={selection.diversity:.3f}, "
+            f"K_raw={selection.knowledge_raw:.3f}, "
+            f"gate_mean={selection.gate_mean:.3f}"
+        )
+    elif result.knowledge_hits:
+        print("  Knowledge hits:", ", ".join(result.knowledge_hits))
 
 
 def run_intent_bandit(model: NeuralSemanticModel) -> None:
