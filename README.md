@@ -339,9 +339,11 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
   The quickstart rewards are simulated using the intent classifier's posterior probabilities so the bandit loop stays in the unit
   interval without external feedback.
 
-  The walkthrough also saves the calibrated accuracy curve and the empirical-vs-theoretical EXP3 regret comparison used in the
-  analysis appendix. Refer to the generated CSV summaries in `Archive/` for the underlying values if you wish to recreate the
-  plots with your preferred tooling. The same behaviour is available through the CLI:
+  You can opt into saving the calibrated accuracy curve and the empirical-vs-theoretical EXP3 regret comparison that back the
+  analysis appendix by setting `SEMANTIC_LEXICON_SAVE_PLOTS=1` (or `true/yes/on`) before running the script. This keeps the
+  repository free of bulky PNGs by default while still letting you regenerate them under `docs/assets/` on demand. Refer to the
+  generated CSV summaries in `Archive/` for the underlying values if you wish to recreate the plots with your preferred tooling.
+  The same behaviour is available through the CLI:
 
 ### Fixed-Point Ladders Companion
 

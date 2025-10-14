@@ -9,6 +9,7 @@ intent routing loop with composite rewards, and saves analysis plots that
 compare empirical EXP3 regret against the theoretical bound.
 """
 
+import os
 from pathlib import Path
 import string
 
@@ -188,8 +189,22 @@ def build_response(prompt: str, intent: str) -> str:
     return "; ".join(suggestions[:3])
 
 
+def _should_save_plots() -> bool:
+    """Return True when the caller explicitly opts into plot generation."""
+
+    flag = os.environ.get("SEMANTIC_LEXICON_SAVE_PLOTS")
+    if flag is None:
+        return False
+
+    return flag.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def save_analysis_plots(model: NeuralSemanticModel) -> None:
     """Persist the convergence and regret plots used in the documentation."""
+
+    if not _should_save_plots():
+        print("\nSkipping plot generation (set SEMANTIC_LEXICON_SAVE_PLOTS=1 to enable).")
+        return
 
     assets = Path("docs/assets")
     assets.mkdir(parents=True, exist_ok=True)
