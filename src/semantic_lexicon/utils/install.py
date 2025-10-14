@@ -3,18 +3,28 @@
 # Do not remove this notice from source distributions.
 
 """Utilities for handling offline package installation fallbacks."""
-
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import re
+import shutil
 import socket
 import subprocess
 import sys
+import sysconfig
+import tempfile
 import urllib.request
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Iterable, MutableMapping, Sequence
+from enum import Enum
 from pathlib import Path
 from typing import Callable
+
+try:  # Python 3.11+
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - fallback for older interpreters
+    import tomli as tomllib  # type: ignore
 
 DEFAULT_INDEX_URL = "https://pypi.org/simple"
 DEFAULT_WHEEL_DIR = Path.home() / ".cache" / "pip" / "wheels"
@@ -22,6 +32,20 @@ DEFAULT_WHEEL_DIR = Path.home() / ".cache" / "pip" / "wheels"
 
 ConnectionChecker = Callable[[str, float], bool]
 PipRunner = Callable[[Sequence[str]], None]
+
+
+class InstallMode(str, Enum):
+    """Resolution modes returned by :func:`resolve_package_installation_failure`."""
+
+    INSTALLED = "Installed"
+    WHEEL_INSTALLED = "WheelInstalled"
+    LINKED = "Linked"
+    DIRECT_INSTALLED = "DirectInstalled"
+    SOURCED = "Sourced"
+
+
+def _canonical_name(value: str) -> str:
+    return value.lower().replace("_", "-")
 
 
 def _default_connection_checker(url: str, timeout: float) -> bool:
@@ -44,32 +68,43 @@ def _default_pip_runner(args: Sequence[str]) -> None:
     subprocess.run(command, check=True)
 
 
-def _normalise_requirement_version(required: float) -> tuple[int, ...]:
+def _normalise_requirement_version(required: int | float | Sequence[int]) -> tuple[int, ...]:
     """Convert ``required`` into a version tuple for lexicographic comparison."""
 
-    if required <= 0:
-        raise ValueError("required build dependency version must be positive")
-    text = f"{required}"
-    if "e" in text.lower():
-        text = f"{required:.12f}"
-    numbers = [int(part) for part in re.findall(r"\d+", text)]
-    while len(numbers) > 1 and numbers[-1] == 0:
-        numbers.pop()
-    return tuple(numbers)
+    if isinstance(required, Sequence) and not isinstance(required, (str, bytes)):
+        numbers: list[int] = []
+        for item in required:
+            if not isinstance(item, int):
+                raise TypeError("version components must be integers")
+            if item < 0:
+                raise ValueError("version components must be non-negative")
+            numbers.append(int(item))
+        if not numbers:
+            raise ValueError("required build dependency version must be positive")
+        return tuple(numbers)
+
+    if isinstance(required, (int, float)):
+        if required <= 0:
+            raise ValueError("required build dependency version must be positive")
+        text = f"{required}"
+        if "e" in text.lower():
+            text = f"{required:.12f}"
+        numbers = [int(part) for part in re.findall(r"\d+", text)]
+        while len(numbers) > 1 and numbers[-1] == 0:
+            numbers.pop()
+        return tuple(numbers)
+
+    raise TypeError("unsupported version specification type")
 
 
-def _extract_version_components(filename: str) -> tuple[int, ...] | None:
-    """Extract a numeric version tuple from a wheel ``filename``."""
-
-    numbers = [int(part) for part in re.findall(r"\d+", filename)]
+def _extract_version_components(segment: str) -> tuple[int, ...] | None:
+    numbers = [int(part) for part in re.findall(r"\d+", segment)]
     if not numbers:
         return None
     return tuple(numbers)
 
 
 def _meets_version(candidate: tuple[int, ...], required: tuple[int, ...]) -> bool:
-    """Return ``True`` when ``candidate`` is greater than or equal to ``required``."""
-
     max_len = max(len(candidate), len(required))
     padded_candidate = candidate + (0,) * (max_len - len(candidate))
     padded_required = required + (0,) * (max_len - len(required))
@@ -79,42 +114,126 @@ def _meets_version(candidate: tuple[int, ...], required: tuple[int, ...]) -> boo
 def _find_local_wheel(
     package_name: str, wheel_dir: Path, required_version: tuple[int, ...]
 ) -> Path | None:
-    """Locate a cached wheel for ``package_name`` that satisfies ``required_version``."""
-
     if not wheel_dir.exists():
         return None
 
-    canonical_name = package_name.lower().replace("_", "-")
-    for wheel_path in sorted(wheel_dir.glob("*.whl")):
-        filename = wheel_path.name
-        name_without_suffix = wheel_path.stem
-        parts = name_without_suffix.split("-")
+    canonical_name = _canonical_name(package_name)
+    for wheel_path in sorted(wheel_dir.rglob("*.whl")):
+        parts = wheel_path.name.split("-")
         if not parts:
             continue
-        candidate_name = parts[0].lower().replace("_", "-")
-        if candidate_name != canonical_name:
+        candidate_name = _canonical_name(parts[0])
+        if candidate_name != canonical_name or len(parts) < 2:
             continue
-        candidate_version = _extract_version_components(filename)
+        candidate_version = _extract_version_components(parts[1])
         if candidate_version and _meets_version(candidate_version, required_version):
             return wheel_path
     return None
 
 
-def _augment_pythonpath(env: MutableMapping[str, str], new_path: str) -> None:
-    """Ensure ``new_path`` appears at the front of ``PYTHONPATH`` inside ``env``."""
+def _find_project_wheels(wheel_dir: Path, project_name: str) -> list[Path]:
+    if not wheel_dir.exists():
+        return []
 
+    canonical_prefix = f"{_canonical_name(project_name)}-"
+    matches: list[Path] = []
+    for wheel_path in wheel_dir.rglob("*.whl"):
+        canonical_filename = _canonical_name(wheel_path.stem)
+        if canonical_filename.startswith(canonical_prefix):
+            matches.append(wheel_path)
+    return matches
+
+
+def _select_latest_wheel(wheels: Iterable[Path]) -> Path | None:
+    best: Path | None = None
+    best_version: tuple[int, ...] = ()
+    for wheel in wheels:
+        parts = wheel.name.split("-")
+        if len(parts) < 2:
+            continue
+        candidate_version = _extract_version_components(parts[1])
+        if candidate_version is None:
+            continue
+        if best is None or _meets_version(candidate_version, best_version):
+            best = wheel
+            best_version = candidate_version
+    return best
+
+
+def _atomically_write(path: Path, data: str, *, mode: str = "w", encoding: str = "utf-8") -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), prefix=path.name, suffix=".tmp")
+    try:
+        with os.fdopen(fd, mode, encoding=encoding) as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def _prepend_pythonpath(env: MutableMapping[str, str], new_path: str) -> None:
     existing = env.get("PYTHONPATH")
     if existing:
-        paths = [part for part in existing.split(os.pathsep) if part]
-        if new_path not in paths:
-            env["PYTHONPATH"] = os.pathsep.join([new_path, *paths])
+        parts = [part for part in existing.split(os.pathsep) if part]
+        if new_path in parts:
+            parts.remove(new_path)
+        env["PYTHONPATH"] = os.pathsep.join([new_path, *parts])
     else:
         env["PYTHONPATH"] = new_path
 
 
+def _ensure_console_script(script_path: Path) -> None:
+    if script_path.exists():
+        return
+    body = (
+        f"#!{sys.executable}\n"
+        "import runpy; runpy.run_module('semantic_lexicon.cli', run_name='__main__')\n"
+    )
+    _atomically_write(script_path, body)
+    script_path.chmod(0o755)
+
+
+def _sha256_b64url(file_path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(file_path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(8192), b""):
+            digest.update(chunk)
+    return base64.urlsafe_b64encode(digest.digest()).rstrip(b"=").decode("ascii")
+
+
+def _iter_package_files(package_root: Path) -> Iterable[Path]:
+    for entry in package_root.rglob("*"):
+        if entry.is_file():
+            yield entry
+
+
+def _parse_project_name_version(pyproject_path: Path) -> tuple[str, str]:
+    data = tomllib.loads(pyproject_path.read_text("utf-8"))
+    project = data.get("project") or {}
+    tool = data.get("tool") or {}
+    setuptools_cfg = tool.get("setuptools") or {}
+
+    name = project.get("name") or setuptools_cfg.get("name")
+    version = project.get("version") or setuptools_cfg.get("version")
+
+    if not name:
+        name = pyproject_path.parent.name
+    if not version:
+        version = "0"
+
+    return str(name), str(version)
+
+
 def resolve_package_installation_failure(
     project_path: Path,
-    required_build_dep_version: float,
+    required_build_dep_version: int | float | Sequence[int],
     *,
     index_url: str = DEFAULT_INDEX_URL,
     wheel_dir: Path | None = None,
@@ -122,37 +241,8 @@ def resolve_package_installation_failure(
     pip_runner: PipRunner | None = None,
     env: MutableMapping[str, str] | None = None,
     connection_timeout: float = 3.0,
-) -> bool:
-    """Attempt to install ``project_path`` even without remote index access.
-
-    The strategy follows these steps:
-
-    1. Try a normal editable installation when the package index is reachable.
-    2. If offline, fall back to a cached ``setuptools`` wheel when it satisfies
-       ``required_build_dep_version`` and install without build isolation.
-    3. As a last resort, expose the project sources by updating ``PYTHONPATH``.
-
-    Parameters
-    ----------
-    project_path:
-        Path to the project root that should be installed.
-    required_build_dep_version:
-        Minimal acceptable version for build-time dependencies such as
-        ``setuptools``.
-    index_url:
-        Package index URL used to probe connectivity.
-    wheel_dir:
-        Directory containing cached wheels. Defaults to the standard pip cache.
-    connection_checker:
-        Optional override for the connectivity test; primarily useful for tests.
-    pip_runner:
-        Function invoked to execute ``pip`` commands. Defaults to launching the
-        interpreter's ``pip`` module.
-    env:
-        Environment mapping updated when falling back to direct source imports.
-    connection_timeout:
-        Timeout in seconds applied to the connectivity probe.
-    """
+) -> tuple[InstallMode, bool]:
+    """Attempt to install ``project_path`` even without remote index access."""
 
     project_root = Path(project_path)
     if wheel_dir is None:
@@ -166,20 +256,106 @@ def resolve_package_installation_failure(
 
     required_version = _normalise_requirement_version(required_build_dep_version)
 
+    # Tier 0 — online fast path
     if connection_checker(index_url, connection_timeout):
         pip_runner(["install", "--upgrade", "pip"])
         pip_runner(["install", "-e", str(project_root)])
-        return True
+        return InstallMode.INSTALLED, True
 
+    # Tier 1 — cached build deps + editable (no build isolation)
     local_wheel = _find_local_wheel("setuptools", wheel_dir, required_version)
     if local_wheel is not None:
         pip_runner(["install", str(local_wheel)])
         pip_runner(["install", "--no-build-isolation", "--no-deps", "-e", str(project_root)])
-        return True
+        return InstallMode.INSTALLED, True
 
-    project_src = str(project_root / "src")
-    _augment_pythonpath(env, project_src)
-    return False
+    # Tier 1.5 — cached project wheel (no index)
+    pyproject_path = project_root / "pyproject.toml"
+    if pyproject_path.exists():
+        project_name, project_version = _parse_project_name_version(pyproject_path)
+    else:
+        project_name = project_root.name
+        project_version = "0"
+
+    cached_project_wheels = _find_project_wheels(wheel_dir, project_name)
+    latest_project_wheel = _select_latest_wheel(cached_project_wheels)
+    if latest_project_wheel is not None:
+        pip_runner(["install", "--no-index", str(latest_project_wheel)])
+        return InstallMode.WHEEL_INSTALLED, True
+
+    # Tier 2 — durable editable via .pth (no setuptools required)
+    src_path = project_root / "src"
+    try:
+        site_paths = sysconfig.get_paths()
+        site_pure = Path(site_paths["purelib"])
+        site_scripts = Path(site_paths["scripts"])
+    except KeyError:
+        site_pure = Path(sysconfig.get_path("purelib"))
+        site_scripts = Path(sysconfig.get_path("scripts"))
+
+    try:
+        offline_pth = site_pure / f"{_canonical_name(project_name)}-offline.pth"
+        _atomically_write(offline_pth, str(src_path) + "\n")
+        _prepend_pythonpath(env, str(src_path))
+        console_script = site_scripts / project_name
+        _ensure_console_script(console_script)
+        return InstallMode.LINKED, True
+    except OSError:
+        pass
+
+    # Tier 3 — direct PEP 376 install (copy + .dist-info), still offline
+    try:
+        package_src = src_path / "semantic_lexicon"
+        if not package_src.exists():
+            raise FileNotFoundError("source package missing")
+
+        package_dst = site_pure / "semantic_lexicon"
+        if package_dst.exists():
+            shutil.rmtree(package_dst)
+        shutil.copytree(package_src, package_dst)
+
+        dist_info = site_pure / f"{_canonical_name(project_name)}-{project_version}.dist-info"
+        if dist_info.exists():
+            shutil.rmtree(dist_info)
+        dist_info.mkdir(parents=True, exist_ok=True)
+
+        metadata = (
+            "Metadata-Version: 2.1\n"
+            f"Name: {project_name}\n"
+            f"Version: {project_version}\n"
+            "Summary: Offline install\n"
+        )
+        _atomically_write(dist_info / "METADATA", metadata)
+        _atomically_write(dist_info / "INSTALLER", "offline-resolver\n")
+
+        record_lines: list[str] = []
+        for file_path in _iter_package_files(package_dst):
+            rel_path = file_path.relative_to(site_pure)
+            digest = _sha256_b64url(file_path)
+            size = file_path.stat().st_size
+            record_lines.append(f"{rel_path},sha256={digest},{size}")
+        for info_file in ("METADATA", "INSTALLER"):
+            file_path = dist_info / info_file
+            rel_path = file_path.relative_to(site_pure)
+            digest = _sha256_b64url(file_path)
+            size = file_path.stat().st_size
+            record_lines.append(f"{rel_path},sha256={digest},{size}")
+        record_lines.append(f"{(dist_info / 'RECORD').relative_to(site_pure)},,")
+        _atomically_write(dist_info / "RECORD", "\n".join(record_lines) + "\n")
+
+        console_script = site_scripts / project_name
+        try:
+            _ensure_console_script(console_script)
+        except OSError:
+            pass
+
+        return InstallMode.DIRECT_INSTALLED, True
+    except OSError:
+        pass
+
+    # Tier 4 — last resort: source import only (what you already do)
+    _prepend_pythonpath(env, str(src_path))
+    return InstallMode.SOURCED, True
 
 
-__all__: Sequence[str] = ["resolve_package_installation_failure"]
+__all__: Sequence[str] = ["resolve_package_installation_failure", "InstallMode"]
