@@ -4,7 +4,7 @@
 
 """Utility helpers for Semantic Lexicon."""
 
-from .install import resolve_package_installation_failure
+from .install import InstallMode, resolve_package_installation_failure
 from .io import read_jsonl, write_jsonl
 from .random import seed_everything
 from .text import normalise_text, tokenize
@@ -16,4 +16,5 @@ __all__ = [
     "tokenize",
     "seed_everything",
     "resolve_package_installation_failure",
+    "InstallMode",
 ]
