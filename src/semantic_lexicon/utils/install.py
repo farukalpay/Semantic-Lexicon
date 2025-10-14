@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import importlib
 import os
 import re
 import shutil
@@ -20,12 +21,13 @@ import urllib.request
 from collections.abc import Iterable, MutableMapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
+tomllib: Any
 try:  # Python 3.11+
-    import tomllib
+    tomllib = importlib.import_module("tomllib")
 except ModuleNotFoundError:  # pragma: no cover - fallback for older interpreters
-    import tomli as tomllib  # type: ignore
+    tomllib = importlib.import_module("tomli")
 
 DEFAULT_INDEX_URL = "https://pypi.org/simple"
 DEFAULT_WHEEL_DIR = Path.home() / ".cache" / "pip" / "wheels"
