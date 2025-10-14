@@ -698,7 +698,10 @@ def _build_related_topics(
         }
         if fallback_items:
             overlap_without_generics = focus_match.prompt_overlap - generic_prompt_overlap
-            if not overlap_without_generics or not set(fallback_keywords).issubset(overlap_without_generics):
+            fallback_keyword_set = set(fallback_keywords)
+            if not overlap_without_generics or not fallback_keyword_set.issubset(
+                overlap_without_generics
+            ):
                 focus = fallback_items[0]
                 related = fallback_items[1:4]
     elif fallback_items:
@@ -735,9 +738,7 @@ def _candidate_from_phrase(
 
 
 def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...]]:
-    prompt_tokens = {
-        _normalise_token(token) for token in tokens if _normalise_token(token)
-    }
+    prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
     prompt_tokens -= STOPWORDS
     for keywords, suggestions in KEYWORD_FALLBACKS.items():
         if set(keywords).issubset(prompt_tokens):
@@ -752,9 +753,7 @@ def _filter_concepts_by_prompt(
 ) -> list[ConceptSelectionMatch]:
     if not concepts:
         return []
-    prompt_tokens = {
-        _normalise_token(token) for token in tokens if _normalise_token(token)
-    }
+    prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
     prompt_tokens -= STOPWORDS
     phrase_tokens: set[str] = set()
     for phrase in phrases:
@@ -795,9 +794,7 @@ def _tokens_share_stem(lhs: str, rhs: str) -> bool:
     return False
 
 
-def _collect_overlap(
-    base_tokens: set[str], concept_tokens: set[str]
-) -> set[str]:
+def _collect_overlap(base_tokens: set[str], concept_tokens: set[str]) -> set[str]:
     overlaps: set[str] = set()
     if not base_tokens:
         return overlaps
