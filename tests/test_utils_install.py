@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
-
 import sysconfig
+from pathlib import Path
 
 import pytest
 
@@ -172,7 +171,13 @@ def test_resolver_direct_installation_when_linking_fails(
 
     real_atomically_write = install_mod._atomically_write
 
-    def flaky_atomically_write(path: Path, data: str, *, mode: str = "w", encoding: str = "utf-8") -> None:
+    def flaky_atomically_write(
+        path: Path,
+        data: str,
+        *,
+        mode: str = "w",
+        encoding: str = "utf-8",
+    ) -> None:
         if str(path).endswith("offline.pth"):
             raise OSError("nope")
         real_atomically_write(path, data, mode=mode, encoding=encoding)
@@ -211,7 +216,13 @@ def test_resolver_sources_when_copy_fails(monkeypatch: pytest.MonkeyPatch, tmp_p
 
     real_atomically_write = install_mod._atomically_write
 
-    def flaky_atomically_write(path: Path, data: str, *, mode: str = "w", encoding: str = "utf-8") -> None:
+    def flaky_atomically_write(
+        path: Path,
+        data: str,
+        *,
+        mode: str = "w",
+        encoding: str = "utf-8",
+    ) -> None:
         if str(path).endswith("offline.pth"):
             raise OSError("nope")
         real_atomically_write(path, data, mode=mode, encoding=encoding)

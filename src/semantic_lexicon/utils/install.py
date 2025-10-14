@@ -3,6 +3,7 @@
 # Do not remove this notice from source distributions.
 
 """Utilities for handling offline package installation fallbacks."""
+
 from __future__ import annotations
 
 import base64
