@@ -89,6 +89,65 @@ VERB_BLACKLIST = {
 }
 
 
+KEYWORD_FALLBACKS: dict[tuple[str, ...], list[str]] = {
+    ("python",): [
+        "schedule focused practice blocks",
+        "work through bite-sized python projects",
+        "review core syntax and standard library patterns",
+        "reflect on debugging takeaways",
+    ],
+    ("public", "speaking"): [
+        "practice short talks on camera",
+        "collect feedback from trusted listeners",
+        "rehearse transitions and openings",
+        "track energy and pacing cues",
+    ],
+    ("matrix", "multiplication"): [
+        "review the row-by-column rule",
+        "connect matrix products to linear transformations",
+        "practice multiplying 2x2 and 3x3 matrices",
+        "interpret column space changes",
+    ],
+    ("machine", "learning"): [
+        "contrast supervised and unsupervised pipelines",
+        "track generalisation error on validation data",
+        "experiment with regularisation strength",
+        "audit feature importance",
+    ],
+    ("productive", "studying"): [
+        "design focus blocks with clear targets",
+        "batch similar study tasks together",
+        "schedule renewal breaks",
+        "log end-of-day reflections",
+    ],
+    ("photosynthesis",): [
+        "map light-dependent and light-independent stages",
+        "highlight the role of chlorophyll",
+        "trace energy conversion to glucose",
+        "connect photosynthesis to cellular respiration",
+    ],
+    ("research", "presentation"): [
+        "draft a clear narrative arc",
+        "storyboard slides around key findings",
+        "practice delivery with timed sections",
+        "prepare audience engagement prompts",
+    ],
+    ("gravitational", "potential", "energy"): [
+        "define reference height explicitly",
+        "illustrate energy transfer scenarios",
+        "compare gravitational and elastic potential energy",
+        "relate potential changes to work",
+    ],
+}
+
+
+@dataclass
+class ConceptSelectionMatch:
+    concept: str
+    prompt_overlap: set[str]
+    phrase_overlap: set[str]
+
+
 class PersonaGenerator:
     """Sample-based generator conditioned on persona vector."""
 
@@ -622,14 +681,41 @@ def _build_related_topics(
     if knowledge is None or not getattr(knowledge, "entities", None):
         return "", [], None
     selection = knowledge.select_concepts(prompt_vector)
-    if not selection.concepts:
-        return "", [], selection
-    focus = selection.concepts[0]
-    related = list(selection.concepts[1:4])
-    if phrases and focus.lower() not in {phrase.lower() for phrase in phrases}:
-        candidate = _match_knowledge_entity(knowledge, phrases[0])
-        if candidate:
-            focus = candidate
+    concepts = list(selection.concepts)
+    filtered_matches = _filter_concepts_by_prompt(tokens, phrases, concepts)
+    fallback_items, fallback_keywords = _fallback_concepts(tokens)
+    focus: str
+    related: list[str]
+
+    if filtered_matches:
+        focus_match = filtered_matches[0]
+        focus = focus_match.concept
+        related = [match.concept for match in filtered_matches[1:4]]
+        generic_prompt_overlap = {
+            token
+            for token in focus_match.prompt_overlap
+            if token in {"energy", "topic", "concept", "information", "data", "idea"}
+        }
+        if fallback_items:
+            overlap_without_generics = focus_match.prompt_overlap - generic_prompt_overlap
+            fallback_keyword_set = set(fallback_keywords)
+            if not overlap_without_generics or not fallback_keyword_set.issubset(
+                overlap_without_generics
+            ):
+                focus = fallback_items[0]
+                related = fallback_items[1:4]
+    elif fallback_items:
+        focus = fallback_items[0]
+        related = fallback_items[1:4]
+    else:
+        if not concepts:
+            candidate_focus = _candidate_from_phrase(knowledge, phrases)
+            if candidate_focus is None:
+                return "", [], selection
+            concepts = [candidate_focus]
+        focus = concepts[0]
+        related = list(concepts[1:4])
+
     pieces: list[str] = []
     pieces.append(f"Knowledge focus: {focus}.")
     if related:
@@ -637,6 +723,90 @@ def _build_related_topics(
     message = " ".join(pieces)
     hits = [focus, *related, f"K_raw={selection.knowledge_raw:.3f}"]
     return message, hits, selection
+
+
+def _candidate_from_phrase(
+    knowledge: Optional[KnowledgeNetwork], phrases: Sequence[str]
+) -> Optional[str]:
+    if not knowledge or not phrases:
+        return None
+    for phrase in phrases:
+        candidate = _match_knowledge_entity(knowledge, phrase)
+        if candidate:
+            return candidate
+    return None
+
+
+def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...]]:
+    prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
+    prompt_tokens -= STOPWORDS
+    for keywords, suggestions in KEYWORD_FALLBACKS.items():
+        if set(keywords).issubset(prompt_tokens):
+            return suggestions, keywords
+    return [], ()
+
+
+def _filter_concepts_by_prompt(
+    tokens: Iterable[str],
+    phrases: Sequence[str],
+    concepts: Sequence[str],
+) -> list[ConceptSelectionMatch]:
+    if not concepts:
+        return []
+    prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
+    prompt_tokens -= STOPWORDS
+    phrase_tokens: set[str] = set()
+    for phrase in phrases:
+        for token in tokenize(phrase):
+            normalised = _normalise_token(token)
+            if normalised:
+                phrase_tokens.add(normalised)
+    filtered: list[ConceptSelectionMatch] = []
+    for concept in concepts:
+        concept_tokens = {
+            _normalise_token(token) for token in tokenize(concept) if _normalise_token(token)
+        }
+        if not concept_tokens:
+            continue
+        prompt_overlap = _collect_overlap(prompt_tokens, concept_tokens)
+        phrase_overlap = _collect_overlap(phrase_tokens, concept_tokens)
+        if prompt_overlap or len(phrase_overlap) >= 2:
+            filtered.append(
+                ConceptSelectionMatch(
+                    concept=concept,
+                    prompt_overlap=prompt_overlap,
+                    phrase_overlap=phrase_overlap,
+                )
+            )
+    return filtered
+
+
+def _tokens_share_stem(lhs: str, rhs: str) -> bool:
+    if not lhs or not rhs:
+        return False
+    if lhs.startswith(rhs) or rhs.startswith(lhs):
+        min_length = min(len(lhs), len(rhs))
+        return min_length >= 4
+    if lhs.endswith("ing") and rhs.startswith(lhs[:-3]):
+        return len(lhs[:-3]) >= 3
+    if rhs.endswith("ing") and lhs.startswith(rhs[:-3]):
+        return len(rhs[:-3]) >= 3
+    return False
+
+
+def _collect_overlap(base_tokens: set[str], concept_tokens: set[str]) -> set[str]:
+    overlaps: set[str] = set()
+    if not base_tokens:
+        return overlaps
+    for concept_token in concept_tokens:
+        if concept_token in base_tokens:
+            overlaps.add(concept_token)
+            continue
+        for base_token in base_tokens:
+            if _tokens_share_stem(base_token, concept_token):
+                overlaps.add(base_token)
+                break
+    return overlaps
 
 
 def _match_knowledge_entity(

@@ -1,0 +1,1 @@
+Agents: Skip creating or staging PNG artifacts (for example under docs/assets/) unless a human explicitly asks for them. Leave the directory empty so maintainers can add their own visuals.
