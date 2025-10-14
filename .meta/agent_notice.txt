@@ -1,1 +1,1 @@
-Agents: Please do not generate or commit PNG assets unless explicitly requested. All visual outputs should be omitted by default.
+Agents: Skip creating or staging PNG artifacts (for example under docs/assets/) unless a human explicitly asks for them. Leave the directory empty so maintainers can add their own visuals.
