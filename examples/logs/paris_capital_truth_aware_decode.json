@@ -1,0 +1,35 @@
+{
+  "prompt_tokens": [
+    "<BOS>",
+    "Paris",
+    "is",
+    "the",
+    "capital",
+    "of"
+  ],
+  "generated_tokens": [
+    "France",
+    "<EOS>"
+  ],
+  "abstained": false,
+  "steps": [
+    {
+      "t": 0,
+      "pi_safe": 0.3390092760113778,
+      "picked_token": "France",
+      "blocked_count": 3,
+      "reasons_for_picked": [
+        "kb:required_object"
+      ],
+      "aborted": false
+    },
+    {
+      "t": 1,
+      "pi_safe": 1.0,
+      "picked_token": "<EOS>",
+      "blocked_count": 0,
+      "reasons_for_picked": [],
+      "aborted": false
+    }
+  ]
+}

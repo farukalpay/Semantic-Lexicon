@@ -99,6 +99,54 @@ The CLI saves embeddings, intent weights, and knowledge matrices to the workspac
    semantic-lexicon generate "Explain neural networks" --workspace artifacts --persona tutor
    ```
 
+## Truth-Aware Decoding Walkthrough
+
+Truth-aware decoding (TAD) combines a model's logits with declarative knowledge supplied by one or more safety oracles. Each decode step (a) queries the model for logits, (b) consults the oracle for a boolean allow/block mask plus diagnostic labels, (c) computes the probability mass that remains safe, and (d) either selects the highest-probability safe token or abstains when the safe mass falls below a configurable threshold. The [`semantic_lexicon.decoding_tad.truth_aware_decode`](src/semantic_lexicon/decoding_tad.py) loop is pure NumPy and logs every decision in a `TADStepLog`, making it easy to audit or integrate into research pipelines.
+
+### Reproducing the toy capital-of demo
+
+The repository includes a fully-worked, research-grade example that resolves the prompt *“Paris is the capital of …”* against a knowledge-base oracle. The script reproduces the toy model from the TAD unit tests, injects a fact table with a single triple `(Paris, capital_of, France)`, and records all decode-time telemetry to disk.
+
+```bash
+python examples/truth_aware_decode_demo.py
+```
+
+Running the demo prints the safe decoding trace and saves the structured log to `examples/logs/paris_capital_truth_aware_decode.json`:
+
+```
+Prompt tokens: <BOS> Paris is the capital of
+Generated tokens: France <EOS>
+Log written to examples/logs/paris_capital_truth_aware_decode.json
+```
+
+The JSON log captures every metric needed for a forensic audit. Each entry in `steps` reports the decode index `t`, the safe probability mass `pi_safe` (after masking), the selected token, the number of blocked vocabulary entries, and the oracle-provided reason labels. A shortened excerpt is shown below; the full file is part of the repository so you can cite or diff it in papers and lab notebooks.
+
+```json
+{
+  "prompt_tokens": ["<BOS>", "Paris", "is", "the", "capital", "of"],
+  "generated_tokens": ["France", "<EOS>"],
+  "abstained": false,
+  "steps": [
+    {
+      "t": 0,
+      "pi_safe": 0.3390092760113778,
+      "picked_token": "France",
+      "blocked_count": 3,
+      "reasons_for_picked": ["kb:required_object"]
+    },
+    {
+      "t": 1,
+      "pi_safe": 1.0,
+      "picked_token": "<EOS>",
+      "blocked_count": 0,
+      "reasons_for_picked": []
+    }
+  ]
+}
+```
+
+From here you can: (1) swap in the graph-backed oracle to ground against a larger knowledge base, (2) set `TADConfig.abstain_token` to emit a sentinel when `pi_safe` drops below the threshold, and (3) feed the logged `pi_safe` sequence into your own reliability analyses (e.g., cumulative risk bounds or safe-mass histograms). Because `truth_aware_decode` works with any `Oracle` implementation, PhD students can plug in bespoke symbolic checkers—factuality verifiers, contradiction detectors, or mathematical solvers—without touching the decoding loop itself.
+
 ## Knowledge Selection Playbook
 
 The knowledge selector now treats every AGENTS.md instruction as a hard feasibility constraint. Broad concepts can still join the shortlist, but only when they collaborate with prompt-relevant anchors *and* all group bounds are respected.
