@@ -5,6 +5,7 @@ repo_url: https://github.com/example/semantic-lexicon
 nav:
   - Home: index.md
   - User Guide: user-guide.md
+  - Toolkit Enhancement Playbook: toolkit-enhancement-guide.md
   - Prompt Evaluations:
       - Overview: prompt-evaluations/index.md
       - Manual Prompt Test: prompt-evaluations/manual_prompt_test.md

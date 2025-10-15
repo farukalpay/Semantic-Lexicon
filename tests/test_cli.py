@@ -40,3 +40,27 @@ def test_cli_train_and_diagnostics(tmp_path: Path) -> None:
     )
     assert knowledge_result.exit_code == 0
     assert '"concepts"' in knowledge_result.stdout
+
+
+def test_cli_prepare_supports_short_option(tmp_path: Path) -> None:
+    workspace = tmp_path / "artifacts"
+    workspace.mkdir()
+    intent_src = Path("src/semantic_lexicon/data/intent.jsonl")
+    knowledge_src = Path("src/semantic_lexicon/data/knowledge.jsonl")
+
+    result = runner.invoke(
+        app,
+        [
+            "prepare",
+            "--intent",
+            str(intent_src),
+            "--knowledge",
+            str(knowledge_src),
+            "--workspace",
+            str(workspace),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (workspace / "intent.jsonl").exists()
+    assert (workspace / "knowledge.jsonl").exists()
