@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import csv
 import json
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from .graph_api import Evidence, GraphAPI
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def load_triples_csv(

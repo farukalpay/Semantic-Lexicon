@@ -4,10 +4,12 @@ from __future__ import annotations
 import json
 import uuid
 from collections import defaultdict
-from collections.abc import Iterable
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from .graph_api import Entity, EntityId, Evidence, GraphAPI
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _norm(text: str) -> str:

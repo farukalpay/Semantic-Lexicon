@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import List, Sequence
-
 import numpy as np
 import pytest
 
@@ -35,13 +33,13 @@ class ToyModel(ModelLike):
         self._id = {token: index for index, token in enumerate(self._vocab)}
 
     @property
-    def vocab(self) -> Sequence[str]:
+    def vocab(self) -> list[str]:
         return self._vocab
 
     def eos_id(self) -> int:
         return self._id["<EOS>"]
 
-    def next_logits(self, prefix_token_ids: List[int]) -> np.ndarray:
+    def next_logits(self, prefix_token_ids: list[int]) -> np.ndarray:
         vocab_size = len(self._vocab)
         logits = np.full(vocab_size, -10.0, dtype=np.float64)
         logits[self._id["."]] = -2.0
@@ -72,7 +70,7 @@ class ToyModel(ModelLike):
         return logits
 
 
-def ids(vocab: Sequence[str], *words: str) -> List[int]:
+def ids(vocab: list[str], *words: str) -> list[int]:
     return [vocab.index(word) for word in words]
 
 
@@ -140,7 +138,10 @@ def test_eos_escape_even_when_oracle_blocks_all() -> None:
 
     class BlockingOracle:
         def evaluate(self, prefix_token_ids, next_logits, vocab):
-            return OracleReport(safe_mask=np.zeros(len(vocab), dtype=bool), reasons=[set() for _ in vocab])
+            return OracleReport(
+                safe_mask=np.zeros(len(vocab), dtype=bool),
+                reasons=[set() for _ in vocab],
+            )
 
     cfg = TADConfig(max_new_tokens=3, tau=0.0, allow_eos_escape=True)
     outcome = truth_aware_decode(

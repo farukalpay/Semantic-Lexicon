@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from collections.abc import Sequence
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class SafetyVerdict(Enum):
@@ -46,8 +48,7 @@ class Oracle(Protocol):
         prefix_token_ids: Sequence[int],
         next_logits: np.ndarray,  # shape [V]
         vocab: Sequence[str],
-    ) -> OracleReport:
-        ...
+    ) -> OracleReport: ...
 
 
 class NullOracle:

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
@@ -9,10 +8,12 @@ import numpy as np
 from .oracle import Oracle, OracleReport
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
     from .graph_api import GraphAPI
 
 
-def _entity_aliases_all(graph: "GraphAPI", entity_id: str) -> Iterable[str]:
+def _entity_aliases_all(graph: GraphAPI, entity_id: str) -> Iterable[str]:
     entity = graph.get_entity(entity_id)
     if entity is None:
         return []
@@ -20,7 +21,7 @@ def _entity_aliases_all(graph: "GraphAPI", entity_id: str) -> Iterable[str]:
     yield from entity.aliases
 
 
-def _resolve_subject(graph: "GraphAPI", words_lc: list[str]) -> Optional[str]:
+def _resolve_subject(graph: GraphAPI, words_lc: list[str]) -> Optional[str]:
     max_back = min(24, len(words_lc))
     for start in range(len(words_lc) - 1, max(-1, len(words_lc) - max_back) - 1, -1):
         for length in (3, 2, 1):
@@ -50,7 +51,7 @@ class GraphKBOracle(Oracle):
 
     def __init__(
         self,
-        graph: "GraphAPI",
+        graph: GraphAPI,
         relation_lexicon: dict[tuple[str, ...], str],
         alias_to_token_ids: dict[str, list[int]],
     ) -> None:

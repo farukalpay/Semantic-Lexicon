@@ -10,7 +10,7 @@ import math
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Optional, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -831,8 +831,8 @@ def _match_knowledge_entity(
 
 def decode_with_kb_oracle(
     model: ModelLike,
-    kb: Dict[Tuple[str, str], str],
-    prefix_token_ids: List[int],
+    kb: dict[tuple[str, str], str],
+    prefix_token_ids: list[int],
     *,
     tau: float = 0.15,
     max_new_tokens: int = 64,

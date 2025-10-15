@@ -1,16 +1,18 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Callable, List, Optional, Protocol, Sequence, Tuple
-
 import math
 import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Callable, Optional, Protocol
+
 import numpy as np
 
-from .oracle import Oracle, OracleReport
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
+    from .oracle import Oracle, OracleReport
 
 # ---------- Public contracts ----------
 
@@ -45,7 +47,7 @@ class TADConfig:
     allow_eos_escape: bool = True
     min_new_tokens: int = 0
     max_decode_ms: Optional[int] = None
-    stop_token_ids: Tuple[int, ...] = ()
+    stop_token_ids: tuple[int, ...] = ()
     no_repeat_ngram: int = 0
     repetition_penalty: float = 1.0
     enable_step_logs: bool = True
@@ -78,18 +80,18 @@ class TADStepLog:
     pi_safe: float
     picked_id: Optional[int]
     blocked_count: int
-    reasons_for_picked: List[str] = field(default_factory=list)
-    topk_ids: List[int] = field(default_factory=list)
-    topk_probs: List[float] = field(default_factory=list)
+    reasons_for_picked: list[str] = field(default_factory=list)
+    topk_ids: list[int] = field(default_factory=list)
+    topk_probs: list[float] = field(default_factory=list)
     aborted: bool = False
 
 
 @dataclass
 class TADOutcome:
-    token_ids: List[int]
+    token_ids: list[int]
     abstained: bool
     abort_reason: DecodeAbortReason
-    logs: List[TADStepLog]
+    logs: list[TADStepLog]
 
 
 # ---------- Exceptions for control flow ----------
@@ -133,7 +135,7 @@ def _apply_repetition_penalty(logits: np.ndarray, generated: Sequence[int], pena
 def _apply_no_repeat_ngram(prefix: Sequence[int], next_mask: np.ndarray, n: int) -> None:
     if n <= 0 or len(prefix) < n - 1:
         return
-    tail = tuple(prefix[-(n - 1):])
+    tail = tuple(prefix[-(n - 1) :])
     seen = set()
     for i in range(len(prefix) - n + 1):
         if tuple(prefix[i : i + n - 1]) == tail:
@@ -186,7 +188,7 @@ def _choose_id(
 
 
 class BackoffHandler(Protocol):
-    def on_abstain(self, prefix_token_ids: List[int], pi_safe: float) -> Tuple[List[int], bool]:
+    def on_abstain(self, prefix_token_ids: list[int], pi_safe: float) -> tuple[list[int], bool]:
         """Return a new prefix and whether to retry decoding."""
 
 
@@ -196,26 +198,25 @@ class BackoffHandler(Protocol):
 def truth_aware_decode(
     model: ModelLike,
     oracle: Oracle,
-    prefix_token_ids: List[int],
-    cfg: TADConfig = TADConfig(),
+    prefix_token_ids: list[int],
+    cfg: TADConfig | None = None,
     *,
     backoff: Optional[BackoffHandler] = None,
     rng: Optional[np.random.Generator] = None,
     now: Callable[[], float] = time.time,
 ) -> TADOutcome:
+    cfg = cfg or TADConfig()
     cfg.validate()
     if rng is None:
         rng = np.random.default_rng()
 
     start_time = now()
-    generated: List[int] = []
-    logs: List[TADStepLog] = []
+    generated: list[int] = []
+    logs: list[TADStepLog] = []
     attempts_left = max(0, cfg.backoff_attempts)
 
     while True:
-        outcome = _decode_once(
-            model, oracle, prefix_token_ids, cfg, rng, now, start_time
-        )
+        outcome = _decode_once(model, oracle, prefix_token_ids, cfg, rng, now, start_time)
 
         logs.extend(outcome.logs)
         generated.extend(outcome.token_ids)
@@ -245,10 +246,13 @@ def truth_aware_decode(
         if cfg.abstain_token is not None:
             generated.append(cfg.abstain_token)
 
+        final_reason = (
+            abort_reason if abort_reason != DecodeAbortReason.NONE else _derive_abort_reason(logs)
+        )
         return TADOutcome(
             token_ids=generated,
             abstained=True,
-            abort_reason=abort_reason if abort_reason != DecodeAbortReason.NONE else _derive_abort_reason(logs),
+            abort_reason=final_reason,
             logs=logs,
         )
 
@@ -256,15 +260,15 @@ def truth_aware_decode(
 def _decode_once(
     model: ModelLike,
     oracle: Oracle,
-    prefix_ids: List[int],
+    prefix_ids: list[int],
     cfg: TADConfig,
     rng: np.random.Generator,
     now: Callable[[], float],
     start_time: float,
 ) -> TADOutcome:
     V = len(model.vocab)
-    generated: List[int] = []
-    logs: List[TADStepLog] = []
+    generated: list[int] = []
+    logs: list[TADStepLog] = []
 
     for t in range(cfg.max_new_tokens):
         if cfg.max_decode_ms is not None and (now() - start_time) * 1000.0 > cfg.max_decode_ms:
@@ -320,9 +324,8 @@ def _decode_once(
 
         next_id = _choose_id(logits, extra_mask, cfg.temperature, cfg.top_p, cfg.top_k, rng)
 
-        if (
-            len(generated) < cfg.min_new_tokens
-            and (next_id == model.eos_id() or next_id in cfg.stop_token_ids)
+        if len(generated) < cfg.min_new_tokens and (
+            next_id == model.eos_id() or next_id in cfg.stop_token_ids
         ):
             tmp_mask = extra_mask.copy()
             tmp_mask[next_id] = False
@@ -363,7 +366,9 @@ def _mk_log(
     top_k = max(1, cfg.log_top_k)
     idx = np.argsort(-probs_full)[:top_k]
     reasons = (
-        sorted(report.reasons[picked_id]) if picked_id is not None and picked_id < len(report.reasons) else []
+        sorted(report.reasons[picked_id])
+        if picked_id is not None and picked_id < len(report.reasons)
+        else []
     )
     return TADStepLog(
         t=t,
@@ -377,18 +382,17 @@ def _mk_log(
     )
 
 
-def _last_pi_safe(logs: List[TADStepLog]) -> float:
+def _last_pi_safe(logs: list[TADStepLog]) -> float:
     for entry in reversed(logs):
         if entry.pi_safe is not None:
             return entry.pi_safe
     return 0.0
 
 
-def _derive_abort_reason(logs: List[TADStepLog]) -> DecodeAbortReason:
+def _derive_abort_reason(logs: list[TADStepLog]) -> DecodeAbortReason:
     if not logs:
         return DecodeAbortReason.NONE
     last = logs[-1]
     if last.aborted and last.picked_id is None:
         return DecodeAbortReason.ABSTAIN_LOW_SAFE_MASS
     return DecodeAbortReason.NONE
-
