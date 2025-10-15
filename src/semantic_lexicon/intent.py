@@ -478,12 +478,17 @@ class IntentClassifier:
             bias[index] *= factor
             changed = True
 
-        if features.get("__feat_definition_phrase"):
+        has_definition_phrase = bool(features.get("__feat_definition_phrase"))
+        has_how_to_phrase = bool(features.get("__feat_how_to_phrase"))
+        if has_definition_phrase:
             bump("definition", 1.35)
             bump("how_to", 0.8)
-        if features.get("__feat_how_to_phrase"):
+        if has_how_to_phrase:
             bump("how_to", 1.35)
             bump("definition", 0.8)
+        if has_definition_phrase and has_how_to_phrase:
+            bump("how_to", 1.15)
+            bump("definition", 0.75)
         if features.get("__feat_comparison_phrase"):
             bump("comparison", 1.35)
             bump("definition", 0.85)
