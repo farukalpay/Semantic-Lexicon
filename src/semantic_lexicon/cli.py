@@ -21,8 +21,18 @@ from .utils import normalise_text, read_jsonl
 LOGGER = configure_logging(logger_name=__name__)
 
 DEFAULT_WORKSPACE = Path("artifacts")
-INTENT_PATH_OPTION = typer.Option(..., help="Path to raw intent dataset (JSON or JSONL).")
-KNOWLEDGE_PATH_OPTION = typer.Option(..., help="Path to raw knowledge dataset.")
+INTENT_PATH_OPTION = typer.Option(
+    ...,
+    "--intent",
+    "--intent-path",
+    help="Path to raw intent dataset (JSON or JSONL).",
+)
+KNOWLEDGE_PATH_OPTION = typer.Option(
+    ...,
+    "--knowledge",
+    "--knowledge-path",
+    help="Path to raw knowledge dataset.",
+)
 WORKSPACE_OPTION = typer.Option(
     DEFAULT_WORKSPACE,
     help="Output directory for processed datasets.",
