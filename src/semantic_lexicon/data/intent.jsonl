@@ -238,3 +238,75 @@
 {"text": "Provide exploration prompts for resilience investment pathways that estimate budget scenarios.", "intent": "exploration"}
 {"text": "Provide exploration prompts for resilience investment pathways that identify necessary data streams.", "intent": "exploration"}
 {"text": "Provide exploration prompts for resilience investment pathways that outline regulatory milestones.", "intent": "exploration"}
+{"text": "Clarify when to use breadth-first search for graph traversal problems.", "intent": "definition"}
+{"text": "Clarify when to use breadth-first search in graph analytics.", "intent": "definition"}
+{"text": "Clarify when to use breadth-first search.", "intent": "definition"}
+{"text": "Define breadth-first search in graph theory.", "intent": "definition"}
+{"text": "Define photosynthesis in simple terms for students.", "intent": "definition"}
+{"text": "Explain the concept of opportunity cost in economics.", "intent": "definition"}
+{"text": "Clarify the definition of cultural relativism.", "intent": "definition"}
+{"text": "Explain what blockchain technology means in finance.", "intent": "definition"}
+{"text": "Define biodiversity for environmental science discussions.", "intent": "definition"}
+{"text": "Define homeostasis for medical trainees.", "intent": "definition"}
+{"text": "Explain the golden ratio in mathematics lessons.", "intent": "definition"}
+{"text": "Define mindfulness within personal development coaching.", "intent": "definition"}
+{"text": "Clarify what is meant by data governance in organizations.", "intent": "definition"}
+{"text": "Explain what quantum entanglement describes in physics.", "intent": "definition"}
+{"text": "Define stellar nucleosynthesis for astronomy outreach.", "intent": "definition"}
+{"text": "Clarify the meaning of plate tectonics for geography students.", "intent": "definition"}
+{"text": "How should I start researching renewable energy?", "intent": "how_to"}
+{"text": "List first steps for researching renewable energy.", "intent": "how_to"}
+{"text": "How do I design a study timetable for finals?", "intent": "how_to"}
+{"text": "How to brew pour-over coffee at home?", "intent": "how_to"}
+{"text": "How do I create a personal budget from scratch?", "intent": "how_to"}
+{"text": "How to configure a secure home Wi-Fi network?", "intent": "how_to"}
+{"text": "How do I analyze a poem for symbolism?", "intent": "how_to"}
+{"text": "How to organize a community beach cleanup?", "intent": "how_to"}
+{"text": "How do I set measurable fitness goals?", "intent": "how_to"}
+{"text": "What is the best way to mentor a new team member?", "intent": "how_to"}
+{"text": "How should I prepare a pitch deck for investors?", "intent": "how_to"}
+{"text": "How do I troubleshoot a failing hard drive?", "intent": "how_to"}
+{"text": "How do I practice mindful breathing each morning?", "intent": "how_to"}
+{"text": "How to plan a sustainable garden layout?", "intent": "how_to"}
+{"text": "What is the best way to practice interview responses?", "intent": "how_to"}
+{"text": "Outline steps to conduct a literature review.", "intent": "how_to"}
+{"text": "Compare supervised and unsupervised learning.", "intent": "comparison"}
+{"text": "Contrast supervised and unsupervised learning.", "intent": "comparison"}
+{"text": "Compare renewable and fossil fuel energy sources.", "intent": "comparison"}
+{"text": "Contrast machine learning and statistics approaches.", "intent": "comparison"}
+{"text": "Compare centralized and decentralized grid control.", "intent": "comparison"}
+{"text": "Compare AC and DC microgrids for campus deployment.", "intent": "comparison"}
+{"text": "Contrast battery storage and pumped hydro for peak shaving.", "intent": "comparison"}
+{"text": "Compare rooftop solar and community solar adoption strategies.", "intent": "comparison"}
+{"text": "Contrast agile and waterfall project management styles.", "intent": "comparison"}
+{"text": "Compare qualitative and quantitative research methods.", "intent": "comparison"}
+{"text": "Contrast heat pumps with gas furnaces for decarbonization.", "intent": "comparison"}
+{"text": "Compare mentoring and coaching approaches for teams.", "intent": "comparison"}
+{"text": "Contrast VR and AR learning experiences.", "intent": "comparison"}
+{"text": "Compare deterministic and stochastic optimization techniques.", "intent": "comparison"}
+{"text": "Contrast direct load control and price-based demand response.", "intent": "comparison"}
+{"text": "Compare descriptive and inferential statistics for surveys.", "intent": "comparison"}
+{"text": "Offer reflective prompts for creative writing.", "intent": "exploration"}
+{"text": "Offer reflective prompts for creative writing sessions.", "intent": "exploration"}
+{"text": "Provide reflective prompts about community building.", "intent": "exploration"}
+{"text": "Share exploration prompts for journaling about gratitude.", "intent": "exploration"}
+{"text": "Suggest exploration questions about mindful leadership.", "intent": "exploration"}
+{"text": "Brainstorm exploration themes for innovation workshops.", "intent": "exploration"}
+{"text": "Generate exploration prompts for climate activism clubs.", "intent": "exploration"}
+{"text": "Curate exploration prompts for team retrospectives.", "intent": "exploration"}
+{"text": "Propose exploration prompts for student career planning.", "intent": "exploration"}
+{"text": "Share exploration prompts about remote collaboration habits.", "intent": "exploration"}
+{"text": "Offer exploration prompts for civic engagement meetups.", "intent": "exploration"}
+{"text": "Suggest exploration prompts for sustainable design studios.", "intent": "exploration"}
+{"text": "Provide exploration prompts for resilience coaching.", "intent": "exploration"}
+{"text": "List exploration prompts for intercultural dialogue circles.", "intent": "exploration"}
+{"text": "Craft exploration prompts for creative writing clubs.", "intent": "exploration"}
+{"text": "Share exploration prompts for mindful productivity journals.", "intent": "exploration"}
+{"text": "Clarify when to use breadth-first search", "intent": "definition"}
+{"text": "Offer reflective prompts for creative writing", "intent": "exploration"}
+{"text": "Compare supervised and unsupervised learning", "intent": "comparison"}
+{"text": "What is the best way to practice interview responses", "intent": "how_to"}
+{"text": "What is the best way to mentor a new team member?", "intent": "how_to"}
+{"text": "What is the best way to plan a sustainable garden layout?", "intent": "how_to"}
+{"text": "Outline the best way to practice interview responses before a job fair.", "intent": "how_to"}
+{"text": "Explain the best way to practice interview responses with a friend.", "intent": "how_to"}
