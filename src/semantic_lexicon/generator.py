@@ -16,9 +16,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .config import GeneratorConfig
+from .decoding_tad import ModelLike, TADConfig, TADOutcome, truth_aware_decode
 from .embeddings import GloVeEmbeddings
 from .knowledge import KnowledgeNetwork, KnowledgeSelection
 from .logging import configure_logging
+from .oracle import CompositeOracle, KBOracle
 from .persona import PersonaProfile
 from .template_learning import BalancedTutorPredictor
 from .templates import render_balanced_tutor_response
@@ -825,3 +827,19 @@ def _match_knowledge_entity(
         if all(token in entity_tokens for token in phrase_tokens):
             return entity
     return None
+
+
+def decode_with_kb_oracle(
+    model: ModelLike,
+    kb: dict[tuple[str, str], str],
+    prefix_token_ids: list[int],
+    *,
+    tau: float = 0.15,
+    max_new_tokens: int = 64,
+    abstain_token: Optional[int] = None,
+) -> TADOutcome:
+    """Run truth-aware decoding for a prefix using a KB-backed oracle."""
+
+    oracle = CompositeOracle([KBOracle(kb)])
+    cfg = TADConfig(tau=tau, max_new_tokens=max_new_tokens, abstain_token=abstain_token)
+    return truth_aware_decode(model, oracle, prefix_token_ids=list(prefix_token_ids), cfg=cfg)
