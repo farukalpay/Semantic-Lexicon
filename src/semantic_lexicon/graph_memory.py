@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 import uuid
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Tuple
+from collections.abc import Iterable
+from typing import Optional
 
 from .graph_api import Entity, EntityId, Evidence, GraphAPI
 
@@ -15,12 +16,12 @@ def _norm(text: str) -> str:
 
 class InMemoryGraph(GraphAPI):
     def __init__(self) -> None:
-        self._entities: Dict[EntityId, Entity] = {}
-        self._alias_to_id: Dict[str, EntityId] = {}
-        self._spo: Dict[Tuple[EntityId, str], List[EntityId]] = defaultdict(list)
-        self._osp: Dict[Tuple[str, EntityId], List[EntityId]] = defaultdict(list)
-        self._facts: Dict[Tuple[EntityId, str, EntityId], Tuple[Evidence, ...]] = {}
-        self._label_cache: Dict[EntityId, str] = {}
+        self._entities: dict[EntityId, Entity] = {}
+        self._alias_to_id: dict[str, EntityId] = {}
+        self._spo: dict[tuple[EntityId, str], list[EntityId]] = defaultdict(list)
+        self._osp: dict[tuple[str, EntityId], list[EntityId]] = defaultdict(list)
+        self._facts: dict[tuple[EntityId, str, EntityId], tuple[Evidence, ...]] = {}
+        self._label_cache: dict[EntityId, str] = {}
 
     def upsert_entity(
         self,
@@ -28,7 +29,7 @@ class InMemoryGraph(GraphAPI):
         *,
         entity_id: Optional[EntityId] = None,
         aliases: Optional[Iterable[str]] = None,
-        attrs: Optional[Dict[str, str]] = None,
+        attrs: Optional[dict[str, str]] = None,
     ) -> EntityId:
         eid = entity_id or str(uuid.uuid4())
         if eid in self._entities:
@@ -72,16 +73,16 @@ class InMemoryGraph(GraphAPI):
             self._spo[(s, relation)].append(o)
             self._osp[(relation, o)].append(s)
 
-    def objects(self, s: EntityId, relation: str) -> List[EntityId]:
+    def objects(self, s: EntityId, relation: str) -> list[EntityId]:
         return self._spo.get((s, relation), [])
 
-    def subjects(self, relation: str, o: EntityId) -> List[EntityId]:
+    def subjects(self, relation: str, o: EntityId) -> list[EntityId]:
         return self._osp.get((relation, o), [])
 
     def has_fact(self, s: EntityId, relation: str, o: EntityId) -> bool:
         return (s, relation, o) in self._facts
 
-    def neighbors(self, entity_id: EntityId) -> List[EntityId]:
+    def neighbors(self, entity_id: EntityId) -> list[EntityId]:
         out: set[EntityId] = set()
         for (s, _relation), objects in self._spo.items():
             if s == entity_id:
@@ -126,7 +127,7 @@ class InMemoryGraph(GraphAPI):
             json.dump(payload, handle, ensure_ascii=False, indent=2)
 
     def load(self, path: str) -> None:
-        with open(path, "r", encoding="utf-8") as handle:
+        with open(path, encoding="utf-8") as handle:
             payload = json.load(handle)
         self.__init__()
         for entity_payload in payload["entities"]:

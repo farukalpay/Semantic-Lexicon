@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Protocol, Sequence, Set, Tuple
+from collections.abc import Sequence
+from typing import Protocol
 
 import numpy as np
 
@@ -23,13 +24,13 @@ class OracleReport:
     ----------
     safe_mask : np.ndarray[bool] shape [V]
         True for tokens allowed by the oracle.
-    reasons : List[Set[str]] length V
+    reasons : list[set[str]] length V
         For each token id, a (possibly empty) set of human-readable
         reasons/labels explaining blocks or passes (for diagnostics).
     """
 
     safe_mask: np.ndarray
-    reasons: List[Set[str]]
+    reasons: list[set[str]]
 
 
 class Oracle(Protocol):
@@ -96,7 +97,7 @@ class KBOracle(Oracle):
     Example: {("Paris", "capital_of"): "France"}
     """
 
-    def __init__(self, kb: Dict[Tuple[str, str], str]) -> None:
+    def __init__(self, kb: dict[tuple[str, str], str]) -> None:
         self.kb = dict(kb)
 
     def evaluate(
@@ -131,7 +132,7 @@ def _ends_with(tokens: Sequence[str], suffix: Sequence[str]) -> bool:
     return [t.lower() for t in tokens[-len(suffix) :]] == [s.lower() for s in suffix]
 
 
-def _find_subject(tokens: Sequence[str], kb_subjects: Set[str]) -> str | None:
+def _find_subject(tokens: Sequence[str], kb_subjects: set[str]) -> str | None:
     """
     Super naive: return the first token in the prefix that exactly matches
     a KB subject. Good enough for unit tests and demos.

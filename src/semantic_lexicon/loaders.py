@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import csv
 import json
-from typing import Dict, Iterable
+from collections.abc import Iterable
 
-from .graph_api import Evidence
-from .graph_memory import InMemoryGraph
+from .graph_api import Evidence, GraphAPI
 
 
 def load_triples_csv(
-    graph: InMemoryGraph,
+    graph: GraphAPI,
     path: str,
     *,
     subject_col: str = "subject",
@@ -32,16 +31,16 @@ def load_triples_csv(
 
 
 def load_entities_jsonl(
-    graph: InMemoryGraph,
+    graph: GraphAPI,
     path: str,
     *,
     label_key: str = "label",
     aliases_key: str = "aliases",
     attrs_key: str = "attrs",
 ) -> None:
-    with open(path, "r", encoding="utf-8") as handle:
+    with open(path, encoding="utf-8") as handle:
         for line in handle:
-            payload: Dict[str, object] = json.loads(line)
+            payload: dict[str, object] = json.loads(line)
             graph.upsert_entity(
                 str(payload[label_key]),
                 aliases=[str(alias) for alias in payload.get(aliases_key, [])],

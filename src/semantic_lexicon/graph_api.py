@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional, Protocol, Tuple
+from collections.abc import Iterable
+from typing import Optional, Protocol
 
 EntityId = str
 
@@ -18,8 +19,8 @@ class Evidence:
 class Entity:
     id: EntityId
     label: str
-    aliases: List[str] = field(default_factory=list)
-    attrs: Dict[str, str] = field(default_factory=dict)
+    aliases: list[str] = field(default_factory=list)
+    attrs: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class Edge:
     subject: EntityId
     relation: str
     object: EntityId
-    evidence: Tuple[Evidence, ...] = ()
+    evidence: tuple[Evidence, ...] = ()
 
 
 class GraphAPI(Protocol):
@@ -39,7 +40,7 @@ class GraphAPI(Protocol):
         *,
         entity_id: Optional[EntityId] = None,
         aliases: Optional[Iterable[str]] = None,
-        attrs: Optional[Dict[str, str]] = None,
+        attrs: Optional[dict[str, str]] = None,
     ) -> EntityId:
         ...
 
@@ -61,16 +62,16 @@ class GraphAPI(Protocol):
     ) -> None:
         ...
 
-    def objects(self, s: EntityId, relation: str) -> List[EntityId]:
+    def objects(self, s: EntityId, relation: str) -> list[EntityId]:
         ...
 
-    def subjects(self, relation: str, o: EntityId) -> List[EntityId]:
+    def subjects(self, relation: str, o: EntityId) -> list[EntityId]:
         ...
 
     def has_fact(self, s: EntityId, relation: str, o: EntityId) -> bool:
         ...
 
-    def neighbors(self, entity_id: EntityId) -> List[EntityId]:
+    def neighbors(self, entity_id: EntityId) -> list[EntityId]:
         ...
 
     def label(self, entity_id: EntityId) -> str:
