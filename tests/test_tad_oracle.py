@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 import pytest
 
@@ -39,7 +41,7 @@ class ToyModel(ModelLike):
     def eos_id(self) -> int:
         return self._id["<EOS>"]
 
-    def next_logits(self, prefix_token_ids: list[int]) -> np.ndarray:
+    def next_logits(self, prefix_token_ids: Sequence[int]) -> np.ndarray:
         vocab_size = len(self._vocab)
         logits = np.full(vocab_size, -10.0, dtype=np.float64)
         logits[self._id["."]] = -2.0

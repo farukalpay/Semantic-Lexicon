@@ -5,14 +5,18 @@ import math
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Optional, Protocol
+from typing import TYPE_CHECKING, Callable, Optional, Protocol, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from .oracle import Oracle, OracleReport
+
+
+FloatArray = NDArray[np.float64]
 
 # ---------- Public contracts ----------
 
@@ -109,7 +113,7 @@ class NumericsError(RuntimeError): ...
 # ---------- Helpers ----------
 
 
-def _safe_softmax(x: np.ndarray) -> np.ndarray:
+def _safe_softmax(x: np.ndarray) -> FloatArray:
     if not np.isfinite(x).all():
         raise NumericsError("logits contain NaN/Inf")
     x64 = x.astype(np.float64, copy=False)
@@ -120,8 +124,8 @@ def _safe_softmax(x: np.ndarray) -> np.ndarray:
     e = np.exp(z, dtype=np.float64)
     s = e.sum()
     if s <= 0.0 or not np.isfinite(s):
-        return np.full_like(x64, 1.0 / x64.size, dtype=np.float64)
-    return e / s
+        return cast("FloatArray", np.full_like(x64, 1.0 / x64.size, dtype=np.float64))
+    return cast("FloatArray", e / s)
 
 
 def _apply_repetition_penalty(logits: np.ndarray, generated: Sequence[int], penalty: float) -> None:

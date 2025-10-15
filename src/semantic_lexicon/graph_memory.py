@@ -18,6 +18,9 @@ def _norm(text: str) -> str:
 
 class InMemoryGraph(GraphAPI):
     def __init__(self) -> None:
+        self._reset()
+
+    def _reset(self) -> None:
         self._entities: dict[EntityId, Entity] = {}
         self._alias_to_id: dict[str, EntityId] = {}
         self._spo: dict[tuple[EntityId, str], list[EntityId]] = defaultdict(list)
@@ -131,7 +134,7 @@ class InMemoryGraph(GraphAPI):
     def load(self, path: str) -> None:
         with open(path, encoding="utf-8") as handle:
             payload = json.load(handle)
-        self.__init__()
+        self._reset()
         for entity_payload in payload["entities"]:
             self.upsert_entity(
                 entity_payload["label"],

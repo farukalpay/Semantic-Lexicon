@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def _entity_aliases_all(graph: GraphAPI, entity_id: str) -> Iterable[str]:
     entity = graph.get_entity(entity_id)
     if entity is None:
-        return []
+        return
     yield entity.label
     yield from entity.aliases
 
@@ -65,7 +65,7 @@ class GraphKBOracle(Oracle):
     ) -> OracleReport:
         vocab_size = len(vocab)
         safe = np.ones(vocab_size, dtype=bool)
-        reasons = [set() for _ in range(vocab_size)]
+        reasons: list[set[str]] = [set() for _ in range(vocab_size)]
 
         words = [vocab[token_id] for token_id in prefix_token_ids]
         words_lc = [word.lower() for word in words]

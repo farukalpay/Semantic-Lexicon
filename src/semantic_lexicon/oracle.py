@@ -104,9 +104,9 @@ class KBOracle(Oracle):
     def evaluate(
         self, prefix_token_ids: Sequence[int], next_logits: np.ndarray, vocab: Sequence[str]
     ) -> OracleReport:
-        V = len(vocab)
-        reasons = [set() for _ in range(V)]
-        safe = np.ones(V, dtype=bool)
+        vocab_size = len(vocab)
+        reasons: list[set[str]] = [set() for _ in range(vocab_size)]
+        safe = np.ones(vocab_size, dtype=bool)
 
         tokens = [vocab[t] for t in prefix_token_ids]
         subject = _find_subject(tokens, kb_subjects={s for (s, _r) in self.kb.keys()})
@@ -116,12 +116,12 @@ class KBOracle(Oracle):
             key = (subject, "capital_of")
             if key in self.kb:
                 correct_obj = self.kb[key]
-                for tid, tok in enumerate(vocab):
-                    if tok == correct_obj:
-                        reasons[tid].add("kb:required_object")
-                    elif _is_candidate_object(tok):
-                        safe[tid] = False
-                        reasons[tid].add(f"kb:contradiction:{subject}_capital_of_{tok}")
+                for token_id, token in enumerate(vocab):
+                    if token == correct_obj:
+                        reasons[token_id].add("kb:required_object")
+                    elif _is_candidate_object(token):
+                        safe[token_id] = False
+                        reasons[token_id].add(f"kb:contradiction:{subject}_capital_of_{token}")
                 return OracleReport(safe_mask=safe, reasons=reasons)
 
         return OracleReport(safe_mask=safe, reasons=reasons)

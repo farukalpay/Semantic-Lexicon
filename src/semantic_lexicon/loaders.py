@@ -3,12 +3,9 @@ from __future__ import annotations
 
 import csv
 import json
-from typing import TYPE_CHECKING
+from typing import Any
 
 from .graph_api import Evidence, GraphAPI
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
 
 def load_triples_csv(
@@ -27,7 +24,7 @@ def load_triples_csv(
             obj = row[object_col]
             subject_id = graph.find_entity_by_surface(subject) or graph.upsert_entity(subject)
             object_id = graph.find_entity_by_surface(obj) or graph.upsert_entity(obj)
-            evidence: Iterable[Evidence] = []
+            evidence: list[Evidence] = []
             if source_col and row.get(source_col):
                 evidence = [Evidence(source=row[source_col])]
             graph.upsert_relation(subject_id, row[relation_col], object_id, evidence)
@@ -43,9 +40,24 @@ def load_entities_jsonl(
 ) -> None:
     with open(path, encoding="utf-8") as handle:
         for line in handle:
-            payload: dict[str, object] = json.loads(line)
-            graph.upsert_entity(
-                str(payload[label_key]),
-                aliases=[str(alias) for alias in payload.get(aliases_key, [])],
-                attrs={str(k): str(v) for k, v in (payload.get(attrs_key) or {}).items()},
-            )
+            data = json.loads(line)
+            if not isinstance(data, dict):
+                msg = "Each JSONL line must decode to an object."
+                raise ValueError(msg)
+
+            payload: dict[str, Any] = data
+            label = str(payload[label_key])
+
+            aliases_raw = payload.get(aliases_key, [])
+            if isinstance(aliases_raw, list):
+                aliases = [str(alias) for alias in aliases_raw]
+            else:
+                aliases = [str(aliases_raw)] if aliases_raw else []
+
+            attrs_raw = payload.get(attrs_key) or {}
+            if isinstance(attrs_raw, dict):
+                attrs = {str(key): str(value) for key, value in attrs_raw.items()}
+            else:
+                attrs = {}
+
+            graph.upsert_entity(label, aliases=aliases, attrs=attrs)
