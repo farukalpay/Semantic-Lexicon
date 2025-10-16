@@ -43,24 +43,38 @@ docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.5",
 ]
+tadkit = [
+    "transformers>=4.37",
+    "torch>=2.1",
+    "pandas>=2.0",
+    "streamlit>=1.30",
+]
+personarag = [
+    "langchain>=0.2",
+    "langchain-core>=0.2",
+    "langchain-openai>=0.1",
+    "langchain-community>=0.2",
+    "langgraph>=0.0.64",
+    "faiss-cpu>=1.7",
+    "openai>=1.0",
+]
 
 [project.urls]
-Homepage = "https://github.com/example/semantic-lexicon"
-Documentation = "https://github.com/example/semantic-lexicon#readme"
-Issues = "https://github.com/example/semantic-lexicon/issues"
+Homepage = "https://github.com/farukalpay/Semantic-Lexicon"
+Documentation = "https://github.com/farukalpay/Semantic-Lexicon#readme"
+Issues = "https://github.com/farukalpay/Semantic-Lexicon/issues"
 
 [project.scripts]
 semantic-lexicon = "semantic_lexicon.cli:app"
+tadkit = "tadkit.cli:app"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+packages = {find = {where = ["src"]}}
 include-package-data = true
 
 [tool.setuptools.package-data]
 "semantic_lexicon" = ["data/*.jsonl"]
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.black]
 line-length = 100

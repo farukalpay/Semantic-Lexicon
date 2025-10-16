@@ -39,17 +39,32 @@ You can read the preprint online at [https://arxiv.org/abs/2508.04612](https://a
 
 ## Installation
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install .[dev,docs]
-```
+1. **Create a virtual environment** (recommended):
 
-To install the core package only:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
 
-```bash
-pip install .
-```
+2. **Install Semantic Lexicon directly from GitHub** using pip's `name @ URL` syntax (avoids
+   future deprecation warnings while matching the hosted repository):
+
+   ```bash
+   pip install "semantic-lexicon[dev,docs] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"
+   ```
+
+   Use the table below to tailor optional extras to your workflow:
+
+   | Goal | Command |
+   | --- | --- |
+   | Minimal CLI & library | `pip install "semantic-lexicon @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+   | Docs + developer tooling | `pip install "semantic-lexicon[dev,docs] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+   | TADKit demos (needs PyTorch + Streamlit) | `pip install "semantic-lexicon[tadkit] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+   | PersonaRAG demos (LangChain/LangGraph stack) | `pip install "semantic-lexicon[personarag] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+
+> **Note:** `tadkit` relies on PyTorch for logits processing. Install a CPU build with
+> `pip install torch --index-url https://download.pytorch.org/whl/cpu` if it is not already
+> included in your environment.
 
 ## Project Layout
 
@@ -146,6 +161,51 @@ The JSON log captures every metric needed for a forensic audit. Each entry in `s
 ```
 
 From here you can: (1) swap in the graph-backed oracle to ground against a larger knowledge base, (2) set `TADConfig.abstain_token` to emit a sentinel when `pi_safe` drops below the threshold, and (3) feed the logged `pi_safe` sequence into your own reliability analyses (e.g., cumulative risk bounds or safe-mass histograms). Because `truth_aware_decode` works with any `Oracle` implementation, PhD students can plug in bespoke symbolic checkers—factuality verifiers, contradiction detectors, or mathematical solvers—without touching the decoding loop itself.
+
+## TADKit — drop-in logits processor and CLI
+
+The repository now exposes a standalone [`tadkit`](src/tadkit) package so you can pip-install the truth-aware decoding utilities outside of the monolithic CLI. TADKit mirrors the “expected product” shown in the product brief:
+
+- `TruthOracle` turns CSV/JSON/YAML rules into prompt-activated constraints.
+- `TADLogitsProcessor` plugs into `transformers` generation loops and injects abstain tokens when a rule is violated.
+- `TADTrace` logs token-level actions and renders console tables or Pandas dataframes for audits.
+- `tadkit compile` converts spreadsheets to JSON payloads; `tadkit demo` spins up a tiny `sshleifer/tiny-gpt2` demo using the compiled oracle.
+- `examples/tadkit_quickstart.py` and `examples/tadkit_streamlit_app.py` are copy-pasteable quickstarts, matching the walkthrough in the brief.
+
+Install extras as needed:
+
+```bash
+pip install "git+https://github.com/farukalpay/Semantic-Lexicon.git#egg=semantic-lexicon[tadkit]"
+tadkit compile capitals.csv --out oracle.json --tokenizer gpt2
+tadkit demo --oracle oracle.json --model sshleifer/tiny-gpt2 \
+  --prompt "Q: What is the capital of France?\nA:"
+```
+
+> **Note:** `tadkit` relies on PyTorch for logits processing. Install a CPU
+> build with `pip install torch --index-url https://download.pytorch.org/whl/cpu`
+> if you do not already have `torch` available.
+
+## PersonaRAG — EXP3 personas with decode-time truth gates
+
+PersonaRAG is a thin layer on top of LangChain/LangGraph that routes tone, enforces truth, and records feedback telemetry. The [`personarag`](src/personarag) package exposes:
+
+- `BrandStyle` persona descriptors.
+- `PersonaPolicyEXP3` — contextual EXP3 with weight telemetry and bulk feedback helpers.
+- `KnowledgeGate` — wraps LangChain LLMs and installs `TADLogitsProcessor` when the underlying model exposes Hugging Face hooks.
+- `examples/personarag_quickstart.py` — the complete “expected product” script from the brief.
+
+Install with optional dependencies when you want the full LangChain stack:
+
+```bash
+pip install "git+https://github.com/farukalpay/Semantic-Lexicon.git#egg=semantic-lexicon[personarag]"
+python examples/personarag_quickstart.py
+```
+
+Decode-time gating is enabled automatically for Hugging Face models (local or
+via LangChain wrappers). Hosted chat models (e.g., OpenAI) receive trace
+metadata only.
+
+`KnowledgeGate` attaches `trace.events` to `response_metadata` (when available), so observability dashboards can render trace heatmaps alongside persona win-rates and abstain telemetry.
 
 ## Knowledge Selection Playbook
 
