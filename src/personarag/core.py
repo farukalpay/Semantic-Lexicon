@@ -1,10 +1,11 @@
 """EXP3-based persona routing utilities."""
+
 from __future__ import annotations
 
+import collections.abc as cabc
 import math
 import random
 from dataclasses import dataclass
-from typing import Iterable, Sequence
 
 
 @dataclass
@@ -19,7 +20,9 @@ class BrandStyle:
 class PersonaPolicyEXP3:
     """Lightweight EXP3 bandit over persona styles."""
 
-    def __init__(self, arms: Sequence[BrandStyle], gamma: float = 0.07) -> None:
+    def __init__(self, arms: cabc.Sequence[BrandStyle], gamma: float = 0.07) -> None:
+        if not isinstance(arms, cabc.Sequence):
+            raise TypeError("arms must be a sequence of BrandStyle")
         if not arms:
             raise ValueError("PersonaPolicyEXP3 requires at least one persona")
         if not (0.0 < gamma <= 1.0):
@@ -65,12 +68,12 @@ class PersonaPolicyEXP3:
         growth = math.exp(self.gamma * importance_weighted / len(self.arms))
         self.weights[self.last_index] *= growth
 
-    def telemetry(self) -> dict[str, Sequence[float]]:
+    def telemetry(self) -> dict[str, cabc.Sequence[float]]:
         return {
             "weights": list(self.weights),
             "probs": self._probabilities(),
         }
 
-    def inject_feedback(self, rewards: Iterable[float]) -> None:
+    def inject_feedback(self, rewards: cabc.Iterable[float]) -> None:
         for reward in rewards:
             self.update(reward)

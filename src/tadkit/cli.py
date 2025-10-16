@@ -1,9 +1,10 @@
 """Typer-based CLI entry point for TADKit."""
+
 from __future__ import annotations
 
 import csv
 import json
-from pathlib import Path
+import pathlib
 from typing import Optional
 
 import typer
@@ -11,6 +12,15 @@ import typer
 from .core import TADLogitsProcessor, TADTrace, TruthOracle
 
 app = typer.Typer(help="Truth-Aware Decoding utilities")
+
+SOURCE_ARGUMENT = typer.Argument(..., help="CSV or JSON file with rule definitions")
+OUT_OPTION = typer.Option(..., "--out", help="Output JSON file")
+TOKENIZER_OPTION = typer.Option(None, help="Tokenizer identifier for allow_strings")
+
+ORACLE_OPTION = typer.Option(..., "--oracle", help="Compiled oracle JSON")
+MODEL_OPTION = typer.Option("sshleifer/tiny-gpt2", help="HF causal LM identifier")
+PROMPT_OPTION = typer.Option("Q: What is the capital of France?\nA:", help="Prompt to decode")
+MAX_TOKENS_OPTION = typer.Option(20, help="Number of tokens to generate")
 
 
 def _load_tokenizer(tokenizer_id: str | None):
@@ -23,30 +33,34 @@ def _load_tokenizer(tokenizer_id: str | None):
 
 @app.command()
 def compile(
-    source: Path = typer.Argument(..., help="CSV or JSON file with rule definitions"),
-    out: Path = typer.Option(..., "--out", help="Output JSON file"),
-    tokenizer: Optional[str] = typer.Option(None, help="Tokenizer identifier for allow_strings"),
+    source: pathlib.Path = SOURCE_ARGUMENT,
+    out: pathlib.Path = OUT_OPTION,
+    tokenizer: Optional[str] = TOKENIZER_OPTION,
 ) -> None:
     """Compile rules from CSV/JSON into a JSON oracle payload."""
 
-    if source.suffix.lower() == ".csv":
-        rules = _load_rules_from_csv(source)
+    source_path = pathlib.Path(source)
+    out_path = pathlib.Path(out)
+
+    if source_path.suffix.lower() == ".csv":
+        rules = _load_rules_from_csv(source_path)
     else:
-        with source.open("r", encoding="utf8") as handle:
+        with source_path.open("r", encoding="utf8") as handle:
             data = json.load(handle)
         rules = data["rules"] if isinstance(data, dict) and "rules" in data else data
     tok = _load_tokenizer(tokenizer)
     oracle = TruthOracle.from_rules(rules, tokenizer=tok)
     payload = {"rules": oracle.to_payload()}
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf8") as handle:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf8") as handle:
         json.dump(payload, handle, indent=2)
-    typer.echo(f"Wrote {len(payload['rules'])} rules to {out}")
+    typer.echo(f"Wrote {len(payload['rules'])} rules to {out_path}")
 
 
-def _load_rules_from_csv(path: Path) -> list[dict[str, object]]:
+def _load_rules_from_csv(path: pathlib.Path) -> list[dict[str, object]]:
     rules: list[dict[str, object]] = []
-    with path.open("r", encoding="utf8") as handle:
+    csv_path = pathlib.Path(path)
+    with csv_path.open("r", encoding="utf8") as handle:
         reader = csv.DictReader(handle)
         for idx, row in enumerate(reader):
             when = [frag.strip() for frag in (row.get("when") or "").split("|") if frag.strip()]
@@ -65,16 +79,17 @@ def _load_rules_from_csv(path: Path) -> list[dict[str, object]]:
 
 @app.command()
 def demo(
-    oracle: Path = typer.Option(..., "--oracle", help="Compiled oracle JSON"),
-    model: str = typer.Option("sshleifer/tiny-gpt2", help="HF causal LM identifier"),
-    prompt: str = typer.Option("Q: What is the capital of France?\nA:", help="Prompt to decode"),
-    max_new_tokens: int = typer.Option(20, help="Number of tokens to generate"),
+    oracle: pathlib.Path = ORACLE_OPTION,
+    model: str = MODEL_OPTION,
+    prompt: str = PROMPT_OPTION,
+    max_new_tokens: int = MAX_TOKENS_OPTION,
 ) -> None:
     """Run a small decoding demo against a Hugging Face model."""
 
     from transformers import AutoModelForCausalLM, AutoTokenizer, LogitsProcessorList
 
-    with oracle.open("r", encoding="utf8") as handle:
+    oracle_path = pathlib.Path(oracle)
+    with oracle_path.open("r", encoding="utf8") as handle:
         payload = json.load(handle)
     truth = TruthOracle.from_payload(payload["rules"])
     tokenizer = AutoTokenizer.from_pretrained(model)

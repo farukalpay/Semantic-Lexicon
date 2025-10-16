@@ -1,4 +1,5 @@
 """Knowledge gating via TADKit for LangChain-compatible models."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -7,9 +8,11 @@ from typing import Any
 try:  # pragma: no cover - optional dependency
     from langchain_core.runnables import Runnable
 except ModuleNotFoundError:  # pragma: no cover - fallback for environments without LangChain
+
     class Runnable:  # type: ignore[override]
         def invoke(self, input: Any, config: Any | None = None) -> Any:  # noqa: ANN401
             raise RuntimeError("langchain_core is required to use KnowledgeGate")
+
 
 from tadkit.core import TADLogitsProcessor, TADTrace, TruthOracle
 
@@ -32,56 +35,74 @@ class KnowledgeGate(Runnable):
 
     @contextmanager
     def _install_processor(self):
-        trace = None
-        processor = None
+        trace: TADTrace | None = None
+        processor: TADLogitsProcessor | None = None
         config_obj = None
-        previous: list[Any] = []
-        owner = None
-        owner_attr = "logits_processor"
+        owner: Any = None
+        sentinel = object()
+        previous: Any = sentinel
 
         model_ref = None
         tokenizer_ref = None
         if hasattr(self.llm, "model") and hasattr(self.llm, "tokenizer"):
-            model_ref = getattr(self.llm, "model")
-            tokenizer_ref = getattr(self.llm, "tokenizer")
+            model_ref = self.llm.model
+            tokenizer_ref = self.llm.tokenizer
         elif (
             hasattr(self.llm, "pipeline")
             and hasattr(self.llm.pipeline, "model")
             and hasattr(self.llm.pipeline, "tokenizer")
         ):
-            model_ref = getattr(self.llm.pipeline, "model")
-            tokenizer_ref = getattr(self.llm.pipeline, "tokenizer")
+            pipeline = self.llm.pipeline
+            model_ref = pipeline.model
+            tokenizer_ref = pipeline.tokenizer
 
         if model_ref is not None and tokenizer_ref is not None:
             trace = TADTrace()
             processor = TADLogitsProcessor(self.oracle, tokenizer_ref, trace=trace)
-            config_obj = getattr(model_ref, "generation_config", None)
+            has_generation_config = hasattr(model_ref, "generation_config")
+            config_obj = model_ref.generation_config if has_generation_config else None
             if config_obj is not None:
                 owner = config_obj
-                previous = list(getattr(config_obj, owner_attr, []) or [])
-                setattr(config_obj, owner_attr, previous + [processor])
-            elif hasattr(model_ref, owner_attr):
+                if hasattr(config_obj, "logits_processor"):
+                    previous = config_obj.logits_processor
+                    existing = list(previous or [])
+                else:
+                    previous = sentinel
+                    existing = []
+                existing.append(processor)
+                config_obj.logits_processor = existing
+            elif hasattr(model_ref, "logits_processor"):
                 owner = model_ref
-                previous = list(getattr(model_ref, owner_attr, []) or [])
-                setattr(model_ref, owner_attr, previous + [processor])
-            elif hasattr(self.llm, owner_attr):
+                previous = model_ref.logits_processor
+                existing = list(previous or [])
+                existing.append(processor)
+                model_ref.logits_processor = existing
+            elif hasattr(self.llm, "logits_processor"):
                 owner = self.llm
-                previous = list(getattr(self.llm, owner_attr, []) or [])
-                setattr(self.llm, owner_attr, previous + [processor])
+                previous = self.llm.logits_processor
+                existing = list(previous or [])
+                existing.append(processor)
+                self.llm.logits_processor = existing
             else:
                 processor = None
                 trace = None
                 owner = None
-                previous = []
+                previous = None
         try:
             yield trace
         finally:
             if processor is not None and owner is not None:
-                setattr(owner, owner_attr, previous)
+                if previous is sentinel:
+                    if hasattr(owner, "logits_processor"):
+                        del owner.logits_processor
+                elif previous is None:
+                    owner.logits_processor = None
+                else:
+                    owner.logits_processor = previous
 
     def _attach_trace_metadata(self, result: Any, events: list[dict[str, Any]]) -> None:
         if hasattr(result, "response_metadata"):
-            metadata = dict(getattr(result, "response_metadata") or {})
+            metadata = dict(result.response_metadata or {})
             metadata["tad_trace"] = events
             result.response_metadata = metadata
         elif isinstance(result, dict):
@@ -89,4 +110,4 @@ class KnowledgeGate(Runnable):
             metadata["tad_trace"] = events
             result["metadata"] = metadata
         else:
-            setattr(result, "tad_trace", events)
+            result.tad_trace = events

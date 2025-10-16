@@ -1,8 +1,10 @@
 """Core primitives for truth-aware decoding."""
+
 from __future__ import annotations
 
+import collections.abc as cabc
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any
 
 import yaml
 
@@ -17,7 +19,7 @@ class Rule:
     """Declarative constraint enforced during decoding."""
 
     name: str
-    when_any: Sequence[str] = field(default_factory=list)
+    when_any: cabc.Sequence[str] = field(default_factory=list)
     allow_token_ids: frozenset[int] = field(default_factory=frozenset)
     abstain_on_violation: bool = False
 
@@ -38,26 +40,24 @@ class Rule:
 class TruthOracle:
     """Matches prompts against rules to derive decode-time constraints."""
 
-    def __init__(self, rules: Sequence[Rule]):
+    def __init__(self, rules: cabc.Sequence[Rule]):
         self.rules = list(rules)
 
     @classmethod
     def from_rules(
         cls,
-        items: Iterable[dict[str, Any]],
+        items: cabc.Iterable[dict[str, Any]],
         tokenizer: Any | None = None,
-    ) -> "TruthOracle":
+    ) -> TruthOracle:
         rules: list[Rule] = []
         for idx, item in enumerate(items):
             name = item.get("name") or f"rule_{idx}"
             when_any = tuple(item.get("when_any") or [])
             allow_ids: set[int] = set(item.get("allow_token_ids") or [])
-            allow_strings: Sequence[str] = tuple(item.get("allow_strings") or [])
+            allow_strings: cabc.Sequence[str] = tuple(item.get("allow_strings") or [])
             if allow_strings:
                 if tokenizer is None:
-                    raise ValueError(
-                        "allow_strings provided but no tokenizer supplied; pass a tokenizer to convert"
-                    )
+                    raise ValueError("allow_strings provided but tokenizer is missing")
                 allow_ids.update(_strings_to_token_ids(allow_strings, tokenizer))
             rule = Rule(
                 name=name,
@@ -69,7 +69,7 @@ class TruthOracle:
         return cls(rules)
 
     @classmethod
-    def from_payload(cls, payload: Sequence[dict[str, Any]]) -> "TruthOracle":
+    def from_payload(cls, payload: cabc.Sequence[dict[str, Any]]) -> TruthOracle:
         rules: list[Rule] = []
         for item in payload:
             allow_ids = frozenset(int(t) for t in item.get("allow_token_ids", ()))
@@ -83,19 +83,19 @@ class TruthOracle:
         return cls(rules)
 
     @classmethod
-    def from_yaml(cls, text: str, tokenizer: Any | None = None) -> "TruthOracle":
+    def from_yaml(cls, text: str, tokenizer: Any | None = None) -> TruthOracle:
         data = yaml.safe_load(text)
-        items: Sequence[dict[str, Any]]
+        items: cabc.Sequence[dict[str, Any]]
         if isinstance(data, dict) and "rules" in data:
             items = data["rules"]
         else:
             items = data or []
-        if not isinstance(items, Sequence):
+        if not isinstance(items, cabc.Sequence):
             raise ValueError("YAML payload must decode to a list of rules")
         return cls.from_rules(items, tokenizer=tokenizer)
 
     @classmethod
-    def from_json(cls, text: str) -> "TruthOracle":
+    def from_json(cls, text: str) -> TruthOracle:
         import json
 
         payload = json.loads(text)
@@ -103,7 +103,7 @@ class TruthOracle:
             data = payload["rules"]
         else:
             data = payload
-        if not isinstance(data, Sequence):
+        if not isinstance(data, cabc.Sequence):
             raise ValueError("JSON payload must decode to a list of rules")
         return cls.from_payload(data)
 
@@ -136,7 +136,7 @@ class TADTrace:
         step: int,
         token_id: int,
         action: str,
-        rule_names: Sequence[str],
+        rule_names: cabc.Sequence[str],
         token: str | None = None,
     ) -> None:
         self.events.append(
@@ -156,9 +156,7 @@ class TADTrace:
         for event in rows:
             allowed = ", ".join(event["rules"]) if event["rules"] else "(n/a)"
             token = event.get("token") or str(event["token_id"])
-            lines.append(
-                f"{event['step']:>4}  {token:<12}  {allowed:<24}  {event['action']}"
-            )
+            lines.append(f"{event['step']:>4}  {token:<12}  {allowed:<24}  {event['action']}")
         if len(self.events) > max_rows:
             lines.append(f"... {len(self.events) - max_rows} more rows")
         return "\n".join(lines)
@@ -176,16 +174,16 @@ class TADLogitsProcessor:
         self,
         oracle: TruthOracle,
         tokenizer: Any,
-        trace: Optional[TADTrace] = None,
+        trace: TADTrace | None = None,
         abstain_token: str = "<ABSTAIN>",
     ) -> None:
         self.oracle = oracle
         self.tokenizer = tokenizer
         self.trace = trace
         self.abstain_token = abstain_token
-        self._abstain_id: Optional[int] = None
+        self._abstain_id: int | None = None
 
-    def __call__(self, input_ids: "torch.LongTensor", scores: "torch.FloatTensor"):
+    def __call__(self, input_ids: Any, scores: Any) -> Any:
         if torch is None:  # pragma: no cover - runtime guard
             raise RuntimeError("TADLogitsProcessor requires torch to be installed")
         if scores.ndim != 2:
@@ -211,7 +209,9 @@ class TADLogitsProcessor:
             original_scores = scores[batch_idx].clone()
             violation = False
             if allow_set is not None:
-                allowed_idx = torch.tensor(sorted(allow_set), dtype=torch.long, device=scores.device)
+                allowed_idx = torch.tensor(
+                    sorted(allow_set), dtype=torch.long, device=scores.device
+                )
                 mask = torch.full_like(scores[batch_idx], float("-inf"))
                 mask[allowed_idx] = 0.0
                 scores[batch_idx] = scores[batch_idx] + mask
@@ -246,7 +246,7 @@ class TADLogitsProcessor:
             )
         return scores
 
-    def _collect_allowlist(self, rules: Sequence[Rule]) -> Optional[set[int]]:
+    def _collect_allowlist(self, rules: cabc.Sequence[Rule]) -> set[int] | None:
         allow: set[int] = set()
         for rule in rules:
             allow.update(rule.allow_token_ids)
@@ -272,16 +272,22 @@ class TADLogitsProcessor:
         self._abstain_id = int(eos)
         return self._abstain_id
 
-    def _log(self, step: int, token_id: int, action: str, rules: Sequence[str]) -> None:
+    def _log(self, step: int, token_id: int, action: str, rules: cabc.Sequence[str]) -> None:
         if not self.trace:
             return
         token_text = None
         if hasattr(self.tokenizer, "convert_ids_to_tokens"):
             token_text = self.tokenizer.convert_ids_to_tokens([token_id])[0]
-        self.trace.log(step=step, token_id=token_id, action=action, rule_names=rules, token=token_text)
+        self.trace.log(
+            step=step,
+            token_id=token_id,
+            action=action,
+            rule_names=rules,
+            token=token_text,
+        )
 
 
-def _strings_to_token_ids(strings: Sequence[str], tokenizer: Any) -> set[int]:
+def _strings_to_token_ids(strings: cabc.Sequence[str], tokenizer: Any) -> set[int]:
     token_ids: set[int] = set()
     for text in strings:
         if not text:

@@ -1,7 +1,7 @@
 """Truth-Aware Decoding Toolkit (TADKit)."""
 
-from .core import Rule, TADLogitsProcessor, TADTrace, TruthOracle
 from .cli import app
+from .core import Rule, TADLogitsProcessor, TADTrace, TruthOracle
 
 __all__ = [
     "Rule",
