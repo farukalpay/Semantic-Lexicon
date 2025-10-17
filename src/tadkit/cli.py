@@ -26,7 +26,7 @@ MAX_TOKENS_OPTION = typer.Option(20, help="Number of tokens to generate")
 def _load_tokenizer(tokenizer_id: str | None):
     if not tokenizer_id:
         return None
-    from transformers import AutoTokenizer
+    from transformers import AutoTokenizer  # type: ignore[import-not-found]
 
     return AutoTokenizer.from_pretrained(tokenizer_id)
 
@@ -86,7 +86,11 @@ def demo(
 ) -> None:
     """Run a small decoding demo against a Hugging Face model."""
 
-    from transformers import AutoModelForCausalLM, AutoTokenizer, LogitsProcessorList
+    from transformers import (  # type: ignore[import-not-found]
+        AutoModelForCausalLM,
+        AutoTokenizer,
+        LogitsProcessorList,
+    )
 
     oracle_path = pathlib.Path(oracle)
     with oracle_path.open("r", encoding="utf8") as handle:

@@ -2,19 +2,44 @@
 
 from __future__ import annotations
 
+import importlib
+import importlib.util
 from contextlib import contextmanager
-from typing import Any
-
-try:  # pragma: no cover - optional dependency
-    from langchain_core.runnables import Runnable
-except ModuleNotFoundError:  # pragma: no cover - fallback for environments without LangChain
-
-    class Runnable:  # type: ignore[override]
-        def invoke(self, input: Any, config: Any | None = None) -> Any:  # noqa: ANN401
-            raise RuntimeError("langchain_core is required to use KnowledgeGate")
-
+from typing import TYPE_CHECKING, Any, Protocol
 
 from tadkit.core import TADLogitsProcessor, TADTrace, TruthOracle
+
+
+class _RunnableProtocol(Protocol):
+    def invoke(self, input: Any, config: Any | None = None) -> Any: ...
+
+
+if TYPE_CHECKING:
+    RunnableProtocol = _RunnableProtocol
+else:
+    RunnableProtocol = None
+
+_LANGCHAIN_BASE_SPEC = importlib.util.find_spec("langchain_core")
+if _LANGCHAIN_BASE_SPEC is not None:
+    _RUNNABLE_SPEC = importlib.util.find_spec("langchain_core.runnables")
+else:
+    _RUNNABLE_SPEC = None
+
+if _RUNNABLE_SPEC is not None and not TYPE_CHECKING:
+    langchain_runnables = importlib.import_module("langchain_core.runnables")
+    RunnableProtocol = langchain_runnables.Runnable
+
+
+class _FallbackRunnable:
+    def invoke(self, input: Any, config: Any | None = None) -> Any:  # noqa: D401, ANN401
+        raise RuntimeError("langchain_core is required to use KnowledgeGate")
+
+
+Runnable: type[Any]
+if RunnableProtocol is not None:
+    Runnable = RunnableProtocol  # type: ignore[assignment]
+else:
+    Runnable = _FallbackRunnable
 
 
 class KnowledgeGate(Runnable):

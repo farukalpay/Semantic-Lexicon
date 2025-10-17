@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import importlib.util
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
-try:  # pragma: no cover - optional dependency, validated in runtime
-    import torch
-except ModuleNotFoundError:  # pragma: no cover - torch optional
-    torch = None  # type: ignore[assignment]
+if TYPE_CHECKING:  # pragma: no cover - help static type checkers
+    import torch as torch_module  # type: ignore[import-not-found]
+else:  # pragma: no cover - optional dependency resolved at runtime
+    torch_module = None
+
+if importlib.util.find_spec("torch") is not None:  # pragma: no cover - runtime optional dependency
+    import torch as torch_module  # type: ignore[import-not-found]
+
+torch: Any = torch_module
 
 
 @dataclass(frozen=True)
@@ -162,7 +168,7 @@ class TADTrace:
         return "\n".join(lines)
 
     def to_dataframe(self):  # pragma: no cover - optional dependency
-        import pandas as pd
+        import pandas as pd  # type: ignore[import-untyped]
 
         return pd.DataFrame(self.events)
 
