@@ -16,7 +16,7 @@ return a string response instead of propagating exceptions.
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Optional
 
@@ -39,7 +39,7 @@ def _resolve_workspace(workspace: Optional[Path]) -> Path:
     return Path(workspace)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_model(workspace: str) -> NeuralSemanticModel:
     """Load (and cache) a ``NeuralSemanticModel`` for ``workspace``.
 
@@ -131,4 +131,3 @@ def run(
 
 
 __all__ = ["run"]
-

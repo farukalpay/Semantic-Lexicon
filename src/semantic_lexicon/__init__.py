@@ -46,6 +46,7 @@ from .go_no_go import (
 )
 from .model import NeuralSemanticModel
 from .presentation import BackupMove, ExperimentPlan, build_single_adjustment_plan
+from .runtime import run
 from .safety import (
     ConstraintSpec,
     GateBounds,
@@ -54,7 +55,6 @@ from .safety import (
     SafetyGateTuner,
     run_primal_dual_autotune,
 )
-from .runtime import run
 from .training import Trainer, TrainerConfig
 
 __all__ = [
