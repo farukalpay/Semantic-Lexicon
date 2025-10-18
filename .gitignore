@@ -1,2 +1,9 @@
 # Prevent auto-generated visualization artifacts from being committed.
 docs/assets/*.png
+# build artifacts
+*.egg-info/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
