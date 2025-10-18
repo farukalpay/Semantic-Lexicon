@@ -264,7 +264,7 @@ def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
     persona template.
     """
 
-    if SECTION_TRIGGER.casefold() not in prompt.casefold():
+    if SECTION_TRIGGER not in prompt:
         return None
     matrices = _parse_matrices(prompt)
     if not {"R", "S"}.issubset(matrices):
