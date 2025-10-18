@@ -12,13 +12,18 @@ syntax slips.
 from __future__ import annotations
 
 import json
+import sys
 from collections import abc
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+_DATACLASS_EXTRA_KWARGS: dict[str, Any] = {}
+if sys.version_info >= (3, 10):  # pragma: no cover - depends on runtime version
+    _DATACLASS_EXTRA_KWARGS["slots"] = True
 
-@dataclass(frozen=True, slots=True)
+
+@dataclass(frozen=True, **_DATACLASS_EXTRA_KWARGS)
 class CaseRecord:
     """Individual compliance evaluation result."""
 
@@ -32,7 +37,7 @@ class CaseRecord:
         return "PASS" if self.passed else "FAIL"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, **_DATACLASS_EXTRA_KWARGS)
 class ComplianceSummary:
     """Aggregate metrics for a compliance report."""
 
