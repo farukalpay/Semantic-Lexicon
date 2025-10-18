@@ -1,0 +1,3 @@
+[console_scripts]
+semantic-lexicon = semantic_lexicon.cli:app
+tadkit = tadkit.cli:app
