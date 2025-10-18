@@ -206,7 +206,10 @@ class IntentClassifier:
             LOGGER.warning("Intent design matrix contained non-finite values; re-normalising")
             matrix = _normalise_design_matrix(matrix)
         if not np.isfinite(matrix).all():
-            LOGGER.warning("Intent design matrix still non-finite after normalisation; zeroing offending entries")
+            LOGGER.warning(
+                "Intent design matrix still non-finite after normalisation; "
+                "zeroing offending entries"
+            )
             matrix = np.nan_to_num(matrix, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         labels = np.array([self.label_to_index[item.intent] for item in dataset], dtype=int)
         num_features = matrix.shape[1]
@@ -634,9 +637,7 @@ class IntentClassifier:
                 working[index] = value
         vector64 = _normalise_feature_vector(working)
         if self._bias_index is not None:
-            vector64 = np.concatenate(
-                [vector64, np.array([1.0], dtype=np.float64)]
-            )
+            vector64 = np.concatenate([vector64, np.array([1.0], dtype=np.float64)])
         if dtype is np.float64:
             vector = vector64
         else:

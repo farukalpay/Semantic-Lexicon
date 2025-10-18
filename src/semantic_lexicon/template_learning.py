@@ -48,7 +48,7 @@ def _clip_gradients(
     if clip_norm == 0.0:
         return grad_w, grad_b
     total_norm = float(
-        math.sqrt(np.sum(grad_w ** 2, dtype=np.float64) + np.sum(grad_b ** 2, dtype=np.float64))
+        math.sqrt(np.sum(grad_w**2, dtype=np.float64) + np.sum(grad_b**2, dtype=np.float64))
     )
     if not math.isfinite(total_norm) or total_norm <= clip_norm or total_norm == 0.0:
         return grad_w, grad_b
@@ -125,7 +125,9 @@ class _SoftmaxModel:
             LOGGER.warning("Softmax training matrix contained non-finite values; re-normalising")
             features = _normalise_design_matrix(features)
         if not _is_finite(features):
-            LOGGER.warning("Softmax features still non-finite after normalisation; zeroing offending rows")
+            LOGGER.warning(
+                "Softmax features still non-finite after normalisation; zeroing offending rows"
+            )
             features = np.nan_to_num(features, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         n_samples = features.shape[0]
         feature_count = max(self.n_features, 1)
