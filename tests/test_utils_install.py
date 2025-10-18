@@ -155,7 +155,9 @@ def test_resolver_links_project_sources(monkeypatch: pytest.MonkeyPatch, tmp_pat
     assert script.exists()
 
 
-def test_resolver_handles_invalid_pyproject(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_resolver_handles_invalid_pyproject(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     project_src = tmp_path / "src"
     package = project_src / "semantic_lexicon"
     package.mkdir(parents=True)
