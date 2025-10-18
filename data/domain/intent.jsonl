@@ -238,3 +238,53 @@
 {"text": "Provide exploration prompts for resilience investment pathways that estimate budget scenarios.", "intent": "exploration"}
 {"text": "Provide exploration prompts for resilience investment pathways that identify necessary data streams.", "intent": "exploration"}
 {"text": "Provide exploration prompts for resilience investment pathways that outline regulatory milestones.", "intent": "exploration"}
+{"text": "Define green ammonia production within offshore wind energy corridors.", "intent": "definition"}
+{"text": "Define blockchain energy trading within distributed generation networks.", "intent": "definition"}
+{"text": "Define carbon intensity tracking within smart metering infrastructure.", "intent": "definition"}
+{"text": "Define grid-edge intelligence within residential solar communities.", "intent": "definition"}
+{"text": "Define thermal energy storage within district heating systems.", "intent": "definition"}
+{"text": "Define power quality management within data center microgrids.", "intent": "definition"}
+{"text": "Define renewable energy credits within corporate sustainability programs.", "intent": "definition"}
+{"text": "Define load flexibility aggregation within commercial building portfolios.", "intent": "definition"}
+{"text": "Define energy justice metrics within utility modernization programs.", "intent": "definition"}
+{"text": "Define cybersecurity protocols within critical infrastructure protection.", "intent": "definition"}
+{"text": "How should I implement carbon tracking systems for renewable energy portfolios?", "intent": "how_to"}
+{"text": "How should I configure vehicle-to-grid integration for fleet operators?", "intent": "how_to"}
+{"text": "How should I establish energy equity programs in disadvantaged communities?", "intent": "how_to"}
+{"text": "How should I optimize battery cycling strategies for grid services?", "intent": "how_to"}
+{"text": "How should I develop weather-responsive demand management systems?", "intent": "how_to"}
+{"text": "How should I integrate hydrogen electrolyzers with renewable generation?", "intent": "how_to"}
+{"text": "How should I implement predictive maintenance for wind turbine fleets?", "intent": "how_to"}
+{"text": "How should I coordinate multi-site virtual power plant operations?", "intent": "how_to"}
+{"text": "How should I establish peer-to-peer energy trading communities?", "intent": "how_to"}
+{"text": "How should I deploy AI-driven grid optimization algorithms?", "intent": "how_to"}
+{"text": "Outline steps to implement blockchain-based renewable energy certificates.", "intent": "how_to"}
+{"text": "Outline steps to establish community resilience hubs with backup power.", "intent": "how_to"}
+{"text": "Outline steps to integrate thermal storage with solar generation facilities.", "intent": "how_to"}
+{"text": "Outline steps to develop dynamic pricing programs for residential customers.", "intent": "how_to"}
+{"text": "Outline steps to create carbon-neutral industrial energy systems.", "intent": "how_to"}
+{"text": "Compare green hydrogen and synthetic methane for long-term energy storage.", "intent": "comparison"}
+{"text": "Compare centralized and distributed battery storage architectures.", "intent": "comparison"}
+{"text": "Compare time-of-use and real-time pricing for demand response programs.", "intent": "comparison"}
+{"text": "Compare offshore floating solar and offshore wind for marine environments.", "intent": "comparison"}
+{"text": "Compare solid-state and lithium-ion batteries for grid applications.", "intent": "comparison"}
+{"text": "Compare AC and DC microgrids for commercial building integration.", "intent": "comparison"}
+{"text": "Compare machine learning and rule-based systems for grid fault detection.", "intent": "comparison"}
+{"text": "Compare community solar and rooftop solar for urban deployment.", "intent": "comparison"}
+{"text": "Compare thermal and battery storage for renewable integration.", "intent": "comparison"}
+{"text": "Compare agrivoltaics and traditional solar farms for land use efficiency.", "intent": "comparison"}
+{"text": "Explore carbon capture integration opportunities and identify funding sources.", "intent": "exploration"}
+{"text": "Explore electric vehicle charging infrastructure and assess grid impacts.", "intent": "exploration"}
+{"text": "Explore energy storage business models and evaluate revenue streams.", "intent": "exploration"}
+{"text": "Explore smart city energy systems and define integration requirements.", "intent": "exploration"}
+{"text": "Explore offshore wind supply chains and identify bottlenecks.", "intent": "exploration"}
+{"text": "Explore grid resilience strategies and prioritize investment areas.", "intent": "exploration"}
+{"text": "Explore renewable energy forecasting methods and benchmark accuracy.", "intent": "exploration"}
+{"text": "Explore energy equity programs and measure community benefits.", "intent": "exploration"}
+{"text": "Explore hydrogen economy pathways and assess infrastructure needs.", "intent": "exploration"}
+{"text": "Explore circular economy principles and apply to battery recycling.", "intent": "exploration"}
+{"text": "Provide exploration prompts for green ammonia production that assess market readiness.", "intent": "exploration"}
+{"text": "Provide exploration prompts for grid modernization that evaluate technology options.", "intent": "exploration"}
+{"text": "Provide exploration prompts for energy transition that identify workforce needs.", "intent": "exploration"}
+{"text": "Provide exploration prompts for carbon markets that analyze pricing mechanisms.", "intent": "exploration"}
+{"text": "Provide exploration prompts for renewable integration that model grid stability.", "intent": "exploration"}
