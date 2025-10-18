@@ -715,7 +715,12 @@ class IntentClassifier:
                 left_limit=_MAX_FEATURE_MAGNITUDE,
                 right_limit=_MAX_PARAMETER_MAGNITUDE,
             )
-            np.clip(candidate_logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=candidate_logits)
+            np.clip(
+                candidate_logits,
+                -_MAX_LOGIT_MAGNITUDE,
+                _MAX_LOGIT_MAGNITUDE,
+                out=candidate_logits,
+            )
             candidate_probs = self._softmax(candidate_logits)
             candidate_accuracy = float(np.mean(np.argmax(candidate_probs, axis=1) == labels))
             if candidate_accuracy < current_accuracy and step > 1e-6:
