@@ -89,7 +89,10 @@ class NeuralSemanticModel:
         try:
             intent_probs = self.intent_classifier.predict_proba(prompt)
         except Exception:  # pragma: no cover - defensive fallback
-            LOGGER.debug("Intent classifier unavailable; returning empty intent list", exc_info=True)
+            LOGGER.debug(
+                "Intent classifier unavailable; returning empty intent list",
+                exc_info=True,
+            )
             return []
         ranked = sorted(
             intent_probs,
