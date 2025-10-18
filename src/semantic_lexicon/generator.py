@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from collections import Counter
@@ -308,10 +309,57 @@ def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
     return "\n".join(lines)
 
 
-LITERAL_JSON_PATTERN = re.compile(r"return only this json:\s*(\{.*\})", re.IGNORECASE)
+LITERAL_JSON_PATTERN = re.compile(
+    r"return only this json:\s*(\{.*)", re.IGNORECASE | re.DOTALL
+)
 LITERAL_WORD_PATTERN = re.compile(r"return only the word:\s*([a-z0-9]+)", re.IGNORECASE)
 LITERAL_NUMBER_PATTERN = re.compile(r"return only the number\s*([-+]?\d+(?:\.\d+)?)", re.IGNORECASE)
 LITERAL_HTML_PATTERN = re.compile(r"output exactly this html[^:]*:\s*(.+)", re.IGNORECASE)
+
+
+def _normalise_json_literal(text: str) -> str:
+    """Canonicalise ``text`` when it contains valid JSON."""
+
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return text.strip()
+    return json.dumps(parsed, separators=(",", ":"), ensure_ascii=False)
+
+
+def _extract_json_literal(candidate: str) -> Optional[str]:
+    """Extract the first balanced JSON object from ``candidate``.
+
+    We walk the string manually so that nested braces inside quoted strings do
+    not terminate the match prematurely.  The helper returns ``None`` if the
+    text does not contain a balanced object starting at ``candidate[0]``.
+    """
+
+    text = candidate.lstrip()
+    if not text.startswith("{"):
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for index, char in enumerate(text):
+        if escaped:
+            escaped = False
+            continue
+        if char == "\\":
+            escaped = True
+            continue
+        if char == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[: index + 1]
+    return None
 
 
 def _maybe_generate_literal_response(prompt: str) -> Optional[str]:
@@ -322,7 +370,10 @@ def _maybe_generate_literal_response(prompt: str) -> Optional[str]:
         return None
     match = LITERAL_JSON_PATTERN.search(text)
     if match:
-        return match.group(1)
+        json_literal = _extract_json_literal(match.group(1))
+        if json_literal is None:
+            json_literal = match.group(1).strip()
+        return _normalise_json_literal(json_literal)
     match = LITERAL_WORD_PATTERN.search(text)
     if match:
         word = match.group(1)
