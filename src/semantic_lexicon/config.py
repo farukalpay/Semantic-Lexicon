@@ -75,7 +75,7 @@ class EmbeddingConfig:
 class IntentConfig:
     """Configuration for the intent classifier."""
 
-    learning_rate: float = 0.1
+    learning_rate: float = 0.05
     epochs: int = 30
     hidden_dim: int = 32
     optimized: bool = True
@@ -83,6 +83,7 @@ class IntentConfig:
     feedback_prior_weight: float = 0.5
     feedback_step_size: float = 0.2
     l2_regularization: float = 1e-4
+    gradient_clip_norm: float = 5.0
 
 
 @dataclass
@@ -102,10 +103,12 @@ class KnowledgeConfig:
     coverage_mix: float = 0.6
     cohesion_mix: float = 0.4
     selection_size: int = 12
-    topic_threshold: float = 0.55
+    topic_threshold: float = 0.65
     anchor_pool: int = 0
     anchor_multiplier: float = 3.0
     gate_bias: float = 0.08
+    anchor_gate_threshold: float = 0.2
+    strict_anchor_filter: bool = True
     on_topic_min_ratio: float = 0.6
     off_topic_min_ratio: float = 0.2
     off_topic_max_ratio: float = 0.4
