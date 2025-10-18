@@ -351,7 +351,8 @@ def _maybe_generate_literal_response(prompt: str) -> Optional[str]:
         return "1. Review limits; 2. Practice derivatives; 3. Solve integrals."
     if "yalnızca türkçe cevap ver" in text_lower or "sadece türkçe cevap ver" in text_lower:
         return (
-            "Matris çarpımı, satırların ve sütunların noktasal çarpımıyla yeni bir matris üretme işlemidir."
+            "Matris çarpımı, satırların ve sütunların noktasal çarpımıyla yeni bir "
+            "matris üretme işlemidir."
         )
     return None
 
