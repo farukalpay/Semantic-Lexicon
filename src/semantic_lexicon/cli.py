@@ -12,6 +12,7 @@ from typing import Any, Optional
 
 import typer  # type: ignore[import-not-found]
 
+from .compliance import load_report_payload, write_reports
 from .config import SemanticModelConfig, load_config
 from .logging import configure_logging
 from .model import NeuralSemanticModel
@@ -64,6 +65,16 @@ GENERATE_CONFIG_OPTION = typer.Option(
 GENERATE_WORKSPACE_OPTION = typer.Option(
     DEFAULT_WORKSPACE,
     help="Directory containing trained artifacts.",
+)
+COMPLIANCE_JSON_OUTPUT_OPTION = typer.Option(
+    DEFAULT_WORKSPACE / "compliance.json",
+    "--json-output",
+    help="Destination path for the compliance JSON report.",
+)
+COMPLIANCE_MARKDOWN_OUTPUT_OPTION = typer.Option(
+    DEFAULT_WORKSPACE / "compliance.md",
+    "--markdown-output",
+    help="Destination path for the compliance Markdown report.",
 )
 
 app = typer.Typer(
@@ -205,6 +216,32 @@ def knowledge(
             "gate_mean": selection.gate_mean,
         }
     typer.echo(json.dumps(payload, indent=2))
+
+
+@app.command("compliance-report")
+def compliance_report(
+    payload_path: Path = typer.Argument(
+        ..., help="JSON file containing 'summary' and 'cases' payloads."
+    ),
+    json_output: Path = COMPLIANCE_JSON_OUTPUT_OPTION,
+    markdown_output: Path = COMPLIANCE_MARKDOWN_OUTPUT_OPTION,
+) -> None:
+    """Generate Markdown and JSON compliance reports from a payload."""
+
+    summary, cases = load_report_payload(payload_path)
+    json_output = Path(json_output)
+    markdown_output = Path(markdown_output)
+    json_output.parent.mkdir(parents=True, exist_ok=True)
+    markdown_output.parent.mkdir(parents=True, exist_ok=True)
+    write_reports(
+        summary,
+        cases,
+        json_path=json_output,
+        markdown_path=markdown_output,
+    )
+    typer.echo(
+        f"Wrote compliance report to {markdown_output} and {json_output}",
+    )
 
 
 if __name__ == "__main__":

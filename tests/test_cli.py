@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -64,3 +65,35 @@ def test_cli_prepare_supports_short_option(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert (workspace / "intent.jsonl").exists()
     assert (workspace / "knowledge.jsonl").exists()
+
+
+def test_cli_compliance_report(tmp_path: Path) -> None:
+    payload = {
+        "summary": {"total": 2, "passed": 2, "failed": 0, "pass_rate": 100.0},
+        "cases": [
+            {"label": "alpha", "passed": True, "notes": {"detail": "ok"}},
+            {"label": "beta", "passed": True, "notes": {"detail": "ok"}},
+        ],
+    }
+    payload_path = tmp_path / "payload.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf8")
+    json_output = tmp_path / "report.json"
+    markdown_output = tmp_path / "report.md"
+
+    result = runner.invoke(
+        app,
+        [
+            "compliance-report",
+            str(payload_path),
+            "--json-output",
+            str(json_output),
+            "--markdown-output",
+            str(markdown_output),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert json_output.exists()
+    assert markdown_output.exists()
+    markdown_text = markdown_output.read_text(encoding="utf8")
+    assert "- **alpha**" in markdown_text
