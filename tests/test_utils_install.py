@@ -155,6 +155,34 @@ def test_resolver_links_project_sources(monkeypatch: pytest.MonkeyPatch, tmp_pat
     assert script.exists()
 
 
+def test_resolver_handles_invalid_pyproject(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    project_src = tmp_path / "src"
+    package = project_src / "semantic_lexicon"
+    package.mkdir(parents=True)
+
+    # Invalid TOML content that should fall back to directory defaults
+    (tmp_path / "pyproject.toml").write_text("[project\nname = 'broken'", encoding="utf8")
+
+    purelib, scripts = _configure_site_paths(monkeypatch, tmp_path / "site")
+
+    env: dict[str, str] = {}
+    mode, success = resolve_package_installation_failure(
+        tmp_path,
+        required_build_dep_version=68,
+        connection_checker=_offline,
+        pip_runner=lambda args: None,
+        wheel_dir=tmp_path / "missing-wheels",
+        env=env,
+    )
+
+    assert success is True
+    assert mode is InstallMode.LINKED
+    assert env["PYTHONPATH"].split(os.pathsep)[0] == str(project_src)
+    pth_files = list(purelib.glob("*.pth"))
+    assert len(pth_files) == 1
+    assert scripts.joinpath(tmp_path.name).exists()
+
+
 def test_resolver_direct_installation_when_linking_fails(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

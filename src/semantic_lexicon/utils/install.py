@@ -29,6 +29,8 @@ try:  # Python 3.11+
 except ModuleNotFoundError:  # pragma: no cover - fallback for older interpreters
     tomllib = importlib.import_module("tomli")
 
+TOMLDecodeError = getattr(tomllib, "TOMLDecodeError", ValueError)
+
 DEFAULT_INDEX_URL = "https://pypi.org/simple"
 DEFAULT_WHEEL_DIR = Path.home() / ".cache" / "pip" / "wheels"
 
@@ -218,18 +220,25 @@ def _iter_package_files(package_root: Path) -> Iterable[Path]:
 
 
 def _parse_project_name_version(pyproject_path: Path) -> tuple[str, str]:
-    data = tomllib.loads(pyproject_path.read_text("utf-8"))
+    default_name = pyproject_path.parent.name
+    default_version = "0"
+
+    try:
+        raw_text = pyproject_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return default_name, default_version
+
+    try:
+        data = tomllib.loads(raw_text)
+    except TOMLDecodeError:
+        return default_name, default_version
+
     project = data.get("project") or {}
     tool = data.get("tool") or {}
     setuptools_cfg = tool.get("setuptools") or {}
 
-    name = project.get("name") or setuptools_cfg.get("name")
-    version = project.get("version") or setuptools_cfg.get("version")
-
-    if not name:
-        name = pyproject_path.parent.name
-    if not version:
-        version = "0"
+    name = project.get("name") or setuptools_cfg.get("name") or default_name
+    version = project.get("version") or setuptools_cfg.get("version") or default_version
 
     return str(name), str(version)
 
