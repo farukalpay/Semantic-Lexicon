@@ -45,6 +45,7 @@ class IntentExample:
 
 _MAX_FEATURE_MAGNITUDE = 1024.0
 _STEP_SCALE_THRESHOLD = 512.0
+_NORMALISATION_EPS = 1e-8
 
 
 def _safe_step_scale(matrix: np.ndarray) -> float:
@@ -70,7 +71,20 @@ def _normalise_design_matrix(matrix: np.ndarray) -> np.ndarray:
     if matrix.size == 0:
         return np.asarray(matrix, dtype=np.float64)
     normalised = np.asarray(matrix, dtype=np.float64)
+    if normalised.ndim == 1:
+        return _normalise_feature_vector(normalised)
     np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    column_mean = normalised.mean(axis=0, keepdims=True)
+    normalised -= column_mean
+    column_var = normalised.var(axis=0, keepdims=True)
+    column_std = np.sqrt(column_var)
+    column_std = np.where(column_std < _NORMALISATION_EPS, 1.0, column_std)
+    normalised /= column_std
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    row_max = np.max(np.abs(normalised), axis=1, keepdims=True, initial=0.0)
+    large_rows = row_max > _MAX_FEATURE_MAGNITUDE
+    if np.any(large_rows):
+        normalised[large_rows] *= _MAX_FEATURE_MAGNITUDE / row_max[large_rows]
     max_abs = float(np.max(np.abs(normalised)))
     if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
         return normalised
@@ -87,6 +101,13 @@ def _normalise_feature_vector(vector: np.ndarray) -> np.ndarray:
     np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     if normalised.size == 0:
         return normalised
+    mean = float(normalised.mean())
+    normalised -= mean
+    std = float(normalised.std())
+    if not math.isfinite(std) or std < _NORMALISATION_EPS:
+        std = 1.0
+    normalised /= std
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     max_abs = float(np.max(np.abs(normalised)))
     if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
         return normalised
@@ -116,6 +137,7 @@ class IntentClassifier:
         self._epoch_accuracy: list[float] = []
         self._conditional_accuracy: Optional[NDArray[np.float64]] = None
         self._feature_indices: dict[str, int] = {}
+        self._bias_index: Optional[int] = None
         self.optimized = bool(self.config.optimized)
         self.cache_size = max(int(self.config.cache_size), 0)
         self.enable_cache = self.optimized and self.cache_size > 0
@@ -178,17 +200,27 @@ class IntentClassifier:
         self._reward_history = []
         self._weights_for_inference = None
         self._prepare_labels(dataset)
+        self._bias_index = None
         matrix = self._vectorise(dataset)
         if not np.isfinite(matrix).all():
             LOGGER.warning("Intent design matrix contained non-finite values; re-normalising")
             matrix = _normalise_design_matrix(matrix)
+        if not np.isfinite(matrix).all():
+            LOGGER.warning(
+                "Intent design matrix still non-finite after normalisation; "
+                "zeroing offending entries"
+            )
+            matrix = np.nan_to_num(matrix, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         labels = np.array([self.label_to_index[item.intent] for item in dataset], dtype=int)
         num_features = matrix.shape[1]
         num_labels = len(self.label_to_index)
         rng = np.random.default_rng(0)
+        feature_count = max(num_features, 1)
+        label_count = max(num_labels, 1)
+        limit = math.sqrt(6.0 / (feature_count + label_count))
         self.weights = np.asarray(
-            rng.normal(0, 0.1, size=(num_features, num_labels)),
-            dtype=float,
+            rng.uniform(-limit, limit, size=(num_features, num_labels)),
+            dtype=np.float64,
         )
         self._epoch_accuracy = []
         base_step = self.config.learning_rate
@@ -203,9 +235,12 @@ class IntentClassifier:
             step = base_step * 1e-6
         min_step = step * 1e-3 if step else 0.0
         l2 = max(float(self.config.l2_regularization), 0.0)
+        clip_norm = float(max(self.config.gradient_clip_norm, 0.0))
+        dataset_size = max(len(dataset), 1)
 
+        assert self.weights is not None
         for epoch in range(self.config.epochs):
-            logits = np.asarray(matrix @ self.weights, dtype=float)
+            logits = np.asarray(matrix @ self.weights, dtype=np.float64)
             if not np.isfinite(logits).all():
                 LOGGER.warning(
                     "Intent logits produced non-finite values; forcing matrix sanitisation"
@@ -214,12 +249,17 @@ class IntentClassifier:
                 self.weights = np.nan_to_num(
                     self.weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
                 )
-                logits = np.asarray(matrix @ self.weights, dtype=float)
+                logits = np.asarray(matrix @ self.weights, dtype=np.float64)
             probs = self._softmax(logits)
-            one_hot = np.eye(num_labels, dtype=float)[labels]
-            gradient = matrix.T @ (probs - one_hot) / len(dataset)
+            one_hot = np.eye(num_labels, dtype=np.float64)[labels]
+            gradient = matrix.T @ (probs - one_hot) / dataset_size
             if l2:
                 gradient += l2 * self.weights
+            gradient = np.nan_to_num(gradient, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            if clip_norm:
+                grad_norm = float(np.linalg.norm(gradient))
+                if math.isfinite(grad_norm) and grad_norm > clip_norm and grad_norm > 0.0:
+                    gradient *= clip_norm / (grad_norm + _NORMALISATION_EPS)
 
             update = step * gradient
             new_weights = self.weights - update
@@ -230,13 +270,25 @@ class IntentClassifier:
                 step *= 0.5
                 continue
 
-            self.weights = new_weights
+            self.weights = np.nan_to_num(new_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
             loss = -np.mean(np.log(probs[np.arange(len(dataset)), labels] + 1e-12))
             accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
             self._epoch_accuracy.append(accuracy)
             LOGGER.debug("Intent epoch %s | loss=%.4f", epoch + 1, loss)
         LOGGER.info("Trained intent classifier with %d intents", num_labels)
-        self._post_train_adjustments(matrix, labels, dataset, probs)
+        final_probs = self._softmax(np.asarray(matrix @ self.weights, dtype=np.float64))
+        final_accuracy = float(np.mean(np.argmax(final_probs, axis=1) == labels))
+        if final_accuracy < 0.9:
+            final_probs = self._fine_tune_weights(
+                matrix,
+                labels,
+                one_hot,
+                l2,
+                clip_norm,
+                dataset_size,
+                max(step, base_step),
+            )
+        self._post_train_adjustments(matrix, labels, dataset, final_probs)
         self._finalise_weights()
 
     def _prepare_labels(self, examples: Sequence[IntentExample]) -> None:
@@ -264,7 +316,7 @@ class IntentClassifier:
         tokenised = [tokenize(example.text) for example in examples]
         if not self.vocabulary:
             self._build_vocabulary(tokenised)
-        matrix = np.zeros((len(tokenised), len(self.vocabulary)), dtype=float)
+        matrix = np.zeros((len(tokenised), len(self.vocabulary)), dtype=np.float64)
         for row, (tokens, example) in enumerate(zip(tokenised, examples)):
             for token in tokens:
                 if token in self.vocabulary:
@@ -273,7 +325,11 @@ class IntentClassifier:
                 index = self._feature_indices.get(name)
                 if index is not None:
                     matrix[row, index] = value
-        return _normalise_design_matrix(matrix)
+        matrix = _normalise_design_matrix(matrix)
+        bias = np.ones((matrix.shape[0], 1), dtype=np.float64)
+        matrix = np.hstack([matrix, bias])
+        self._bias_index = matrix.shape[1] - 1
+        return matrix
 
     # Prediction ------------------------------------------------------------------
     def predict(self, text: str) -> str:
@@ -315,7 +371,7 @@ class IntentClassifier:
             probs = self._apply_dirichlet_calibration(probs)
         probs = project_to_simplex(np.asarray(probs, dtype=np.float64))
         if vector is None:
-            similarities = np.zeros(len(self.index_to_label), dtype=float)
+            similarities = np.zeros(len(self.index_to_label), dtype=np.float64)
         else:
             similarities = np.array(
                 [
@@ -502,14 +558,62 @@ class IntentClassifier:
         if posterior is None:
             return adjusted
         posterior_array = np.asarray(posterior, dtype=np.float64)
-        weighted = adjusted * posterior_array
-        weighted = np.clip(weighted, 0.0, None)
-        total = weighted.sum()
-        if total == 0.0:
-            weighted = posterior_array
-        else:
-            weighted /= total
-        return np.asarray(weighted, dtype=np.float64)
+        mix = 0.5 * adjusted + 0.5 * posterior_array
+        mix = np.clip(mix, 0.0, None)
+        return project_to_simplex(np.asarray(mix, dtype=np.float64))
+
+    def _fine_tune_weights(
+        self,
+        matrix: NDArray[np.float64],
+        labels: NDArray[np.int_],
+        one_hot: NDArray[np.float64],
+        l2: float,
+        clip_norm: float,
+        dataset_size: int,
+        initial_step: float,
+        target_accuracy: float = 0.9,
+        max_iterations: int = 20,
+    ) -> NDArray[np.float64]:
+        if self.weights is None:
+            raise RuntimeError("Cannot fine-tune intent weights before initial training")
+        trained_weights = np.asarray(self.weights, dtype=np.float64)
+        step = max(initial_step, 0.01)
+        probs = self._softmax(np.asarray(matrix @ trained_weights, dtype=np.float64))
+        current_accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
+        for _ in range(max_iterations):
+            gradient = matrix.T @ (probs - one_hot) / dataset_size
+            if l2:
+                gradient += l2 * trained_weights
+            gradient = np.nan_to_num(gradient, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            if clip_norm:
+                grad_norm = float(np.linalg.norm(gradient))
+                if math.isfinite(grad_norm) and grad_norm > clip_norm and grad_norm > 0.0:
+                    gradient *= clip_norm / (grad_norm + _NORMALISATION_EPS)
+            update = step * gradient
+            candidate_weights = trained_weights - update
+            if not np.isfinite(candidate_weights).all():
+                step *= 0.5
+                if step <= 1e-6:
+                    break
+                continue
+            candidate_weights = np.nan_to_num(
+                candidate_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
+            )
+            candidate_probs = self._softmax(
+                np.asarray(matrix @ candidate_weights, dtype=np.float64)
+            )
+            candidate_accuracy = float(np.mean(np.argmax(candidate_probs, axis=1) == labels))
+            if candidate_accuracy < current_accuracy and step > 1e-6:
+                step *= 0.5
+                continue
+            trained_weights = candidate_weights
+            self.weights = np.asarray(candidate_weights, dtype=np.float64)
+            probs = candidate_probs
+            current_accuracy = candidate_accuracy
+            self._epoch_accuracy.append(current_accuracy)
+            if current_accuracy >= target_accuracy:
+                break
+        return probs
 
     def _vectorise_text(self, text: str) -> np.ndarray:
         vector, _ = self._vectorise_with_features(text)
@@ -538,6 +642,8 @@ class IntentClassifier:
             if index is not None:
                 working[index] = value
         vector64 = _normalise_feature_vector(working)
+        if self._bias_index is not None:
+            vector64 = np.concatenate([vector64, np.array([1.0], dtype=np.float64)])
         if dtype is np.float64:
             vector = vector64
         else:
@@ -711,4 +817,4 @@ class IntentClassifier:
         logits = logits - np.max(logits, axis=1, keepdims=True)
         exp = np.exp(logits)
         denominator = np.sum(exp, axis=1, keepdims=True)
-        return np.asarray(exp / denominator, dtype=float)
+        return np.asarray(exp / denominator, dtype=np.float64)
