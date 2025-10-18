@@ -8,6 +8,7 @@ from semantic_lexicon.compliance import (
     ComplianceSummary,
     build_json,
     build_markdown,
+    load_report_payload,
     write_reports,
 )
 
@@ -52,3 +53,22 @@ def test_write_reports(tmp_path: Path) -> None:
     assert json_path.exists()
     assert markdown_path.exists()
     assert "PASS" in markdown_path.read_text(encoding="utf8")
+
+
+def test_load_report_payload(tmp_path: Path) -> None:
+    payload = {
+        "summary": {"total": 2, "passed": 1, "failed": 1, "pass_rate": 50.0},
+        "cases": [
+            {"label": "alpha", "passed": True, "notes": {"detail": "ok"}},
+            {"label": "beta", "passed": False, "notes": {"error": "mismatch"}},
+        ],
+    }
+    path = tmp_path / "payload.json"
+    path.write_text(json.dumps(payload), encoding="utf8")
+
+    summary, cases = load_report_payload(path)
+
+    assert summary.passed == 1
+    assert len(cases) == 2
+    assert cases[1].label == "beta"
+    assert cases[1].notes["error"] == "mismatch"
