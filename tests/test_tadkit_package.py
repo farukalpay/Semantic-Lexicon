@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-import pytest
+import numpy as np
 
 from tadkit.core import TADLogitsProcessor, TADTrace, TruthOracle
+
+try:  # pragma: no cover - exercised in environments with torch installed
+    import torch  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - runtime optional dependency
+    torch = None  # type: ignore[assignment]
 
 
 class DummyTokenizer:
@@ -50,7 +55,6 @@ def test_truth_oracle_from_rules_handles_strings():
 
 
 def test_logits_processor_forces_abstain_when_rule_blocked():
-    torch = pytest.importorskip("torch")
     tokenizer = DummyTokenizer()
     oracle = TruthOracle.from_rules(
         [
@@ -65,12 +69,21 @@ def test_logits_processor_forces_abstain_when_rule_blocked():
     )
     trace = TADTrace()
     processor = TADLogitsProcessor(oracle, tokenizer, trace=trace)
-    input_ids = torch.tensor([[tokenizer.vocab[" prompt"]]], dtype=torch.long)
-    scores = torch.zeros((1, len(tokenizer.get_vocab())), dtype=torch.float32)
-    scores[0, tokenizer.vocab[" Lyon"]] = 3.0
-    scores[0, tokenizer.vocab[" Paris"]] = 1.0
+    if torch is not None:
+        input_ids = torch.tensor([[tokenizer.vocab[" prompt"]]], dtype=torch.long)
+        scores = torch.zeros((1, len(tokenizer.get_vocab())), dtype=torch.float32)
+        scores[0, tokenizer.vocab[" Lyon"]] = 3.0
+        scores[0, tokenizer.vocab[" Paris"]] = 1.0
+    else:
+        input_ids = np.array([[tokenizer.vocab[" prompt"]]], dtype=np.int64)
+        scores = np.zeros((1, len(tokenizer.get_vocab())), dtype=np.float32)
+        scores[0, tokenizer.vocab[" Lyon"]] = 3.0
+        scores[0, tokenizer.vocab[" Paris"]] = 1.0
     processed = processor(input_ids, scores)
-    winner = int(torch.argmax(processed[0]).item())
+    if torch is not None:
+        winner = int(torch.argmax(processed[0]).item())
+    else:
+        winner = int(np.argmax(processed[0]))
     assert winner == tokenizer.vocab["<ABSTAIN>"]
     actions = [event["action"] for event in trace.events]
     assert actions == ["block", "inject"]
