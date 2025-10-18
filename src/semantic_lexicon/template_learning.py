@@ -36,6 +36,24 @@ FloatArray = NDArray[np.float64]
 
 _MAX_FEATURE_MAGNITUDE = 1024.0
 _STEP_SCALE_THRESHOLD = 512.0
+_NORMALISATION_EPS = 1e-8
+
+
+def _clip_gradients(
+    grad_w: np.ndarray, grad_b: np.ndarray, clip_norm: float
+) -> tuple[np.ndarray, np.ndarray]:
+    """Clip gradients to the provided ``clip_norm`` when necessary."""
+
+    clip_norm = float(max(clip_norm, 0.0))
+    if clip_norm == 0.0:
+        return grad_w, grad_b
+    total_norm = float(
+        math.sqrt(np.sum(grad_w ** 2, dtype=np.float64) + np.sum(grad_b ** 2, dtype=np.float64))
+    )
+    if not math.isfinite(total_norm) or total_norm <= clip_norm or total_norm == 0.0:
+        return grad_w, grad_b
+    scale = clip_norm / (total_norm + _NORMALISATION_EPS)
+    return grad_w * scale, grad_b * scale
 
 
 @dataclass(frozen=True)
@@ -72,10 +90,11 @@ class _SoftmaxModel:
         classes: Iterable[str],
         n_features: int,
         *,
-        learning_rate: float = 0.4,
+        learning_rate: float = 0.05,
         epochs: int = 400,
         l2: float = 1e-3,
         loss_weight: float = 1.0,
+        gradient_clip_norm: float = 1.0,
     ) -> None:
         self.classes = tuple(dict.fromkeys(classes))
         if not self.classes:
@@ -85,6 +104,7 @@ class _SoftmaxModel:
         self.epochs = int(epochs)
         self.l2 = float(l2)
         self.loss_weight = float(loss_weight)
+        self.gradient_clip_norm = float(max(gradient_clip_norm, 0.0))
         self._constant_class: str | None = None
         self._weights: np.ndarray | None = None
         self._bias: np.ndarray | None = None
@@ -104,8 +124,15 @@ class _SoftmaxModel:
         if not _is_finite(features):
             LOGGER.warning("Softmax training matrix contained non-finite values; re-normalising")
             features = _normalise_design_matrix(features)
+        if not _is_finite(features):
+            LOGGER.warning("Softmax features still non-finite after normalisation; zeroing offending rows")
+            features = np.nan_to_num(features, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         n_samples = features.shape[0]
-        weights = np.zeros((len(self.classes), self.n_features), dtype=float)
+        feature_count = max(self.n_features, 1)
+        class_count = max(len(self.classes), 1)
+        rng = np.random.default_rng(0)
+        limit = math.sqrt(6.0 / (feature_count + class_count))
+        weights = rng.uniform(-limit, limit, size=(class_count, self.n_features)).astype(float)
         bias = np.zeros(len(self.classes), dtype=float)
 
         base_step = self.learning_rate * self.loss_weight
@@ -120,6 +147,7 @@ class _SoftmaxModel:
             step = base_step * 1e-6
         min_step = step * 1e-3 if step else 0.0
 
+        dataset_size = max(n_samples, 1)
         for _ in range(self.epochs):
             logits = features @ weights.T + bias
             if not _is_finite(logits):
@@ -130,10 +158,13 @@ class _SoftmaxModel:
                 logits = features @ weights.T + bias
             probs = _softmax(logits)
             probs[np.arange(n_samples), y_indices] -= 1.0
-            probs /= n_samples
+            probs /= dataset_size
 
             grad_w = probs.T @ features + self.l2 * weights
             grad_b = probs.sum(axis=0)
+            grad_w = np.nan_to_num(grad_w, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            grad_b = np.nan_to_num(grad_b, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            grad_w, grad_b = _clip_gradients(grad_w, grad_b, self.gradient_clip_norm)
 
             update_w = step * grad_w
             update_b = step * grad_b
@@ -148,8 +179,8 @@ class _SoftmaxModel:
                 step *= 0.5
                 continue
 
-            weights = new_weights
-            bias = new_bias
+            weights = np.nan_to_num(new_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            bias = np.nan_to_num(new_bias, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
 
         self._weights = weights
         self._bias = bias
@@ -216,6 +247,13 @@ def _normalise_design_matrix(matrix: np.ndarray) -> FloatArray:
     if normalised.ndim == 1:
         return _normalise_feature_vector(normalised)
     np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    column_mean = normalised.mean(axis=0, keepdims=True)
+    normalised -= column_mean
+    column_var = normalised.var(axis=0, keepdims=True)
+    column_std = np.sqrt(column_var)
+    column_std = np.where(column_std < _NORMALISATION_EPS, 1.0, column_std)
+    normalised /= column_std
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     row_max = np.max(np.abs(normalised), axis=1, keepdims=True, initial=0.0)
     large_rows = row_max > _MAX_FEATURE_MAGNITUDE
     if np.any(large_rows):
@@ -233,6 +271,13 @@ def _normalise_feature_vector(vector: np.ndarray) -> FloatArray:
     if vector.size == 0:
         return cast(FloatArray, np.asarray(vector, dtype=np.float64))
     normalised = np.asarray(vector, dtype=np.float64)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    mean = float(normalised.mean()) if normalised.size else 0.0
+    normalised -= mean
+    std = float(normalised.std()) if normalised.size else 1.0
+    if not math.isfinite(std) or std < _NORMALISATION_EPS:
+        std = 1.0
+    normalised /= std
     np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     max_abs = float(np.max(np.abs(normalised)))
     if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:

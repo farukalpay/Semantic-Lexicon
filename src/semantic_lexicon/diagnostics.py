@@ -161,7 +161,11 @@ class DiagnosticsSuite:
             return None
         query = self.embedding_tokens[0]
         vector = self.model.embeddings.get_embedding(query)
-        selection = self.model.knowledge_network.select_concepts(vector, top_k=3)
+        selection = self.model.knowledge_network.select_concepts(
+            vector,
+            top_k=3,
+            anchor_tokens=(query,),
+        )
         return KnowledgeRetrieval(
             query_token=query,
             retrieved=list(selection.concepts[:3]),

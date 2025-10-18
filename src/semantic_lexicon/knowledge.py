@@ -16,6 +16,7 @@ from numpy.typing import NDArray
 
 from .config import KnowledgeConfig
 from .logging import configure_logging
+from .utils import tokenize
 
 LOGGER = configure_logging(logger_name=__name__)
 
@@ -74,6 +75,7 @@ class KnowledgeNetwork:
         self.similarity: Optional[FloatArray] = None
         self._concept_groups: dict[str, set[str]] = {}
         self._group_bounds: dict[str, tuple[Optional[float], Optional[float]]] = {}
+        self._entity_token_cache: dict[str, set[str]] = {}
 
     # Building --------------------------------------------------------------------
     def _ensure_entity(self, name: str) -> int:
@@ -204,6 +206,7 @@ class KnowledgeNetwork:
         prompt_vector: np.ndarray,
         *,
         top_k: Optional[int] = None,
+        anchor_tokens: Optional[Sequence[str]] = None,
     ) -> KnowledgeSelection:
         """Select a knowledge subset using the composite objective."""
 
@@ -222,9 +225,31 @@ class KnowledgeNetwork:
         if similarity is None:
             similarity = np.eye(len(self.entities), dtype=float)
         size = max(1, min(top_k or self.config.selection_size, len(self.entities)))
+        anchor_set = self._prepare_anchor_tokens(anchor_tokens or ())
         topic_mask = self._topic_mask(topic_weights)
+        anchor_scores: Optional[np.ndarray] = None
+        if anchor_set:
+            anchor_scores = self._anchor_overlap_scores(anchor_set)
+            if anchor_scores.size:
+                anchor_hits = anchor_scores > 0.0
+                if np.any(anchor_hits):
+                    topic_mask = np.logical_or(topic_mask, anchor_hits)
         anchors = self._select_anchors(relevance, topic_mask, size)
         gates, _ = self._compute_anchor_gates(similarity, anchors)
+        gates = np.nan_to_num(gates, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+        gate_floor = max(min(self.config.anchor_gate_threshold, 1.0), 0.0)
+        if anchor_scores is not None and anchor_scores.size:
+            scaled_scores = anchor_scores.copy()
+            max_score = float(np.max(scaled_scores))
+            if max_score > 0:
+                scaled_scores /= max_score
+            anchor_mask = scaled_scores >= gate_floor
+            if self.config.strict_anchor_filter and np.any(anchor_mask):
+                gates = np.where(anchor_mask, gates * np.maximum(scaled_scores, gate_floor), 0.0)
+            else:
+                gates = gates * np.maximum(scaled_scores, gate_floor)
+            topic_mask = np.logical_or(topic_mask, anchor_mask)
+        gates = np.where(gates > 0.0, gates, np.full_like(gates, 1e-6))
         collaboration_matrix = self._compute_collaboration_matrix(
             similarity,
             gates,
@@ -285,6 +310,7 @@ class KnowledgeNetwork:
         for name, index in self.entities.items():
             if 0 <= index < size:
                 self.index_to_entity[index] = name
+        self._entity_token_cache = {}
 
     def _build_graph(self, triples: Sequence[KnowledgeEdge]) -> None:
         count = len(self.entities)
@@ -360,6 +386,42 @@ class KnowledgeNetwork:
         similarity = np.clip(similarity, 0.0, 1.0)
         np.fill_diagonal(similarity, 1.0)
         return cast(FloatArray, np.asarray(similarity, dtype=float))
+
+    @staticmethod
+    def _normalise_anchor_token(token: str) -> str:
+        return token.replace("_", " ").replace("-", " ")
+
+    def _prepare_anchor_tokens(self, tokens: Sequence[str]) -> set[str]:
+        anchors: set[str] = set()
+        for token in tokens:
+            if token is None:
+                continue
+            expanded = self._normalise_anchor_token(str(token))
+            for piece in tokenize(expanded):
+                piece = piece.strip()
+                if piece:
+                    anchors.add(piece)
+        return anchors
+
+    def _concept_tokens(self, name: str) -> set[str]:
+        if name in self._entity_token_cache:
+            return self._entity_token_cache[name]
+        expanded = self._normalise_anchor_token(name)
+        tokens = {piece for piece in tokenize(expanded) if piece}
+        self._entity_token_cache[name] = tokens
+        return tokens
+
+    def _anchor_overlap_scores(self, anchors: set[str]) -> np.ndarray:
+        scores = np.zeros(len(self.index_to_entity), dtype=float)
+        if not anchors or not self.index_to_entity:
+            return scores
+        anchor_count = max(len(anchors), 1)
+        for idx, name in enumerate(self.index_to_entity):
+            concept_tokens = self._concept_tokens(name)
+            overlap = anchors.intersection(concept_tokens)
+            if overlap:
+                scores[idx] = len(overlap) / anchor_count
+        return scores
 
     def _align_prompt_vector(self, vector: np.ndarray) -> FloatArray:
         target_dim = self.embeddings.shape[1] if self.embeddings is not None else vector.size
