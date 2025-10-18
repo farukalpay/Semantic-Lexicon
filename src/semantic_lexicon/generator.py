@@ -452,7 +452,7 @@ def _format_number(value: float) -> str:
             return str(int(float(value)))
     except Exception:  # pragma: no cover - defensive guard
         pass
-    return "%.4g" % float(value)
+    return f"{float(value):.4g}"
 
 
 def _format_matrix(matrix: list[list[float]]) -> str:
