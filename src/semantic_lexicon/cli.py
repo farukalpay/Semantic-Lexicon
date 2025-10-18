@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 import typer  # type: ignore[import-not-found]
 
@@ -40,6 +40,8 @@ WORKSPACE_OPTION = typer.Option(
 )
 CONFIG_OPTION = typer.Option(
     None,
+    "--config",
+    "--config-path",
     help="Path to semantic model configuration.",
 )
 TRAIN_WORKSPACE_OPTION = typer.Option(
@@ -60,11 +62,20 @@ PERSONA_OPTION = typer.Option(
 )
 GENERATE_CONFIG_OPTION = typer.Option(
     None,
+    "--config",
+    "--config-path",
     help="Optional configuration file.",
 )
 GENERATE_WORKSPACE_OPTION = typer.Option(
     DEFAULT_WORKSPACE,
     help="Directory containing trained artifacts.",
+)
+BULLET_COUNT_OPTION = typer.Option(
+    2,
+    "--bullets",
+    min=1,
+    max=5,
+    help="Number of actionable bullet points to return (1-5).",
 )
 COMPLIANCE_JSON_OUTPUT_OPTION = typer.Option(
     DEFAULT_WORKSPACE / "compliance.json",
@@ -83,6 +94,126 @@ COMPLIANCE_PAYLOAD_ARGUMENT = typer.Argument(
 app = typer.Typer(
     help="Automate training, diagnostics, and generation for the Semantic Lexicon model."
 )
+
+
+_CONCEPT_HINTS_EXACT = {
+    "weight decay": "Use weight decay (AdamW)—start near 0.01 and tune.",
+    "l2": "Use weight decay (AdamW)—start near 0.01 and tune.",
+    "regularization": "Use weight decay (AdamW)—start near 0.01 and tune.",
+    "dropout": "Add dropout (≈0.2–0.5) and tune on validation.",
+    "early stopping": "Enable early stopping on val loss (patience 5–10).",
+    "small learning rate": "Lower LR; use warmup + cosine/step decay.",
+    "learning rate": "Lower LR; use warmup + cosine/step decay.",
+    "batch size": "Tune batch size: larger = stability, smaller = regularization.",
+}
+
+_CONCEPT_HINTS_PREFIX = {
+    "data augmentation": "Apply augmentation (flip/crop/jitter) to expand data.",
+    "fine tuning": "Freeze lower layers first; unfreeze gradually while tracking val.",
+}
+
+_QUESTION_FALLBACKS = [
+    (
+        ("overfitting",),
+        [
+            "Use weight decay (AdamW)—start near 0.01 and tune.",
+            "Add augmentation and early stopping on validation.",
+        ],
+    ),
+    (
+        ("transformer", "fine-tune", "finetune", "fine tune"),
+        [
+            "Lower LR; freeze lower layers then unfreeze progressively.",
+            "Use AdamW with weight decay; add LR warmup + decay.",
+        ],
+    ),
+]
+
+_DEFAULT_FALLBACKS = [
+    "Define metric + val split; optimize only what you measure.",
+    "Start with a small baseline; change one thing at a time.",
+]
+
+
+def _normalise_phrase(text: str) -> str:
+    cleaned = text.strip().lower().replace("_", " ")
+    return " ".join(cleaned.replace("-", " ").split())
+
+
+def _push_unique(items: list[str], value: str) -> None:
+    key = value.lower()
+    if key not in {existing.lower() for existing in items}:
+        items.append(value)
+
+
+def _iter_candidate_phrases(response: str) -> Iterable[str]:
+    for raw_line in response.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.lower().startswith("knowledge focus:"):
+            payload = line.split(":", 1)[1].strip().rstrip(".,")
+            if payload:
+                yield payload
+            continue
+        if "related concepts worth exploring:" in line.lower():
+            _, payload = line.split(":", 1)
+            for chunk in payload.strip().rstrip(".").split(","):
+                chunk = chunk.strip()
+                if chunk:
+                    yield chunk
+            continue
+        if line.startswith("- "):
+            yield line[2:].strip()
+
+
+def _concept_to_hint(concept: str) -> Optional[str]:
+    key = _normalise_phrase(concept)
+    if not key:
+        return None
+    if key in _CONCEPT_HINTS_EXACT:
+        return _CONCEPT_HINTS_EXACT[key]
+    for prefix, hint in _CONCEPT_HINTS_PREFIX.items():
+        if key.startswith(prefix):
+            return hint
+    return None
+
+
+def _question_fallbacks(question: str) -> Iterable[str]:
+    lower_question = question.lower()
+    for keywords, hints in _QUESTION_FALLBACKS:
+        if any(keyword in lower_question for keyword in keywords):
+            yield from hints
+            return
+    yield from _DEFAULT_FALLBACKS
+
+
+def _tight_bullet_points(
+    prompt: str,
+    response: str,
+    knowledge_concepts: Iterable[str],
+    limit: int,
+) -> list[str]:
+    bullets: list[str] = []
+    for concept in knowledge_concepts:
+        hint = _concept_to_hint(concept)
+        if hint:
+            _push_unique(bullets, hint)
+            if len(bullets) >= limit:
+                return bullets[:limit]
+    for phrase in _iter_candidate_phrases(response):
+        hint = _concept_to_hint(phrase)
+        if hint:
+            _push_unique(bullets, hint)
+            if len(bullets) >= limit:
+                return bullets[:limit]
+    if len(bullets) < limit:
+        for hint in _question_fallbacks(prompt):
+            _push_unique(bullets, hint)
+            if len(bullets) >= limit:
+                break
+    return bullets[:limit]
+
 
 
 def _load_records(path: Path) -> list[dict[str, Any]]:
@@ -179,6 +310,29 @@ def generate(
         model = NeuralSemanticModel.load(artifacts_dir, config=model.config)
     result = model.generate(normalise_text(prompt), persona=persona)
     typer.echo(result.response)
+
+
+@app.command("ask-tight")
+def ask_tight(
+    prompt: str = typer.Argument(..., help="Prompt to respond to."),
+    persona: Optional[str] = PERSONA_OPTION,
+    config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
+    workspace: Path = GENERATE_WORKSPACE_OPTION,
+    bullets: int = BULLET_COUNT_OPTION,
+) -> None:
+    """Generate exactly N actionable bullet points suitable for tight prompts."""
+
+    model, _ = _load_model(config_path)
+    artifacts_dir = Path(workspace)
+    if (artifacts_dir / "embeddings.json").exists():
+        model = NeuralSemanticModel.load(artifacts_dir, config=model.config)
+    result = model.generate(normalise_text(prompt), persona=persona)
+    knowledge_concepts: Iterable[str] = []
+    if result.knowledge_selection is not None and result.knowledge_selection.concepts:
+        knowledge_concepts = result.knowledge_selection.concepts
+    bullets_out = _tight_bullet_points(prompt, result.response, knowledge_concepts, bullets)
+    for bullet in bullets_out:
+        typer.echo(f"• {bullet}")
 
 
 @app.command()
