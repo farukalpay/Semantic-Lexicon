@@ -54,6 +54,7 @@ from .safety import (
     SafetyGateTuner,
     run_primal_dual_autotune,
 )
+from .runtime import run
 from .training import Trainer, TrainerConfig
 
 __all__ = [
@@ -110,6 +111,7 @@ __all__ = [
     "GateTuningResult",
     "SafetyGateTuner",
     "run_primal_dual_autotune",
+    "run",
 ]
 
 __version__ = "0.1.0"
