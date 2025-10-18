@@ -16,7 +16,12 @@ import numpy as np
 
 from .config import KnowledgeConfig, SemanticModelConfig
 from .embeddings import GloVeEmbeddings
-from .generator import GenerationResult, PersonaGenerator
+from .generator import (
+    GenerationResult,
+    PersonaGenerator,
+    _maybe_generate_literal_response,
+    _maybe_generate_structured_matrix_response,
+)
 from .intent import IntentClassifier, IntentExample
 from .knowledge import KnowledgeEdge, KnowledgeNetwork
 from .logging import configure_logging
@@ -63,14 +68,35 @@ class NeuralSemanticModel:
 
     # Inference -------------------------------------------------------------------
     def generate(self, prompt: str, persona: Optional[str] = None) -> GenerationResult:
+        prompt_text = str(prompt or "")
+        deterministic = _maybe_generate_structured_matrix_response(prompt_text)
+        if deterministic is None:
+            deterministic = _maybe_generate_literal_response(prompt_text)
+        if deterministic is not None:
+            intents = self._ranked_intents(prompt_text)
+            return GenerationResult(
+                response=deterministic,
+                intents=intents,
+                knowledge_hits=[],
+                phrases=[],
+                knowledge_selection=None,
+            )
+        intents = self._ranked_intents(prompt_text)
         profile = self.persona_store.get(persona)
-        intent_probs = self.intent_classifier.predict_proba(prompt)
-        intents = sorted(
+        return self.generator.generate(prompt_text, profile, intents)
+
+    def _ranked_intents(self, prompt: str, limit: int = 3) -> list[str]:
+        try:
+            intent_probs = self.intent_classifier.predict_proba(prompt)
+        except Exception:  # pragma: no cover - defensive fallback
+            LOGGER.debug("Intent classifier unavailable; returning empty intent list", exc_info=True)
+            return []
+        ranked = sorted(
             intent_probs,
             key=lambda label: intent_probs[label],
             reverse=True,
-        )[:3]
-        return self.generator.generate(prompt, profile, intents)
+        )
+        return ranked[:limit]
 
     # Persistence -----------------------------------------------------------------
     def save(self, directory: Path) -> ModelArtifacts:
