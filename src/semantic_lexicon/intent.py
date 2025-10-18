@@ -6,12 +6,11 @@
 
 from __future__ import annotations
 
+import math
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Optional
-
-import math
 
 import numpy as np
 from numpy.typing import NDArray
@@ -180,6 +179,9 @@ class IntentClassifier:
         self._weights_for_inference = None
         self._prepare_labels(dataset)
         matrix = self._vectorise(dataset)
+        if not np.isfinite(matrix).all():
+            LOGGER.warning("Intent design matrix contained non-finite values; re-normalising")
+            matrix = _normalise_design_matrix(matrix)
         labels = np.array([self.label_to_index[item.intent] for item in dataset], dtype=int)
         num_features = matrix.shape[1]
         num_labels = len(self.label_to_index)
@@ -191,19 +193,28 @@ class IntentClassifier:
         self._epoch_accuracy = []
         base_step = self.config.learning_rate
         step_scale = max(_safe_step_scale(matrix), 1.0)
+        scale_factor = max(step_scale / _STEP_SCALE_THRESHOLD, 1.0)
+        step = base_step / math.sqrt(scale_factor)
         if step_scale > _STEP_SCALE_THRESHOLD:
-            effective_scale = math.log(step_scale + 1.0)
-            if effective_scale < 1.0:
-                effective_scale = 1.0
-            effective_scale = min(effective_scale, 1.5)
-            step = base_step / effective_scale
-        else:
-            step = base_step
+            damping = math.log(step_scale / _STEP_SCALE_THRESHOLD + 1.0)
+            damping = min(max(damping, 1.0), 1.5)
+            step /= damping
+        if step == 0.0 and base_step > 0.0:
+            step = base_step * 1e-6
         min_step = step * 1e-3 if step else 0.0
         l2 = max(float(self.config.l2_regularization), 0.0)
 
         for epoch in range(self.config.epochs):
             logits = np.asarray(matrix @ self.weights, dtype=float)
+            if not np.isfinite(logits).all():
+                LOGGER.warning(
+                    "Intent logits produced non-finite values; forcing matrix sanitisation"
+                )
+                matrix = _normalise_design_matrix(matrix)
+                self.weights = np.nan_to_num(
+                    self.weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
+                )
+                logits = np.asarray(matrix @ self.weights, dtype=float)
             probs = self._softmax(logits)
             one_hot = np.eye(num_labels, dtype=float)[labels]
             gradient = matrix.T @ (probs - one_hot) / len(dataset)
@@ -214,17 +225,13 @@ class IntentClassifier:
             new_weights = self.weights - update
             if not np.isfinite(new_weights).all():
                 if step <= min_step or step == 0.0:
-                    LOGGER.warning(
-                        "Intent training halted early due to non-finite weight update"
-                    )
+                    LOGGER.warning("Intent training halted early due to non-finite weight update")
                     break
                 step *= 0.5
                 continue
 
             self.weights = new_weights
-            loss = -np.mean(
-                np.log(probs[np.arange(len(dataset)), labels] + 1e-12)
-            )
+            loss = -np.mean(np.log(probs[np.arange(len(dataset)), labels] + 1e-12))
             accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
             self._epoch_accuracy.append(accuracy)
             LOGGER.debug("Intent epoch %s | loss=%.4f", epoch + 1, loss)

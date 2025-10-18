@@ -101,24 +101,33 @@ class _SoftmaxModel:
         class_to_index = {label: index for index, label in enumerate(self.classes)}
         y_indices = np.array([class_to_index[label] for label in y], dtype=int)
         features = _normalise_design_matrix(X)
+        if not _is_finite(features):
+            LOGGER.warning("Softmax training matrix contained non-finite values; re-normalising")
+            features = _normalise_design_matrix(features)
         n_samples = features.shape[0]
         weights = np.zeros((len(self.classes), self.n_features), dtype=float)
         bias = np.zeros(len(self.classes), dtype=float)
 
         base_step = self.learning_rate * self.loss_weight
         step_scale = max(_safe_step_scale(features), 1.0)
+        scale_factor = max(step_scale / _STEP_SCALE_THRESHOLD, 1.0)
+        step = base_step / math.sqrt(scale_factor)
         if step_scale > _STEP_SCALE_THRESHOLD:
-            effective_scale = math.log(step_scale + 1.0)
-            if effective_scale < 1.0:
-                effective_scale = 1.0
-            effective_scale = min(effective_scale, 1.5)
-            step = base_step / effective_scale
-        else:
-            step = base_step
+            damping = math.log(step_scale / _STEP_SCALE_THRESHOLD + 1.0)
+            damping = min(max(damping, 1.0), 1.5)
+            step /= damping
+        if step == 0.0 and base_step > 0.0:
+            step = base_step * 1e-6
         min_step = step * 1e-3 if step else 0.0
 
         for _ in range(self.epochs):
             logits = features @ weights.T + bias
+            if not _is_finite(logits):
+                LOGGER.warning("Softmax logits produced non-finite values; sanitising inputs")
+                features = _normalise_design_matrix(features)
+                weights = np.nan_to_num(weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+                bias = np.nan_to_num(bias, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+                logits = features @ weights.T + bias
             probs = _softmax(logits)
             probs[np.arange(n_samples), y_indices] -= 1.0
             probs /= n_samples
@@ -204,6 +213,26 @@ def _normalise_design_matrix(matrix: np.ndarray) -> FloatArray:
     if matrix.size == 0:
         return cast(FloatArray, np.asarray(matrix, dtype=np.float64))
     normalised = np.asarray(matrix, dtype=np.float64)
+    if normalised.ndim == 1:
+        return _normalise_feature_vector(normalised)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    row_max = np.max(np.abs(normalised), axis=1, keepdims=True, initial=0.0)
+    large_rows = row_max > _MAX_FEATURE_MAGNITUDE
+    if np.any(large_rows):
+        normalised[large_rows] *= _MAX_FEATURE_MAGNITUDE / row_max[large_rows]
+    max_abs = float(np.max(np.abs(normalised)))
+    if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
+        return cast(FloatArray, normalised)
+    scale = _MAX_FEATURE_MAGNITUDE / max_abs
+    return cast(FloatArray, normalised * scale)
+
+
+def _normalise_feature_vector(vector: np.ndarray) -> FloatArray:
+    r"""Return a finite vector with bounded absolute feature values."""
+
+    if vector.size == 0:
+        return cast(FloatArray, np.asarray(vector, dtype=np.float64))
+    normalised = np.asarray(vector, dtype=np.float64)
     np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     max_abs = float(np.max(np.abs(normalised)))
     if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
@@ -407,8 +436,7 @@ class BalancedTutorPredictor:
         norm = np.linalg.norm(vector)
         if norm:
             vector /= norm
-        np.nan_to_num(vector, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
-        return vector
+        return _normalise_feature_vector(vector)
 
 
 def _keyword_votes(prompt: str, token_to_topics: dict[str, Counter]) -> Counter:
