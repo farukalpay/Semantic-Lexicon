@@ -76,6 +76,9 @@ COMPLIANCE_MARKDOWN_OUTPUT_OPTION = typer.Option(
     "--markdown-output",
     help="Destination path for the compliance Markdown report.",
 )
+COMPLIANCE_PAYLOAD_ARGUMENT = typer.Argument(
+    ..., help="JSON file containing 'summary' and 'cases' payloads."
+)
 
 app = typer.Typer(
     help="Automate training, diagnostics, and generation for the Semantic Lexicon model."
@@ -220,9 +223,7 @@ def knowledge(
 
 @app.command("compliance-report")
 def compliance_report(
-    payload_path: Path = typer.Argument(
-        ..., help="JSON file containing 'summary' and 'cases' payloads."
-    ),
+    payload_path: Path = COMPLIANCE_PAYLOAD_ARGUMENT,
     json_output: Path = COMPLIANCE_JSON_OUTPUT_OPTION,
     markdown_output: Path = COMPLIANCE_MARKDOWN_OUTPUT_OPTION,
 ) -> None:
