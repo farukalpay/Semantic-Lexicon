@@ -251,7 +251,7 @@ class PersonaGenerator:
 
 
 SECTION_TRIGGER = (
-    "Return markdown with exactly these sections: " + "## Matrices, ## Composition, ## Results."
+    "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
 )
 
 
