@@ -262,7 +262,7 @@ class PersonaGenerator:
 
 
 SECTION_TRIGGER = (
-    "return markdown with exactly these sections: ## matrices, ## composition, ## results."
+    "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
 )
 
 
@@ -275,8 +275,7 @@ def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
     persona template.
     """
 
-    prompt_lower = prompt.lower()
-    if SECTION_TRIGGER not in prompt_lower:
+    if SECTION_TRIGGER not in prompt:
         return None
     matrices = _parse_matrices(prompt)
     if not {"R", "S"}.issubset(matrices):
@@ -414,30 +413,29 @@ def _parse_matrices(prompt: str) -> dict[str, list[list[float]]]:
     matrices: dict[str, list[list[float]]] = {}
     for match in pattern.finditer(prompt):
         label = match.group(1).upper()
-        entries = [float(match.group(i)) for i in range(2, 6)]
-        matrices[label] = [entries[:2], entries[2:]]
+        a, b, c, d = (float(match.group(i)) for i in range(2, 6))
+        matrices[label] = [[a, b], [c, d]]
     return matrices
 
 
 def _parse_vector(prompt: str) -> Optional[tuple[float, float]]:
-    vector_pattern = re.compile(
+    preferred = re.search(
         r"vector[^()]*\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)",
+        prompt,
         re.IGNORECASE,
     )
-    match = vector_pattern.search(prompt)
-    if match is not None:
-        return float(match.group(1)), float(match.group(2))
-    generic_pattern = re.compile(r"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)")
-    match = generic_pattern.search(prompt)
-    if match is None:
-        return None
-    return float(match.group(1)), float(match.group(2))
+    if preferred:
+        return float(preferred.group(1)), float(preferred.group(2))
+    fallback = re.search(r"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)", prompt)
+    if fallback:
+        return float(fallback.group(1)), float(fallback.group(2))
+    return None
 
 
 def _matmul(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
     return [
-        [a[0][0] * b[0][j] + a[0][1] * b[1][j] for j in range(2)],
-        [a[1][0] * b[0][j] + a[1][1] * b[1][j] for j in range(2)],
+        [a[0][0] * b[0][0] + a[0][1] * b[1][0], a[0][0] * b[0][1] + a[0][1] * b[1][1]],
+        [a[1][0] * b[0][0] + a[1][1] * b[1][0], a[1][0] * b[0][1] + a[1][1] * b[1][1]],
     ]
 
 
@@ -446,6 +444,15 @@ def _matvec(matrix: list[list[float]], vector: tuple[float, float]) -> tuple[flo
         matrix[0][0] * vector[0] + matrix[0][1] * vector[1],
         matrix[1][0] * vector[0] + matrix[1][1] * vector[1],
     )
+
+
+def _format_number(value: float) -> str:
+    try:
+        if float(value).is_integer():
+            return str(int(float(value)))
+    except Exception:  # pragma: no cover - defensive guard
+        pass
+    return f"{float(value):.4g}"
 
 
 def _format_matrix(matrix: list[list[float]]) -> str:
@@ -458,12 +465,6 @@ def _format_column_vector(vector: tuple[float, float]) -> str:
     top = _format_number(vector[0])
     bottom = _format_number(vector[1])
     return f"\\(\\begin{{bmatrix}}{top} \\ {bottom}\\end{{bmatrix}}\\)"
-
-
-def _format_number(value: float) -> str:
-    if value.is_integer():
-        return str(int(value))
-    return f"{value:.4g}"
 
 
 def _match_dimensions(persona_vector: np.ndarray, prompt_vector: np.ndarray) -> np.ndarray:
