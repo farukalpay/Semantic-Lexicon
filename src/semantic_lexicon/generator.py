@@ -799,10 +799,11 @@ def _build_related_topics(
 ) -> tuple[str, list[str], Optional[KnowledgeSelection]]:
     if knowledge is None or not getattr(knowledge, "entities", None):
         return "", [], None
-    selection = knowledge.select_concepts(prompt_vector, anchor_tokens=tokens)
+    token_sequence: tuple[str, ...] = tuple(tokens)
+    selection = knowledge.select_concepts(prompt_vector, anchor_tokens=token_sequence)
     concepts = list(selection.concepts)
-    filtered_matches = _filter_concepts_by_prompt(tokens, phrases, concepts)
-    fallback_items, fallback_keywords = _fallback_concepts(tokens)
+    filtered_matches = _filter_concepts_by_prompt(token_sequence, phrases, concepts)
+    fallback_items, fallback_keywords = _fallback_concepts(token_sequence)
     focus: str
     related: list[str]
 
