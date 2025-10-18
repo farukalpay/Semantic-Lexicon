@@ -7,6 +7,7 @@ import importlib.util
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import yaml  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:  # pragma: no cover - help static type checkers
@@ -190,25 +191,25 @@ class TADLogitsProcessor:
         self._abstain_id: int | None = None
 
     def __call__(self, input_ids: Any, scores: Any) -> Any:
+        if torch is not None and hasattr(scores, "clone"):
+            return self._call_torch(input_ids, scores)
+        return self._call_numpy(input_ids, scores)
+
+    def _call_torch(self, input_ids: Any, scores: Any) -> Any:
         if torch is None:  # pragma: no cover - runtime guard
             raise RuntimeError("TADLogitsProcessor requires torch to be installed")
         if scores.ndim != 2:
             raise ValueError("scores must have shape [batch, vocab]")
         batch = scores.size(0)
         for batch_idx in range(batch):
-            prompt_text = self.tokenizer.decode(
-                input_ids[batch_idx].tolist(), skip_special_tokens=True
-            )
+            prompt_tokens = self._row_tokens(input_ids, batch_idx)
+            prompt_text = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
             active_rules = self.oracle.active_for(prompt_text)
+            step_index = max(len(prompt_tokens) - 1, 0)
             if not active_rules:
                 if self.trace:
                     token_id = int(torch.argmax(scores[batch_idx]).item())
-                    self._log(
-                        step=len(input_ids[batch_idx]) - 1,
-                        token_id=token_id,
-                        action="pass",
-                        rules=[],
-                    )
+                    self._log(step=step_index, token_id=token_id, action="pass", rules=[])
                 continue
 
             allow_set = self._collect_allowlist(active_rules)
@@ -225,7 +226,7 @@ class TADLogitsProcessor:
                 violation = top_before not in allow_set
                 if violation and self.trace:
                     self._log(
-                        step=len(input_ids[batch_idx]) - 1,
+                        step=step_index,
                         token_id=top_before,
                         action="block",
                         rules=[r.name for r in active_rules],
@@ -237,7 +238,7 @@ class TADLogitsProcessor:
                 scores[batch_idx, target] = 0.0
                 if self.trace:
                     self._log(
-                        step=len(input_ids[batch_idx]) - 1,
+                        step=step_index,
                         token_id=target,
                         action="inject",
                         rules=[r.name for r in active_rules],
@@ -245,12 +246,91 @@ class TADLogitsProcessor:
                 continue
             chosen = int(torch.argmax(scores[batch_idx]).item())
             self._log(
-                step=len(input_ids[batch_idx]) - 1,
+                step=step_index,
                 token_id=chosen,
                 action="pass",
                 rules=[r.name for r in active_rules],
             )
         return scores
+
+    def _call_numpy(self, input_ids: Any, scores: Any) -> Any:
+        scores_array = np.asarray(scores, dtype=np.float64)
+        if scores_array.ndim != 2:
+            raise ValueError("scores must have shape [batch, vocab]")
+        for batch_idx in range(scores_array.shape[0]):
+            prompt_tokens = self._row_tokens(input_ids, batch_idx)
+            prompt_text = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
+            active_rules = self.oracle.active_for(prompt_text)
+            step_index = max(len(prompt_tokens) - 1, 0)
+            if not active_rules:
+                if self.trace:
+                    token_id = int(np.argmax(scores_array[batch_idx]))
+                    self._log(step=step_index, token_id=token_id, action="pass", rules=[])
+                continue
+
+            allow_set = self._collect_allowlist(active_rules)
+            original_scores = scores_array[batch_idx].copy()
+            violation = False
+            if allow_set is not None:
+                allowed_idx = np.array(sorted(allow_set), dtype=int)
+                mask = np.full_like(scores_array[batch_idx], float("-inf"), dtype=np.float64)
+                mask[allowed_idx] = 0.0
+                scores_array[batch_idx] = scores_array[batch_idx] + mask
+                top_before = int(np.argmax(original_scores))
+                violation = top_before not in allow_set
+                if violation and self.trace:
+                    self._log(
+                        step=step_index,
+                        token_id=top_before,
+                        action="block",
+                        rules=[r.name for r in active_rules],
+                    )
+            require_abstain = any(r.abstain_on_violation for r in active_rules)
+            if violation and require_abstain:
+                target = self._ensure_abstain_id()
+                scores_array[batch_idx] = float("-inf")
+                scores_array[batch_idx, target] = 0.0
+                if self.trace:
+                    self._log(
+                        step=step_index,
+                        token_id=target,
+                        action="inject",
+                        rules=[r.name for r in active_rules],
+                    )
+                continue
+            chosen = int(np.argmax(scores_array[batch_idx]))
+            self._log(
+                step=step_index,
+                token_id=chosen,
+                action="pass",
+                rules=[r.name for r in active_rules],
+            )
+        if isinstance(scores, np.ndarray):
+            scores[...] = scores_array
+            return scores
+        return scores_array
+
+    @staticmethod
+    def _row_tokens(input_ids: Any, batch_idx: int) -> list[int]:
+        row = input_ids[batch_idx]
+        if hasattr(row, "detach") and hasattr(row, "cpu"):
+            raw = row.detach().cpu().tolist()
+        elif hasattr(row, "tolist"):
+            raw = row.tolist()
+        elif isinstance(row, cabc.Iterable) and not isinstance(row, (str, bytes)):
+            raw = list(row)
+        else:
+            raw = [row]
+
+        def _flatten(values: Any) -> list[int]:
+            if isinstance(values, cabc.Iterable) and not isinstance(values, (str, bytes)):
+                items: list[int] = []
+                for value in values:
+                    items.extend(_flatten(value))
+                return items
+            return [int(values)]
+
+        return _flatten(raw)
 
     def _collect_allowlist(self, rules: cabc.Sequence[Rule]) -> set[int] | None:
         allow: set[int] = set()
