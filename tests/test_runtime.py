@@ -29,7 +29,7 @@ def test_run_handles_multiline_json_literal(tmp_path: Path) -> None:
 
 
 def test_run_json_literal_ignores_trailing_text(tmp_path: Path) -> None:
-    prompt = "Return only this JSON: {\"ok\": true}\nThanks!"
+    prompt = 'Return only this JSON: {"ok": true}\nThanks!'
 
     result = run(prompt, workspace=tmp_path)
     assert result == '{"ok":true}'

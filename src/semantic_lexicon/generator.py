@@ -309,9 +309,7 @@ def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
     return "\n".join(lines)
 
 
-LITERAL_JSON_PATTERN = re.compile(
-    r"return only this json:\s*(\{.*)", re.IGNORECASE | re.DOTALL
-)
+LITERAL_JSON_PATTERN = re.compile(r"return only this json:\s*(\{.*)", re.IGNORECASE | re.DOTALL)
 LITERAL_WORD_PATTERN = re.compile(r"return only the word:\s*([a-z0-9]+)", re.IGNORECASE)
 LITERAL_NUMBER_PATTERN = re.compile(r"return only the number\s*([-+]?\d+(?:\.\d+)?)", re.IGNORECASE)
 LITERAL_HTML_PATTERN = re.compile(r"output exactly this html[^:]*:\s*(.+)", re.IGNORECASE)
