@@ -60,15 +60,11 @@ def _case_lines(cases: abc.Sequence[CaseRecord]) -> list[str]:
             raise TypeError("each case must be a CaseRecord instance")
         if not isinstance(case.notes, abc.Mapping):
             raise TypeError("case notes must be a mapping")
-        lines.append(
-            f"- **{case.label}** — {case.status_text()} — {json.dumps(case.notes)}"
-        )
+        lines.append(f"- **{case.label}** — {case.status_text()} — {json.dumps(case.notes)}")
     return lines
 
 
-def build_markdown(
-    summary: ComplianceSummary, cases: abc.Sequence[CaseRecord]
-) -> str:
+def build_markdown(summary: ComplianceSummary, cases: abc.Sequence[CaseRecord]) -> str:
     """Compose the Markdown document for a compliance report."""
 
     lines = ["# Semantic-Lexicon Compliance Report", "", "## Summary"]
