@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import OrderedDict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -40,6 +41,57 @@ class IntentExample:
     text: str
     intent: str
     feedback: float = 0.95
+
+
+_MAX_FEATURE_MAGNITUDE = 1024.0
+_STEP_SCALE_THRESHOLD = 512.0
+
+
+def _safe_step_scale(matrix: np.ndarray) -> float:
+    """Return a scaling factor that dampens gradient steps for stability."""
+
+    if matrix.size == 0:
+        return 1.0
+    try:
+        spectral_norm = float(np.linalg.norm(matrix, ord=2))
+    except ValueError:  # pragma: no cover - defensive
+        spectral_norm = float(np.linalg.norm(matrix))
+    if not np.isfinite(spectral_norm) or spectral_norm == 0.0:
+        return 1.0
+    scaled = spectral_norm * spectral_norm
+    if not np.isfinite(scaled) or scaled == 0.0:
+        return 1.0
+    return scaled
+
+
+def _normalise_design_matrix(matrix: np.ndarray) -> np.ndarray:
+    r"""Return a finite matrix with bounded absolute feature values."""
+
+    if matrix.size == 0:
+        return np.asarray(matrix, dtype=np.float64)
+    normalised = np.asarray(matrix, dtype=np.float64)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    max_abs = float(np.max(np.abs(normalised)))
+    if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
+        return normalised
+    scale = _MAX_FEATURE_MAGNITUDE / max_abs
+    return normalised * scale
+
+
+def _normalise_feature_vector(vector: np.ndarray) -> np.ndarray:
+    r"""Return a finite feature vector with bounded absolute values."""
+
+    if vector.size == 0:
+        return np.asarray(vector, dtype=np.float64)
+    normalised = np.asarray(vector, dtype=np.float64)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    if normalised.size == 0:
+        return normalised
+    max_abs = float(np.max(np.abs(normalised)))
+    if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
+        return normalised
+    scale = _MAX_FEATURE_MAGNITUDE / max_abs
+    return normalised * scale
 
 
 class IntentClassifier:
@@ -127,6 +179,9 @@ class IntentClassifier:
         self._weights_for_inference = None
         self._prepare_labels(dataset)
         matrix = self._vectorise(dataset)
+        if not np.isfinite(matrix).all():
+            LOGGER.warning("Intent design matrix contained non-finite values; re-normalising")
+            matrix = _normalise_design_matrix(matrix)
         labels = np.array([self.label_to_index[item.intent] for item in dataset], dtype=int)
         num_features = matrix.shape[1]
         num_labels = len(self.label_to_index)
@@ -136,12 +191,46 @@ class IntentClassifier:
             dtype=float,
         )
         self._epoch_accuracy = []
+        base_step = self.config.learning_rate
+        step_scale = max(_safe_step_scale(matrix), 1.0)
+        scale_factor = max(step_scale / _STEP_SCALE_THRESHOLD, 1.0)
+        step = base_step / math.sqrt(scale_factor)
+        if step_scale > _STEP_SCALE_THRESHOLD:
+            damping = math.log(step_scale / _STEP_SCALE_THRESHOLD + 1.0)
+            damping = min(max(damping, 1.0), 1.5)
+            step /= damping
+        if step == 0.0 and base_step > 0.0:
+            step = base_step * 1e-6
+        min_step = step * 1e-3 if step else 0.0
+        l2 = max(float(self.config.l2_regularization), 0.0)
+
         for epoch in range(self.config.epochs):
             logits = np.asarray(matrix @ self.weights, dtype=float)
+            if not np.isfinite(logits).all():
+                LOGGER.warning(
+                    "Intent logits produced non-finite values; forcing matrix sanitisation"
+                )
+                matrix = _normalise_design_matrix(matrix)
+                self.weights = np.nan_to_num(
+                    self.weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
+                )
+                logits = np.asarray(matrix @ self.weights, dtype=float)
             probs = self._softmax(logits)
             one_hot = np.eye(num_labels, dtype=float)[labels]
             gradient = matrix.T @ (probs - one_hot) / len(dataset)
-            self.weights -= self.config.learning_rate * gradient
+            if l2:
+                gradient += l2 * self.weights
+
+            update = step * gradient
+            new_weights = self.weights - update
+            if not np.isfinite(new_weights).all():
+                if step <= min_step or step == 0.0:
+                    LOGGER.warning("Intent training halted early due to non-finite weight update")
+                    break
+                step *= 0.5
+                continue
+
+            self.weights = new_weights
             loss = -np.mean(np.log(probs[np.arange(len(dataset)), labels] + 1e-12))
             accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
             self._epoch_accuracy.append(accuracy)
@@ -184,7 +273,7 @@ class IntentClassifier:
                 index = self._feature_indices.get(name)
                 if index is not None:
                     matrix[row, index] = value
-        return matrix
+        return _normalise_design_matrix(matrix)
 
     # Prediction ------------------------------------------------------------------
     def predict(self, text: str) -> str:
@@ -438,20 +527,25 @@ class IntentClassifier:
                 cached_vector, cached_features = cached
                 return cached_vector.copy(), dict(cached_features)
         dtype = np.float16 if self.optimized else np.float64
-        vector = np.zeros((len(self.vocabulary),), dtype=dtype)
+        working = np.zeros((len(self.vocabulary),), dtype=np.float64)
         for token in tokenize(text):
             index = self.vocabulary.get(token)
             if index is not None:
-                vector[index] += 1.0
+                working[index] += 1.0
         features = self._feature_activations(text)
         for name, value in features.items():
             index = self._feature_indices.get(name)
             if index is not None:
-                vector[index] = value
+                working[index] = value
+        vector64 = _normalise_feature_vector(working)
+        if dtype is np.float64:
+            vector = vector64
+        else:
+            vector = np.asarray(vector64, dtype=dtype)
         self._cache_misses += 1
         if self.enable_cache:
             self._cache_insert(cache_key, vector, features)
-        return vector, features
+        return vector.copy(), dict(features)
 
     def _feature_activations(self, text: str) -> dict[str, float]:
         normalised = f" {normalise_text(text)} "

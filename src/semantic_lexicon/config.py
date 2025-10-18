@@ -82,6 +82,7 @@ class IntentConfig:
     cache_size: int = 2048
     feedback_prior_weight: float = 0.5
     feedback_step_size: float = 0.2
+    l2_regularization: float = 1e-4
 
 
 @dataclass

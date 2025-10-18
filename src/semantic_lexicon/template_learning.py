@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import logging
+import math
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -24,10 +26,16 @@ __all__ = [
     "load_balanced_tutor_dataset",
 ]
 
+LOGGER = logging.getLogger(__name__)
+
 _STOP_TOKEN = "<STOP>"
 
 
 FloatArray = NDArray[np.float64]
+
+
+_MAX_FEATURE_MAGNITUDE = 1024.0
+_STEP_SCALE_THRESHOLD = 512.0
 
 
 @dataclass(frozen=True)
@@ -92,22 +100,56 @@ class _SoftmaxModel:
 
         class_to_index = {label: index for index, label in enumerate(self.classes)}
         y_indices = np.array([class_to_index[label] for label in y], dtype=int)
-        n_samples = X.shape[0]
+        features = _normalise_design_matrix(X)
+        if not _is_finite(features):
+            LOGGER.warning("Softmax training matrix contained non-finite values; re-normalising")
+            features = _normalise_design_matrix(features)
+        n_samples = features.shape[0]
         weights = np.zeros((len(self.classes), self.n_features), dtype=float)
         bias = np.zeros(len(self.classes), dtype=float)
 
+        base_step = self.learning_rate * self.loss_weight
+        step_scale = max(_safe_step_scale(features), 1.0)
+        scale_factor = max(step_scale / _STEP_SCALE_THRESHOLD, 1.0)
+        step = base_step / math.sqrt(scale_factor)
+        if step_scale > _STEP_SCALE_THRESHOLD:
+            damping = math.log(step_scale / _STEP_SCALE_THRESHOLD + 1.0)
+            damping = min(max(damping, 1.0), 1.5)
+            step /= damping
+        if step == 0.0 and base_step > 0.0:
+            step = base_step * 1e-6
+        min_step = step * 1e-3 if step else 0.0
+
         for _ in range(self.epochs):
-            logits = X @ weights.T + bias
+            logits = features @ weights.T + bias
+            if not _is_finite(logits):
+                LOGGER.warning("Softmax logits produced non-finite values; sanitising inputs")
+                features = _normalise_design_matrix(features)
+                weights = np.nan_to_num(weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+                bias = np.nan_to_num(bias, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+                logits = features @ weights.T + bias
             probs = _softmax(logits)
             probs[np.arange(n_samples), y_indices] -= 1.0
             probs /= n_samples
 
-            grad_w = probs.T @ X + self.l2 * weights
+            grad_w = probs.T @ features + self.l2 * weights
             grad_b = probs.sum(axis=0)
 
-            step = self.learning_rate * self.loss_weight
-            weights -= step * grad_w
-            bias -= step * grad_b
+            update_w = step * grad_w
+            update_b = step * grad_b
+
+            new_weights = weights - update_w
+            new_bias = bias - update_b
+
+            if not _is_finite(new_weights) or not _is_finite(new_bias):
+                if step <= min_step or step == 0.0:
+                    LOGGER.warning("Softmax training aborted due to non-finite updates")
+                    break
+                step *= 0.5
+                continue
+
+            weights = new_weights
+            bias = new_bias
 
         self._weights = weights
         self._bias = bias
@@ -148,6 +190,63 @@ def _softmax(logits: np.ndarray) -> FloatArray:
     return probs
 
 
+def _safe_step_scale(matrix: np.ndarray) -> float:
+    """Return a scaling factor that keeps gradient steps numerically stable."""
+
+    if matrix.size == 0:
+        return 1.0
+    try:
+        spectral_norm = float(np.linalg.norm(matrix, ord=2))
+    except ValueError:  # pragma: no cover - defensive: ord=2 unsupported
+        spectral_norm = float(np.linalg.norm(matrix))
+    if not np.isfinite(spectral_norm) or spectral_norm == 0.0:
+        return 1.0
+    scaled = spectral_norm * spectral_norm
+    if not np.isfinite(scaled) or scaled == 0.0:
+        return 1.0
+    return scaled
+
+
+def _normalise_design_matrix(matrix: np.ndarray) -> FloatArray:
+    r"""Return a finite matrix with bounded absolute feature values."""
+
+    if matrix.size == 0:
+        return cast(FloatArray, np.asarray(matrix, dtype=np.float64))
+    normalised = np.asarray(matrix, dtype=np.float64)
+    if normalised.ndim == 1:
+        return _normalise_feature_vector(normalised)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    row_max = np.max(np.abs(normalised), axis=1, keepdims=True, initial=0.0)
+    large_rows = row_max > _MAX_FEATURE_MAGNITUDE
+    if np.any(large_rows):
+        normalised[large_rows] *= _MAX_FEATURE_MAGNITUDE / row_max[large_rows]
+    max_abs = float(np.max(np.abs(normalised)))
+    if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
+        return cast(FloatArray, normalised)
+    scale = _MAX_FEATURE_MAGNITUDE / max_abs
+    return cast(FloatArray, normalised * scale)
+
+
+def _normalise_feature_vector(vector: np.ndarray) -> FloatArray:
+    r"""Return a finite vector with bounded absolute feature values."""
+
+    if vector.size == 0:
+        return cast(FloatArray, np.asarray(vector, dtype=np.float64))
+    normalised = np.asarray(vector, dtype=np.float64)
+    np.nan_to_num(normalised, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    max_abs = float(np.max(np.abs(normalised)))
+    if not np.isfinite(max_abs) or max_abs <= _MAX_FEATURE_MAGNITUDE or max_abs == 0.0:
+        return cast(FloatArray, normalised)
+    scale = _MAX_FEATURE_MAGNITUDE / max_abs
+    return cast(FloatArray, normalised * scale)
+
+
+def _is_finite(array: np.ndarray) -> bool:
+    """Return ``True`` when all elements of ``array`` are finite."""
+
+    return bool(np.isfinite(array).all())
+
+
 class BalancedTutorPredictor:
     """Learns a mapping from prompts to template variables."""
 
@@ -177,7 +276,9 @@ class BalancedTutorPredictor:
 
         self._feature_matrix = cast(
             FloatArray,
-            np.vstack([self._vectorise(example.prompt) for example in self.examples]),
+            _normalise_design_matrix(
+                np.vstack([self._vectorise(example.prompt) for example in self.examples])
+            ),
         )
         self._train_models()
 
@@ -335,7 +436,7 @@ class BalancedTutorPredictor:
         norm = np.linalg.norm(vector)
         if norm:
             vector /= norm
-        return vector
+        return _normalise_feature_vector(vector)
 
 
 def _keyword_votes(prompt: str, token_to_topics: dict[str, Counter]) -> Counter:
