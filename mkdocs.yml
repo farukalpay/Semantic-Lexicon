@@ -9,6 +9,7 @@ nav:
   - Prompt Evaluations:
       - Overview: prompt-evaluations/index.md
       - Manual Prompt Test: prompt-evaluations/manual_prompt_test.md
+      - CLI Test Report: cli-test-report.md
   - Analysis Appendix: analysis.md
   - Articles:
       - Fixed-Point Layers: articles/fixed-point-ladders.md

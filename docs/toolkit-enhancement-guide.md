@@ -29,8 +29,8 @@ or Python APIs so the workflow stays reproducible.
    whitespace with `semantic_lexicon.utils.normalise_text` or the
    `prepare` command so features match the NumPy training loops.
 2. **Expand coverage.** Aim for 50–100 labelled prompts per
-   intent so the multinomial logistic regression in
-   [`IntentClassifier`](../src/semantic_lexicon/intent.py) can estimate
+   intent so the multinomial logistic regression implemented by the
+   `IntentClassifier` (see `src/semantic_lexicon/intent.py`) can estimate
    reliable weights.
 3. **Store as JSONL.** Write raw data to a `intent.jsonl` file where
    each line is of the form:
@@ -76,9 +76,10 @@ or Python APIs so the workflow stays reproducible.
 
 ## 4. Calibrate personas
 
-1. **Create persona profiles.** Extend
-   [`persona_registry.json`](../src/semantic_lexicon/data/persona_registry.json)
-   (or the in-memory defaults) with vectors capturing tone, expertise,
+1. **Create persona profiles.** Extend the
+   `persona_registry.json` resource (located at
+   `src/semantic_lexicon/data/persona_registry.json`, or the in-memory defaults)
+   with vectors capturing tone, expertise,
    and risk posture. For example: `"clinical_reviewer"`,
    `"patient_advocate"`, `"compliance_officer"`.
 2. **Blend variable attributes.** Use the persona blending utilities to
