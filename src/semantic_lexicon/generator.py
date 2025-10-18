@@ -7,10 +7,10 @@
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-import re
 from typing import Optional, cast
 
 import numpy as np
@@ -250,7 +250,9 @@ class PersonaGenerator:
         )
 
 
-SECTION_TRIGGER = "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
+SECTION_TRIGGER = (
+    "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
+)
 
 
 def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
@@ -316,9 +318,7 @@ def _parse_vector(prompt: str) -> Optional[tuple[float, float]]:
     match = vector_pattern.search(prompt)
     if match is not None:
         return float(match.group(1)), float(match.group(2))
-    generic_pattern = re.compile(
-        r"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)"
-    )
+    generic_pattern = re.compile(r"\(\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*\)")
     match = generic_pattern.search(prompt)
     if match is None:
         return None
