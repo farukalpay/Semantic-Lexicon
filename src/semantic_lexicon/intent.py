@@ -44,8 +44,46 @@ class IntentExample:
 
 
 _MAX_FEATURE_MAGNITUDE = 1024.0
+_MAX_PARAMETER_MAGNITUDE = 64.0
+_MAX_LOGIT_MAGNITUDE = 60.0
+_MAX_PROBABILITY_MAGNITUDE = 1.0
 _STEP_SCALE_THRESHOLD = 512.0
 _NORMALISATION_EPS = 1e-8
+
+
+def _clamp_inplace(array: np.ndarray, limit: float) -> np.ndarray:
+    arr = np.asarray(array, dtype=np.float64)
+    if arr.size == 0:
+        return arr
+    np.nan_to_num(arr, copy=False, nan=0.0, posinf=limit, neginf=-limit)
+    if limit > 0.0:
+        np.clip(arr, -limit, limit, out=arr)
+    return arr
+
+
+def _safe_matmul(
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    context: str,
+    left_limit: float,
+    right_limit: float,
+) -> NDArray[np.float64]:
+    left_local = np.asarray(left, dtype=np.float64)
+    right_local = np.asarray(right, dtype=np.float64)
+    if left_local.ndim == 0 or right_local.ndim == 0:
+        return np.zeros((), dtype=np.float64)
+    left_local = left_local.copy()
+    right_local = right_local.copy()
+    _clamp_inplace(left_local, left_limit)
+    _clamp_inplace(right_local, right_limit)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        product = left_local @ right_local
+    product_array = np.asarray(product, dtype=np.float64)
+    if not np.isfinite(product_array).all():
+        LOGGER.warning("%s produced non-finite values; applying sanitisation", context)
+        product_array = np.nan_to_num(product_array, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    return product_array
 
 
 def _safe_step_scale(matrix: np.ndarray) -> float:
@@ -211,6 +249,7 @@ class IntentClassifier:
                 "zeroing offending entries"
             )
             matrix = np.nan_to_num(matrix, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+        _clamp_inplace(matrix, _MAX_FEATURE_MAGNITUDE)
         labels = np.array([self.label_to_index[item.intent] for item in dataset], dtype=int)
         num_features = matrix.shape[1]
         num_labels = len(self.label_to_index)
@@ -222,6 +261,7 @@ class IntentClassifier:
             rng.uniform(-limit, limit, size=(num_features, num_labels)),
             dtype=np.float64,
         )
+        _clamp_inplace(self.weights, _MAX_PARAMETER_MAGNITUDE)
         self._epoch_accuracy = []
         base_step = self.config.learning_rate
         step_scale = max(_safe_step_scale(matrix), 1.0)
@@ -240,19 +280,27 @@ class IntentClassifier:
 
         assert self.weights is not None
         for epoch in range(self.config.epochs):
-            logits = np.asarray(matrix @ self.weights, dtype=np.float64)
-            if not np.isfinite(logits).all():
-                LOGGER.warning(
-                    "Intent logits produced non-finite values; forcing matrix sanitisation"
-                )
-                matrix = _normalise_design_matrix(matrix)
-                self.weights = np.nan_to_num(
-                    self.weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
-                )
-                logits = np.asarray(matrix @ self.weights, dtype=np.float64)
+            _clamp_inplace(self.weights, _MAX_PARAMETER_MAGNITUDE)
+            logits = _safe_matmul(
+                matrix,
+                self.weights,
+                context="Intent logits",
+                left_limit=_MAX_FEATURE_MAGNITUDE,
+                right_limit=_MAX_PARAMETER_MAGNITUDE,
+            )
+            np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
             probs = self._softmax(logits)
             one_hot = np.eye(num_labels, dtype=np.float64)[labels]
-            gradient = matrix.T @ (probs - one_hot) / dataset_size
+            diff = np.asarray(probs - one_hot, dtype=np.float64)
+            _clamp_inplace(diff, _MAX_PROBABILITY_MAGNITUDE)
+            gradient = _safe_matmul(
+                matrix.T,
+                diff,
+                context="Intent gradient",
+                left_limit=_MAX_FEATURE_MAGNITUDE,
+                right_limit=_MAX_PROBABILITY_MAGNITUDE,
+            )
+            gradient /= dataset_size
             if l2:
                 gradient += l2 * self.weights
             gradient = np.nan_to_num(gradient, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
@@ -271,12 +319,21 @@ class IntentClassifier:
                 continue
 
             self.weights = np.nan_to_num(new_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            _clamp_inplace(self.weights, _MAX_PARAMETER_MAGNITUDE)
             loss = -np.mean(np.log(probs[np.arange(len(dataset)), labels] + 1e-12))
             accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
             self._epoch_accuracy.append(accuracy)
             LOGGER.debug("Intent epoch %s | loss=%.4f", epoch + 1, loss)
         LOGGER.info("Trained intent classifier with %d intents", num_labels)
-        final_probs = self._softmax(np.asarray(matrix @ self.weights, dtype=np.float64))
+        logits = _safe_matmul(
+            matrix,
+            self.weights,
+            context="Intent logits (final)",
+            left_limit=_MAX_FEATURE_MAGNITUDE,
+            right_limit=_MAX_PARAMETER_MAGNITUDE,
+        )
+        np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
+        final_probs = self._softmax(logits)
         final_accuracy = float(np.mean(np.argmax(final_probs, axis=1) == labels))
         if final_accuracy < 0.9:
             final_probs = self._fine_tune_weights(
@@ -360,11 +417,30 @@ class IntentClassifier:
                 else:
                     values = np.asarray(vector[indices], dtype=np.float64)
                     weights_slice = np.asarray(weights64[indices], dtype=np.float64)
-                    logits = weights_slice.T @ values
+                    _clamp_inplace(values, _MAX_FEATURE_MAGNITUDE)
+                    _clamp_inplace(weights_slice, _MAX_PARAMETER_MAGNITUDE)
+                    logits = _safe_matmul(
+                        weights_slice.T,
+                        values,
+                        context="Intent logits (sparse inference)",
+                        left_limit=_MAX_PARAMETER_MAGNITUDE,
+                        right_limit=_MAX_FEATURE_MAGNITUDE,
+                    )
                 logits64 = np.asarray(logits, dtype=np.float64)
+                np.clip(logits64, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits64)
                 probs = self._softmax(logits64[np.newaxis, :])[0]
             else:
-                logits = np.asarray(vector @ weights64, dtype=np.float64)
+                vector64 = np.asarray(vector, dtype=np.float64)
+                _clamp_inplace(vector64, _MAX_FEATURE_MAGNITUDE)
+                _clamp_inplace(weights64, _MAX_PARAMETER_MAGNITUDE)
+                logits = _safe_matmul(
+                    vector64,
+                    weights64,
+                    context="Intent logits (dense inference)",
+                    left_limit=_MAX_FEATURE_MAGNITUDE,
+                    right_limit=_MAX_PARAMETER_MAGNITUDE,
+                )
+                np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
                 probs = self._softmax(logits[np.newaxis, :])[0]
         if not used_fast:
             probs = self._apply_systematic_correction(probs)
@@ -508,7 +584,14 @@ class IntentClassifier:
             dtype=np.float64,
         )
 
-        corrected_probs = np.clip((self._correction_matrix @ probs.T).T, 0.0, None)
+        correction = _safe_matmul(
+            self._correction_matrix,
+            probs.T,
+            context="Intent correction application",
+            left_limit=_MAX_PROBABILITY_MAGNITUDE,
+            right_limit=_MAX_PROBABILITY_MAGNITUDE,
+        )
+        corrected_probs = np.clip(correction.T, 0.0, None)
         calibrated = np.array([self._posterior_mix(row) for row in corrected_probs])
         self._ece_before = self._expected_calibration_error(probs, labels)
         self._ece_after = self._expected_calibration_error(calibrated, labels)
@@ -537,7 +620,14 @@ class IntentClassifier:
         if self._correction_matrix is None:
             return probs
         correction = np.asarray(self._correction_matrix, dtype=np.float64)
-        corrected = correction @ probs
+        _clamp_inplace(correction, _MAX_PROBABILITY_MAGNITUDE)
+        corrected = _safe_matmul(
+            correction,
+            probs,
+            context="Intent correction pass",
+            left_limit=_MAX_PROBABILITY_MAGNITUDE,
+            right_limit=_MAX_PROBABILITY_MAGNITUDE,
+        )
         return np.clip(corrected, 0.0, None)
 
     def _apply_dirichlet_calibration(self, probs: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -577,11 +667,29 @@ class IntentClassifier:
         if self.weights is None:
             raise RuntimeError("Cannot fine-tune intent weights before initial training")
         trained_weights = np.asarray(self.weights, dtype=np.float64)
+        _clamp_inplace(trained_weights, _MAX_PARAMETER_MAGNITUDE)
         step = max(initial_step, 0.01)
-        probs = self._softmax(np.asarray(matrix @ trained_weights, dtype=np.float64))
+        logits = _safe_matmul(
+            matrix,
+            trained_weights,
+            context="Intent fine-tune logits",
+            left_limit=_MAX_FEATURE_MAGNITUDE,
+            right_limit=_MAX_PARAMETER_MAGNITUDE,
+        )
+        np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
+        probs = self._softmax(logits)
         current_accuracy = float(np.mean(np.argmax(probs, axis=1) == labels))
         for _ in range(max_iterations):
-            gradient = matrix.T @ (probs - one_hot) / dataset_size
+            diff = np.asarray(probs - one_hot, dtype=np.float64)
+            _clamp_inplace(diff, _MAX_PROBABILITY_MAGNITUDE)
+            gradient = _safe_matmul(
+                matrix.T,
+                diff,
+                context="Intent fine-tune gradient",
+                left_limit=_MAX_FEATURE_MAGNITUDE,
+                right_limit=_MAX_PROBABILITY_MAGNITUDE,
+            )
+            gradient /= dataset_size
             if l2:
                 gradient += l2 * trained_weights
             gradient = np.nan_to_num(gradient, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
@@ -599,15 +707,23 @@ class IntentClassifier:
             candidate_weights = np.nan_to_num(
                 candidate_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0
             )
-            candidate_probs = self._softmax(
-                np.asarray(matrix @ candidate_weights, dtype=np.float64)
+            _clamp_inplace(candidate_weights, _MAX_PARAMETER_MAGNITUDE)
+            candidate_logits = _safe_matmul(
+                matrix,
+                candidate_weights,
+                context="Intent fine-tune logits (candidate)",
+                left_limit=_MAX_FEATURE_MAGNITUDE,
+                right_limit=_MAX_PARAMETER_MAGNITUDE,
             )
+            np.clip(candidate_logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=candidate_logits)
+            candidate_probs = self._softmax(candidate_logits)
             candidate_accuracy = float(np.mean(np.argmax(candidate_probs, axis=1) == labels))
             if candidate_accuracy < current_accuracy and step > 1e-6:
                 step *= 0.5
                 continue
             trained_weights = candidate_weights
             self.weights = np.asarray(candidate_weights, dtype=np.float64)
+            _clamp_inplace(self.weights, _MAX_PARAMETER_MAGNITUDE)
             probs = candidate_probs
             current_accuracy = candidate_accuracy
             self._epoch_accuracy.append(current_accuracy)
@@ -734,14 +850,14 @@ class IntentClassifier:
     def _finalise_weights(self) -> None:
         if self.weights is None:
             return
+        weights64 = np.asarray(self.weights, dtype=np.float64)
+        _clamp_inplace(weights64, _MAX_PARAMETER_MAGNITUDE)
         if self.optimized:
-            optimised_weights = np.asarray(self.weights, dtype=np.float16)
-            self.weights = optimised_weights
-            self._weights_for_inference = np.asarray(optimised_weights, dtype=np.float64)
+            self.weights = np.asarray(weights64, dtype=np.float16)
+            self._weights_for_inference = weights64.copy()
         else:
-            precise = np.asarray(self.weights, dtype=np.float64)
-            self.weights = precise
-            self._weights_for_inference = precise.copy()
+            self.weights = weights64.copy()
+            self._weights_for_inference = weights64.copy()
 
     def _blend_reward_weights(self, learned: NDArray[np.float64]) -> NDArray[np.float64]:
         prior_weight = float(np.clip(self.config.feedback_prior_weight, 0.0, 1.0))
@@ -774,6 +890,7 @@ class IntentClassifier:
                 centroids[index] = np.zeros(matrix.shape[1], dtype=np.float64)
                 continue
             centroid = np.asarray(matrix[mask].mean(axis=0), dtype=np.float64)
+            _clamp_inplace(centroid, _MAX_FEATURE_MAGNITUDE)
             centroids[index] = centroid
         return centroids
 
@@ -787,7 +904,16 @@ class IntentClassifier:
         centroid = self._intent_centroids.get(intent_index)
         if centroid is None or np.allclose(centroid, 0.0):
             return 0.0
-        numerator = float(vector @ centroid)
+        vector64 = _clamp_inplace(np.asarray(vector, dtype=np.float64), _MAX_FEATURE_MAGNITUDE)
+        centroid64 = _clamp_inplace(np.asarray(centroid, dtype=np.float64), _MAX_FEATURE_MAGNITUDE)
+        numerator_arr = _safe_matmul(
+            vector64,
+            centroid64,
+            context="Intent centroid similarity",
+            left_limit=_MAX_FEATURE_MAGNITUDE,
+            right_limit=_MAX_FEATURE_MAGNITUDE,
+        )
+        numerator = float(np.asarray(numerator_arr, dtype=np.float64))
         denominator = float(np.linalg.norm(vector) * np.linalg.norm(centroid))
         if denominator == 0.0:
             return 0.0

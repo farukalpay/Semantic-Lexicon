@@ -35,8 +35,50 @@ FloatArray = NDArray[np.float64]
 
 
 _MAX_FEATURE_MAGNITUDE = 1024.0
+_MAX_PARAMETER_MAGNITUDE = 64.0
+_MAX_LOGIT_MAGNITUDE = 60.0
+_MAX_PROBABILITY_MAGNITUDE = 1.0
 _STEP_SCALE_THRESHOLD = 512.0
 _NORMALISATION_EPS = 1e-8
+
+
+def _clamp_inplace(array: np.ndarray, limit: float) -> np.ndarray:
+    """Clamp values in ``array`` to ``[-limit, limit]`` after sanitising NaNs."""
+
+    arr = np.asarray(array, dtype=np.float64)
+    if arr.size == 0:
+        return arr
+    np.nan_to_num(arr, copy=False, nan=0.0, posinf=limit, neginf=-limit)
+    if limit > 0.0:
+        np.clip(arr, -limit, limit, out=arr)
+    return arr
+
+
+def _safe_matmul(
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    context: str,
+    left_limit: float,
+    right_limit: float,
+) -> FloatArray:
+    """Compute ``left @ right`` with operand clamping and NaN sanitisation."""
+
+    left_local = np.asarray(left, dtype=np.float64)
+    right_local = np.asarray(right, dtype=np.float64)
+    if left_local.ndim == 0 or right_local.ndim == 0:
+        return cast(FloatArray, np.zeros((), dtype=np.float64))
+    left_local = left_local.copy()
+    right_local = right_local.copy()
+    _clamp_inplace(left_local, left_limit)
+    _clamp_inplace(right_local, right_limit)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        product = left_local @ right_local
+    product_array = np.asarray(product, dtype=np.float64)
+    if not np.isfinite(product_array).all():
+        LOGGER.warning("%s produced non-finite values; applying sanitisation", context)
+        product_array = np.nan_to_num(product_array, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+    return cast(FloatArray, product_array)
 
 
 def _clip_gradients(
@@ -129,6 +171,7 @@ class _SoftmaxModel:
                 "Softmax features still non-finite after normalisation; zeroing offending rows"
             )
             features = np.nan_to_num(features, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+        _clamp_inplace(features, _MAX_FEATURE_MAGNITUDE)
         n_samples = features.shape[0]
         feature_count = max(self.n_features, 1)
         class_count = max(len(self.classes), 1)
@@ -136,6 +179,8 @@ class _SoftmaxModel:
         limit = math.sqrt(6.0 / (feature_count + class_count))
         weights = rng.uniform(-limit, limit, size=(class_count, self.n_features)).astype(float)
         bias = np.zeros(len(self.classes), dtype=float)
+        _clamp_inplace(weights, _MAX_PARAMETER_MAGNITUDE)
+        _clamp_inplace(bias, _MAX_PARAMETER_MAGNITUDE)
 
         base_step = self.learning_rate * self.loss_weight
         step_scale = max(_safe_step_scale(features), 1.0)
@@ -151,18 +196,30 @@ class _SoftmaxModel:
 
         dataset_size = max(n_samples, 1)
         for _ in range(self.epochs):
-            logits = features @ weights.T + bias
-            if not _is_finite(logits):
-                LOGGER.warning("Softmax logits produced non-finite values; sanitising inputs")
-                features = _normalise_design_matrix(features)
-                weights = np.nan_to_num(weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
-                bias = np.nan_to_num(bias, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
-                logits = features @ weights.T + bias
+            _clamp_inplace(weights, _MAX_PARAMETER_MAGNITUDE)
+            _clamp_inplace(bias, _MAX_PARAMETER_MAGNITUDE)
+            logits = _safe_matmul(
+                features,
+                weights.T,
+                context="Softmax logits",
+                left_limit=_MAX_FEATURE_MAGNITUDE,
+                right_limit=_MAX_PARAMETER_MAGNITUDE,
+            )
+            logits += bias
+            np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
             probs = _softmax(logits)
             probs[np.arange(n_samples), y_indices] -= 1.0
             probs /= dataset_size
+            probs = np.nan_to_num(probs, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
 
-            grad_w = probs.T @ features + self.l2 * weights
+            grad_w = _safe_matmul(
+                probs.T,
+                features,
+                context="Softmax weight gradient",
+                left_limit=_MAX_PROBABILITY_MAGNITUDE,
+                right_limit=_MAX_FEATURE_MAGNITUDE,
+            )
+            grad_w += self.l2 * weights
             grad_b = probs.sum(axis=0)
             grad_w = np.nan_to_num(grad_w, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
             grad_b = np.nan_to_num(grad_b, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
@@ -183,6 +240,8 @@ class _SoftmaxModel:
 
             weights = np.nan_to_num(new_weights, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
             bias = np.nan_to_num(new_bias, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+            _clamp_inplace(weights, _MAX_PARAMETER_MAGNITUDE)
+            _clamp_inplace(bias, _MAX_PARAMETER_MAGNITUDE)
 
         self._weights = weights
         self._bias = bias
@@ -207,7 +266,18 @@ class _SoftmaxModel:
             probs = np.zeros(len(self.classes), dtype=float)
             probs[0] = 1.0
             return probs
-        logits = vector @ self._weights.T + self._bias  # type: ignore[union-attr]
+        vector64 = _clamp_inplace(np.asarray(vector, dtype=np.float64), _MAX_FEATURE_MAGNITUDE)
+        weights = _clamp_inplace(self._weights, _MAX_PARAMETER_MAGNITUDE)  # type: ignore[arg-type]
+        bias = _clamp_inplace(self._bias, _MAX_PARAMETER_MAGNITUDE)  # type: ignore[arg-type]
+        logits = _safe_matmul(
+            vector64,
+            weights.T,  # type: ignore[union-attr]
+            context="Softmax logits (inference)",
+            left_limit=_MAX_FEATURE_MAGNITUDE,
+            right_limit=_MAX_PARAMETER_MAGNITUDE,
+        )
+        logits += bias  # type: ignore[union-attr]
+        np.clip(logits, -_MAX_LOGIT_MAGNITUDE, _MAX_LOGIT_MAGNITUDE, out=logits)
         return _softmax(logits)
 
 
