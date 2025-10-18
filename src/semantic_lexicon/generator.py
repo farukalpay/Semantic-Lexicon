@@ -264,7 +264,6 @@ class PersonaGenerator:
 SECTION_TRIGGER = (
     "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
 )
-_SECTION_TRIGGER_NORMALISED = SECTION_TRIGGER.lower()
 
 
 def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
@@ -276,7 +275,9 @@ def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
     persona template.
     """
 
-    if _SECTION_TRIGGER_NORMALISED not in prompt.lower():
+    normalised_prompt = prompt.casefold()
+    trigger_casefold = SECTION_TRIGGER.casefold()
+    if SECTION_TRIGGER not in prompt and trigger_casefold not in normalised_prompt:
         return None
     matrices = _parse_matrices(prompt)
     if not {"R", "S"}.issubset(matrices):

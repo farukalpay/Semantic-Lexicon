@@ -35,3 +35,17 @@ def test_generator_handles_structured_matrix_prompt() -> None:
     assert "RS · v" in result.response
     assert result.knowledge_hits == []
     assert result.phrases == []
+
+
+def test_generator_handles_section_trigger_case_insensitively() -> None:
+    store = PersonaStore()
+    persona = store.get("tutor")
+    generator = PersonaGenerator(GeneratorConfig())
+    prompt = (
+        "return markdown with exactly these sections: ## Matrices, ## Composition, ## Results. "
+        "Given S=[[1, 1], [0, 1]] and R=[[0, 1], [-1, 0]], and v=(1, 0)."
+    )
+    result = generator.generate(prompt, persona, ["definition"])
+    assert "## Matrices" in result.response
+    assert "SR = S × R" in result.response
+    assert "SR · v" in result.response
