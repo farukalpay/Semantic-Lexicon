@@ -355,7 +355,8 @@ def clipboard(
     try:
         text = get_clipboard_text()
     except ClipboardError as exc:
-        typer.secho(f"Unable to read clipboard: {exc}", err=True)
+        message = str(exc) or "Unable to read clipboard."
+        typer.secho(message, err=True)
         raise typer.Exit(code=1) from exc
 
     if not text.strip():
