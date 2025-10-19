@@ -6,6 +6,47 @@ Semantic Lexicon is a NumPy-first research toolkit that demonstrates persona-awa
 
 The name reflects the long-standing academic concept of the [semantic lexicon](https://en.wikipedia.org/wiki/Semantic_lexicon); this repository contributes an applied, open implementation that operationalises those ideas for persona-aware experimentation.
 
+---
+
+## Contents
+
+- [Quick Start](#quick-start)
+- [Citation](#citation)
+- [Features](#features)
+- [Installation](#installation)
+- [Project Layout](#project-layout)
+- [CLI Walkthrough](#cli-walkthrough)
+- [Streams & Clipboard](#streams--clipboard)
+- [TADKit](#tadkit--drop-in-logits-processor-and-cli)
+- [PersonaRAG](#personarag--exp3-personas-with-decode-time-truth-gates)
+- [Development Workflow](#development-workflow)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [Author's Note](#authors-note)
+- [Contact & Legal](#contact--legal)
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install the CLI and core library
+pip install "semantic-lexicon @ git+https://github.com/farukalpay/Semantic-Lexicon.git"
+
+# 2. Materialise the sample workspace
+semantic-lexicon prepare \
+  --intent src/semantic_lexicon/data/intent.jsonl \
+  --knowledge src/semantic_lexicon/data/knowledge.jsonl \
+  --workspace artifacts
+
+# 3. Train and generate
+semantic-lexicon train --workspace artifacts
+semantic-lexicon generate "Outline transformer basics" --workspace artifacts
+```
+
+- Prefer `semantic-lexicon generate -` to pipe prompts from other tools (`echo question | semantic-lexicon generate -`).
+- `semantic-lexicon clipboard --workspace artifacts` mirrors the same workflow but seeds the prompt from your system clipboard.
+
 ## Citation
 
 Semantic Lexicon operationalises the reproducible persona-aware pipeline introduced in the accompanying preprint. If you build on this toolkit, please cite the work so other researchers can trace the connection between the paper's methodology and this implementation.
@@ -26,16 +67,21 @@ You can read the preprint online at [https://arxiv.org/abs/2508.04612](https://a
 
 ## Features
 
-- **Modular architecture** – dedicated submodules for embeddings, intent classification, knowledge graphs, persona handling, and persona-aware generation.
-- **Deterministic NumPy training loops** – simple yet reproducible optimisation routines for intents and knowledge edges.
-- **Automated workflows** – Typer-powered CLI (`semantic-lexicon`) for corpus preparation, training, diagnostics, and generation.
-- **Extensible configuration** – YAML/JSON configuration loading with dataclass-backed defaults.
-- **Diagnostics** – structured reports covering embeddings, intents, knowledge neighbours, personas, and generation previews.
-- **Adversarial style selection** – EXP3 utilities for experimenting with persona choices under bandit feedback.
-- **Analytical guarantees** – composite reward shaping, Bayesian calibration, and regret tooling with documented proofs.
-- **Graph-based knowledge curation** – SPPMI-weighted co-occurrence graphs, smoothed relevance, and greedy facility-location selection produce calibrated “Knowledge” scores that surface tightly connected concepts.
-- **Docs & tests** – MkDocs documentation, pytest-based regression tests, prompt evaluation hub (`docs/prompt-evaluations/index.md`), and CI-ready tooling (black, ruff, mypy).
-- **Primal–dual safety tuning** – projected primal–dual controller that auto-tunes exploration, pricing, and knowledge gates until all residuals vanish.
+**Core modelling**
+- Modular architecture spanning embeddings, intents, knowledge graphs, personas, and persona-aware generation.
+- Deterministic NumPy training loops delivering reproducible optimisation.
+- Graph-driven knowledge curation using SPPMI weighting, smoothed relevance, and greedy facility-location selection.
+
+**Automation & tooling**
+- Typer-powered CLI for preparation, training, diagnostics, and generation.
+- Extensible configuration with dataclass-backed YAML/JSON loading.
+- Diagnostics covering embeddings, intents, knowledge neighbours, personas, and generation previews.
+- Documentation plus regression safeguards via MkDocs, pytest, prompt evaluations, ruff, mypy, and black.
+
+**Decision-making & safety**
+- EXP3 persona selection utilities for adversarial style experiments.
+- Analytical guarantees through composite reward shaping, calibration, and regret tooling.
+- Primal–dual safety tuning that balances exploration, pricing, and knowledge gates until residuals vanish.
 
 ## Installation
 
@@ -46,21 +92,22 @@ You can read the preprint online at [https://arxiv.org/abs/2508.04612](https://a
    source .venv/bin/activate
    ```
 
-2. **Install Semantic Lexicon directly from GitHub** using pip's `name @ URL` syntax (avoids
-   future deprecation warnings while matching the hosted repository):
+2. **Install Semantic Lexicon** using pip's `name @ URL` syntax (avoids future deprecation warnings while matching the hosted repository):
 
    ```bash
    pip install "semantic-lexicon[dev,docs] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"
    ```
 
-   Use the table below to tailor optional extras to your workflow:
+### Optional extras
 
-   | Goal | Command |
-   | --- | --- |
-   | Minimal CLI & library | `pip install "semantic-lexicon @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
-   | Docs + developer tooling | `pip install "semantic-lexicon[dev,docs] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
-   | TADKit demos (needs PyTorch + Streamlit) | `pip install "semantic-lexicon[tadkit] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
-   | PersonaRAG demos (LangChain/LangGraph stack) | `pip install "semantic-lexicon[personarag] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+Use the table below to tailor optional extras to your workflow:
+
+| Goal | Command |
+| --- | --- |
+| Minimal CLI & library | `pip install "semantic-lexicon @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+| Docs + developer tooling | `pip install "semantic-lexicon[dev,docs] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+| TADKit demos (needs PyTorch + Streamlit) | `pip install "semantic-lexicon[tadkit] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
+| PersonaRAG demos (LangChain/LangGraph stack) | `pip install "semantic-lexicon[personarag] @ git+https://github.com/farukalpay/Semantic-Lexicon.git"` |
 
 > **Note:** `tadkit` relies on PyTorch for logits processing. Install a CPU build with
 > `pip install torch --index-url https://download.pytorch.org/whl/cpu` if it is not already
@@ -84,7 +131,11 @@ src/semantic_lexicon/
 └── data/                 # Sample intent & knowledge datasets for tests
 ```
 
-## Quick Start
+> **Tip:** `examples/` mirrors these modules with runnable notebooks and scripts so you can jump from the reference implementation to experiments quickly.
+
+## CLI Walkthrough
+
+Follow the full pipeline when you want to rebuild artefacts from raw data.
 
 1. **Prepare the corpus** (optional if using bundled sample data):
 
@@ -803,10 +854,12 @@ print(report.to_dict())
 
 ## Development Workflow
 
-- **Format & lint**: `ruff check .` and `black .`
-- **Type check**: `mypy src`
-- **Tests**: `pytest`
-- **Docs**: `mkdocs serve`
+| Task            | Command                           |
+| --------------- | --------------------------------- |
+| Format & lint   | `ruff check .` · `black .`        |
+| Type check      | `mypy src`                        |
+| Run tests       | `pytest`                          |
+| Preview docs    | `mkdocs serve`                    |
 
 A `Makefile` (or CI workflow) can orchestrate the tasks:
 
@@ -818,7 +871,10 @@ make docs
 
 ## Streams & Clipboard
 
-Generation now distinguishes abstract sources via the prompt functor \(𝐅\): a literal argument feeds `generate` directly, while the distinguished symbol `"-"` lifts the STDIN stream, concatenating all chunks until EOF before generation. The `clipboard` entrypoint composes the same generator with \(𝐅(\text{CLIPBOARD})\), pulling the current text from the system clipboard.
+Generation now distinguishes abstract sources via the prompt functor \(𝐅\). Use cases:
+- **Literal prompts** – pass a string and the CLI behaves exactly as before.
+- **Streaming prompts** – pass `"-"` to fold STDIN chunks until EOF, perfect for shell pipelines.
+- **Clipboard prompts** – call `semantic-lexicon clipboard` to pull the current system clipboard.
 
 Example invocations:
 
@@ -828,6 +884,8 @@ semantic-lexicon clipboard --workspace artifacts --persona exploration
 ```
 
 Both paths reuse the existing workspace/persona/config pipeline and reject empty inputs with a friendly error.
+
+---
 
 ## Contributing
 
