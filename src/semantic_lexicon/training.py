@@ -52,14 +52,34 @@ class Trainer:
             }
             for item in raw_intents
         ]
-        processed_knowledge = [
-            {
-                "head": normalise_text(item["head"]),
-                "relation": item["relation"],
-                "tail": normalise_text(item["tail"]),
-            }
-            for item in raw_knowledge
-        ]
+        processed_knowledge: list[dict[str, str]] = []
+        for item in raw_knowledge:
+            # Accept both triple-style (head/relation/tail) and simplified (key/text) records.
+            if "head" in item or "tail" in item:
+                head_raw = item.get("head")
+                tail_raw = item.get("tail")
+                relation_raw = item.get("relation")
+                default_relation = "related_to"
+            elif "key" in item and "text" in item:
+                head_raw = item.get("key")
+                tail_raw = item.get("text")
+                relation_raw = item.get("relation")
+                default_relation = "describes"
+            else:
+                msg = "Knowledge record must provide either ('head','tail') or ('key','text') fields"
+                raise KeyError(msg)
+            if not isinstance(head_raw, str) or not head_raw.strip():
+                raise TypeError("Knowledge 'head'/'key' field must be a non-empty string")
+            if not isinstance(tail_raw, str) or not tail_raw.strip():
+                raise TypeError("Knowledge 'tail'/'text' field must be a non-empty string")
+            relation_value = relation_raw if isinstance(relation_raw, str) and relation_raw.strip() else default_relation
+            processed_knowledge.append(
+                {
+                    "head": normalise_text(head_raw),
+                    "relation": normalise_text(relation_value),
+                    "tail": normalise_text(tail_raw),
+                }
+            )
         write_jsonl(intent_path, processed_intents)
         write_jsonl(knowledge_path, processed_knowledge)
         LOGGER.info("Prepared corpus under %s", workspace)
