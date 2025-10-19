@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semantic-lexicon"
-version = "0.1.1"
+version = "0.1.2"
 description = "Neural semantic modeling toolkit with persona-aware generation and diagnostics."
 readme = "README.md"
 license = {file = "LICENSE"}
