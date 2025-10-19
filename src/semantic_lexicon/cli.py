@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -21,6 +22,7 @@ from .logging import configure_logging
 from .model import NeuralSemanticModel
 from .training import Trainer, TrainerConfig
 from .utils import normalise_text, read_jsonl
+from .utils.clipboard import ClipboardError, get_clipboard_text
 
 LOGGER = configure_logging(logger_name=__name__)
 
@@ -63,6 +65,10 @@ PERSONA_OPTION = typer.Option(
     None,
     help="Persona to condition generation.",
 )
+CLIPBOARD_PERSONA_OPTION = typer.Option(
+    "generic",
+    help="Persona to condition generation.",
+)
 GENERATE_CONFIG_OPTION = typer.Option(
     None,
     "--config",
@@ -71,6 +77,15 @@ GENERATE_CONFIG_OPTION = typer.Option(
 )
 GENERATE_WORKSPACE_OPTION = typer.Option(
     DEFAULT_WORKSPACE,
+    help="Directory containing trained artifacts.",
+)
+CLIPBOARD_WORKSPACE_OPTION = typer.Option(
+    ...,
+    "--workspace",
+    exists=True,
+    file_okay=False,
+    dir_okay=True,
+    resolve_path=True,
     help="Directory containing trained artifacts.",
 )
 BULLET_COUNT_OPTION = typer.Option(
@@ -242,6 +257,22 @@ def _load_model(config_path: Optional[Path]) -> tuple[NeuralSemanticModel, Seman
     return model, config
 
 
+def _run_generation(
+    prompt: str,
+    persona: Optional[str],
+    config_path: Optional[Path],
+    workspace: Path,
+) -> None:
+    """Load the model artifacts and emit a generated response."""
+
+    model, _ = _load_model(config_path)
+    artifacts_dir = Path(workspace)
+    if (artifacts_dir / "embeddings.json").exists():
+        model = NeuralSemanticModel.load(artifacts_dir, config=model.config)
+    result = model.generate(normalise_text(prompt), persona=persona)
+    typer.echo(result.response)
+
+
 @app.command()
 def prepare(
     intent_path: Path = INTENT_PATH_OPTION,
@@ -299,19 +330,41 @@ def diagnostics(
 
 @app.command()
 def generate(
-    prompt: str = typer.Argument(..., help="Prompt to respond to."),
+    prompt: str = typer.Argument(
+        ..., help="Prompt string; use '-' to read from standard input."
+    ),
     persona: Optional[str] = PERSONA_OPTION,
     config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
     workspace: Path = GENERATE_WORKSPACE_OPTION,
 ) -> None:
     """Generate a persona-conditioned response."""
 
-    model, _ = _load_model(config_path)
-    artifacts_dir = Path(workspace)
-    if (artifacts_dir / "embeddings.json").exists():
-        model = NeuralSemanticModel.load(artifacts_dir, config=model.config)
-    result = model.generate(normalise_text(prompt), persona=persona)
-    typer.echo(result.response)
+    if prompt == "-":
+        prompt = sys.stdin.read()
+    if not prompt.strip():
+        raise typer.BadParameter("Empty prompt.")
+    _run_generation(prompt, persona, config_path, workspace)
+
+
+@app.command()
+def clipboard(
+    workspace: Path = CLIPBOARD_WORKSPACE_OPTION,
+    persona: str = CLIPBOARD_PERSONA_OPTION,
+    config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
+) -> None:
+    """Generate a response using the current clipboard contents."""
+
+    try:
+        text = get_clipboard_text()
+    except ClipboardError as exc:
+        typer.secho(f"Unable to read clipboard: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    if not text.strip():
+        typer.secho("Clipboard is empty.", err=True)
+        raise typer.Exit(code=1)
+
+    _run_generation(text, persona, config_path, workspace)
 
 
 @app.command("ask-tight")

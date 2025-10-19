@@ -816,6 +816,19 @@ make test
 make docs
 ```
 
+## Streams & Clipboard
+
+Generation now distinguishes abstract sources via the prompt functor \(𝐅\): a literal argument feeds `generate` directly, while the distinguished symbol `"-"` lifts the STDIN stream, concatenating all chunks until EOF before generation. The `clipboard` entrypoint composes the same generator with \(𝐅(\text{CLIPBOARD})\), pulling the current text from the system clipboard.
+
+Example invocations:
+
+```bash
+echo "What is a transformer?" | semantic-lexicon generate - --workspace artifacts
+semantic-lexicon clipboard --workspace artifacts --persona exploration
+```
+
+Both paths reuse the existing workspace/persona/config pipeline and reject empty inputs with a friendly error.
+
 ## Contributing
 
 1. Fork the repository and create a feature branch.
