@@ -330,9 +330,7 @@ def diagnostics(
 
 @app.command()
 def generate(
-    prompt: str = typer.Argument(
-        ..., help="Prompt string; use '-' to read from standard input."
-    ),
+    prompt: str = typer.Argument(..., help="Prompt string; use '-' to read from standard input."),
     persona: Optional[str] = PERSONA_OPTION,
     config_path: Optional[Path] = GENERATE_CONFIG_OPTION,
     workspace: Path = GENERATE_WORKSPACE_OPTION,

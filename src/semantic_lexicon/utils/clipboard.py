@@ -80,9 +80,7 @@ def _read_with_platform_command() -> Optional[str]:
         return _read_with_command(["pbpaste"])
 
     if system == "windows":
-        return _read_with_command(
-            ["powershell", "-NoProfile", "-Command", "Get-Clipboard"]
-        )
+        return _read_with_command(["powershell", "-NoProfile", "-Command", "Get-Clipboard"])
 
     # Assume POSIX; try known clipboard tools.
     for candidate in (
