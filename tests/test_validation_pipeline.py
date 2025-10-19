@@ -39,17 +39,19 @@ def test_validation_records_include_hierarchy_metadata() -> None:
     energy_record = next(record for record in records if record.domain == "grid_operations")
     assert energy_record.domain_path == (
         "energy_systems",
+        "grid_management",
         "grid_operations",
         "virtual_power_plant_enrollment",
     )
-    assert "real_time_grid_coordination" in energy_record.traits
+    assert "real_time_coordination" in energy_record.traits
     kernel_record = next(record for record in records if record.domain == "linux_kernel_operations")
     assert kernel_record.domain_path == (
+        "science_and_technology",
         "platform_engineering",
         "linux_kernel_operations",
         "ubuntu_kernel_lifecycle",
     )
-    assert "kernel_reliability_engineering" in kernel_record.traits
+    assert "kernel_reliability" in kernel_record.traits
 
 
 def test_cross_domain_validation_metrics() -> None:
@@ -73,30 +75,33 @@ def test_cross_domain_validation_metrics() -> None:
         "linux_kernel_operations",
     ):
         assert metrics.domain_accuracy.get(domain, 0.0) >= 0.9
-    assert metrics.hierarchy_accuracy.get("energy_systems > grid_operations", 0.0) >= 0.9
     assert (
-        metrics.hierarchy_accuracy.get(
-            "energy_systems > grid_operations > virtual_power_plant_enrollment",
-            0.0,
-        )
-        >= 0.9
-    )
-    assert metrics.trait_accuracy.get("real_time_grid_coordination", 0.0) >= 0.9
-    assert (
-        metrics.hierarchy_accuracy.get(
-            "platform_engineering > linux_kernel_operations",
-            0.0,
-        )
+        metrics.hierarchy_accuracy.get("energy_systems > grid_management > grid_operations", 0.0)
         >= 0.9
     )
     assert (
         metrics.hierarchy_accuracy.get(
-            "platform_engineering > linux_kernel_operations > ubuntu_kernel_lifecycle",
+            "energy_systems > grid_management > grid_operations > virtual_power_plant_enrollment",
             0.0,
         )
         >= 0.9
     )
-    assert metrics.trait_accuracy.get("kernel_reliability_engineering", 0.0) >= 0.9
+    assert metrics.trait_accuracy.get("real_time_coordination", 0.0) >= 0.9
+    assert (
+        metrics.hierarchy_accuracy.get(
+            "science_and_technology > platform_engineering > linux_kernel_operations",
+            0.0,
+        )
+        >= 0.9
+    )
+    assert (
+        metrics.hierarchy_accuracy.get(
+            "science_and_technology > platform_engineering > linux_kernel_operations > ubuntu_kernel_lifecycle",
+            0.0,
+        )
+        >= 0.9
+    )
+    assert metrics.trait_accuracy.get("kernel_reliability", 0.0) >= 0.9
     assert metrics.trait_accuracy.get("ubuntu_support_alignment", 0.0) >= 0.9
 
 
@@ -274,6 +279,70 @@ def test_domain_hierarchy_member_casefold_conflict(tmp_path) -> None:
         )
     )
     with pytest.raises(ValueError, match=r"Contradictory member 'shared_member'"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_hierarchy_lineage_traits_propagate(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "science",
+                        "path": ["knowledge", "science"],
+                        "members": [],
+                        "traits": ["domain_specific"],
+                        "lineage_traits": {
+                            "knowledge": ["shared_context"],
+                            "knowledge>science": ["refined_focus"],
+                        },
+                    }
+                ),
+            )
+        )
+    )
+    validation_path = tmp_path / "validation.jsonl"
+    validation_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "text": "Summarise",
+                        "intent": "summary",
+                        "domain": "science",
+                    }
+                ),
+            )
+        )
+    )
+    records = load_validation_records(validation_path, hierarchy_path=hierarchy_path)
+    assert records[0].traits == ("shared_context", "refined_focus", "domain_specific")
+
+
+def test_domain_hierarchy_lineage_traits_prefix_must_align(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "science",
+                        "path": ["knowledge", "science"],
+                        "members": [],
+                        "traits": ["domain_specific"],
+                        "lineage_traits": {
+                            "knowledge>mismatch": ["shared_context"],
+                        },
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"Lineage trait prefix 'knowledge>mismatch'"):
         load_validation_records(
             Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
             hierarchy_path=hierarchy_path,

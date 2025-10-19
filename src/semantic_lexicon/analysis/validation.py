@@ -27,6 +27,7 @@ class DomainHierarchy:
     path: tuple[str, ...]
     members: tuple[str, ...]
     traits: tuple[str, ...]
+    lineage_traits: Mapping[tuple[str, ...], tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -119,6 +120,18 @@ def _coerce_to_sequence_of_str(
     raise TypeError(msg)
 
 
+def _merge_ordered_traits(*sources: Sequence[str]) -> tuple[str, ...]:
+    seen: dict[str, str] = {}
+    ordered: list[str] = []
+    for values in sources:
+        for value in values:
+            key = value.casefold()
+            if key not in seen:
+                seen[key] = value
+                ordered.append(value)
+    return tuple(ordered)
+
+
 def _normalise_identifier(value: str, field: str) -> str:
     normalised = value.strip()
     if not normalised:
@@ -134,6 +147,35 @@ def _coerce_identifier_sequence(
 ) -> tuple[str, ...]:
     raw_values = _coerce_to_sequence_of_str(value, field, default=default)
     return tuple(_normalise_identifier(item, field) for item in raw_values)
+
+
+def _coerce_lineage_prefix(
+    raw_prefix: object,
+    *,
+    domain: str,
+    path: Sequence[str],
+) -> tuple[str, ...]:
+    if not isinstance(raw_prefix, str):
+        msg = f"Lineage trait keys for domain '{domain}' must be strings"
+        raise TypeError(msg)
+    parts = [segment.strip() for segment in raw_prefix.split(">") if segment.strip()]
+    if not parts:
+        msg = f"Lineage trait prefix for domain '{domain}' must be non-empty"
+        raise ValueError(msg)
+    prefix = tuple(_normalise_identifier(part, "lineage_traits") for part in parts)
+    if len(prefix) > len(path):
+        msg = (
+            f"Lineage trait prefix '{raw_prefix}' for domain '{domain}' is deeper than the domain path"
+        )
+        raise ValueError(msg)
+    path_prefix = tuple(entry.casefold() for entry in path[: len(prefix)])
+    prefix_key = tuple(entry.casefold() for entry in prefix)
+    if path_prefix != prefix_key:
+        msg = (
+            f"Lineage trait prefix '{raw_prefix}' for domain '{domain}' must align with the declared path"
+        )
+        raise ValueError(msg)
+    return prefix
 
 
 def _find_casefold_duplicates(values: Sequence[str]) -> list[str]:
@@ -199,6 +241,38 @@ def load_domain_hierarchy(path: Path | None = None) -> dict[str, DomainHierarchy
             dup = ", ".join(duplicates)
             msg = f"Duplicate trait identifier(s) {dup} declared for domain '{domain}'"
             raise ValueError(msg)
+        lineage_traits_field = mapping.get("lineage_traits")
+        lineage_traits: dict[tuple[str, ...], tuple[str, ...]] = {}
+        if lineage_traits_field is not None:
+            if not isinstance(lineage_traits_field, Mapping):
+                msg = (
+                    f"Expected mapping for 'lineage_traits' in domain '{domain}', received {type(lineage_traits_field)!r}"
+                )
+                raise TypeError(msg)
+            for raw_prefix, raw_values in lineage_traits_field.items():
+                prefix = _coerce_lineage_prefix(
+                    raw_prefix,
+                    domain=domain,
+                    path=path_values,
+                )
+                if prefix in lineage_traits:
+                    msg = (
+                        f"Duplicate lineage trait prefix '{raw_prefix}' declared for domain '{domain}'"
+                    )
+                    raise ValueError(msg)
+                trait_values = _coerce_identifier_sequence(
+                    raw_values,
+                    f"lineage_traits[{raw_prefix!r}]",
+                )
+                duplicates = _find_casefold_duplicates(trait_values)
+                if duplicates:
+                    dup = ", ".join(duplicates)
+                    msg = (
+                        "Duplicate trait identifier(s) "
+                        f"{dup} declared for lineage prefix '{raw_prefix}' in domain '{domain}'"
+                    )
+                    raise ValueError(msg)
+                lineage_traits[prefix] = trait_values
         for member in members:
             member_key = member.casefold()
             owning_domain = canonical_domains.get(member_key)
@@ -221,6 +295,7 @@ def load_domain_hierarchy(path: Path | None = None) -> dict[str, DomainHierarchy
             path=path_values,
             members=members,
             traits=traits,
+            lineage_traits=lineage_traits,
         )
     return hierarchy
 
@@ -252,12 +327,19 @@ def load_validation_records(
         mapping = cast(Mapping[str, object], raw)
         domain = _coerce_to_str(mapping.get("domain"), "domain", default="unknown")
         hierarchy = hierarchy_index.get(domain)
-        traits: tuple[str, ...] = hierarchy.traits if hierarchy else ()
+        traits: tuple[str, ...]
         domain_path: tuple[str, ...]
         if hierarchy:
             domain_path = hierarchy.path
+            trait_sources = [
+                hierarchy.lineage_traits.get(hierarchy.path[:depth], ())
+                for depth in range(1, len(hierarchy.path) + 1)
+            ]
+            trait_sources.append(hierarchy.traits)
+            traits = _merge_ordered_traits(*trait_sources)
         else:
             domain_path = (domain,)
+            traits = ()
         member = _coerce_optional_str(mapping.get("domain_member"), "domain_member")
         if member:
             if not hierarchy:
