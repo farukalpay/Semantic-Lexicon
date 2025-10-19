@@ -35,10 +35,6 @@ try:
     WIKIPEDIA_AVAILABLE = True
 except ImportError:
     WIKIPEDIA_AVAILABLE = False
-    WikipediaTermExtractor = None
-    KnowledgeAugmentedGenerator = None
-    AdvancedWikipediaExtractor = None
-    TopicCoherenceManager = None
 
 LOGGER = configure_logging(logger_name=__name__)
 
@@ -82,7 +78,7 @@ PHRASE_LIMIT = 3
 LENGTH_BONUS = 0.05
 
 # Dynamic phrase expansions - populated from Wikipedia
-PHRASE_EXPANSIONS = {}
+PHRASE_EXPANSIONS: dict[str, list[str]] = {}
 
 DEFAULT_FALLBACK_TOPICS = ["Key Insight", "Next Step", "Guiding Question"]
 

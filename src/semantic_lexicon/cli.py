@@ -30,8 +30,6 @@ try:
     DIRECT_QA_AVAILABLE = True
 except ImportError:
     DIRECT_QA_AVAILABLE = False
-    DirectQAGenerator = None
-    EnhancedSentenceBuilder = None
 
 LOGGER = configure_logging(logger_name=__name__)
 
@@ -475,11 +473,11 @@ def answer(
 
     try:
         if mode == "enhanced":
-            generator = EnhancedSentenceBuilder()
-            response = generator.build_response(prompt)
+            enhanced_builder = EnhancedSentenceBuilder()
+            response = enhanced_builder.build_response(prompt)
         else:
-            generator = DirectQAGenerator()
-            response = generator.generate_answer(prompt)
+            qa_generator = DirectQAGenerator()
+            response = qa_generator.generate_answer(prompt)
 
         typer.echo(response)
 

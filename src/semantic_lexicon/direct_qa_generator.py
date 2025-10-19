@@ -192,7 +192,7 @@ class DirectQAGenerator:
 
     def _group_facts(self, facts: list[WikipediaFact]) -> dict[str, list[WikipediaFact]]:
         """Group facts by their predicate type."""
-        groups = {
+        groups: dict[str, list[WikipediaFact]] = {
             "definitions": [],
             "capabilities": [],
             "composition": [],
@@ -369,10 +369,8 @@ class DirectQAGenerator:
         # Start with understanding what it is
         if fact_groups["definitions"]:
             fact = fact_groups["definitions"][0]
-            intro = (
-                f"To understand how {topic} works, it helps to know that it "
-                f"{self._naturalize_phrase(fact.object)}."
-            )
+            definition = self._naturalize_phrase(fact.object)
+            intro = f"To understand how {topic} works, it helps to know that it {definition}."
             paragraphs.append(intro)
 
         # Explain the mechanism through capabilities
@@ -408,9 +406,9 @@ class DirectQAGenerator:
         # Start with the purpose based on definition
         if fact_groups["definitions"]:
             fact = fact_groups["definitions"][0]
+            purpose = self._naturalize_phrase(fact.object)
             paragraphs.append(
-                f"{topic.capitalize()} exists because it provides "
-                f"{self._naturalize_phrase(fact.object)}."
+                f"{topic.capitalize()} exists because it provides {purpose}."
             )
 
         # Explain benefits through capabilities
@@ -646,9 +644,9 @@ class EnhancedSentenceBuilder:
 
         # Historical sentence
         if facts["years"] or facts["entities"]:
-            sentence = self._build_historical_sentence(topic, facts)
-            if sentence:
-                sentences.append(sentence)
+            historical_sentence = self._build_historical_sentence(topic, facts)
+            if historical_sentence:
+                sentences.append(historical_sentence)
 
         # Technical details sentence
         if facts["technical"]:
@@ -657,9 +655,9 @@ class EnhancedSentenceBuilder:
 
         # Application sentence
         if facts["quantities"] or facts["technical"]:
-            sentence = self._build_application_sentence(topic, facts)
-            if sentence:
-                sentences.append(sentence)
+            application_sentence = self._build_application_sentence(topic, facts)
+            if application_sentence:
+                sentences.append(application_sentence)
 
         return " ".join(sentences) if sentences else f"Information about {topic} is limited."
 
@@ -677,7 +675,7 @@ class EnhancedSentenceBuilder:
 
     def _organize_facts(self, terms: list[WikipediaTerm]) -> dict[str, list[WikipediaTerm]]:
         """Organize terms by their context type."""
-        facts = {
+        facts: dict[str, list[WikipediaTerm]] = {
             "definitions": [],
             "years": [],
             "entities": [],

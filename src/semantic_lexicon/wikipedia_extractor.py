@@ -83,7 +83,7 @@ class WikipediaTermExtractor:
 
     def _search_wikipedia(self, query: str) -> Optional[str]:
         """Search Wikipedia and return the most relevant page title."""
-        params = {
+        params: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "list": "search",
@@ -97,7 +97,8 @@ class WikipediaTermExtractor:
             data = response.json()
 
             if data.get("query", {}).get("search"):
-                return data["query"]["search"][0]["title"]
+                title = data["query"]["search"][0]["title"]
+                return str(title) if title else None
             return None
 
         except Exception as e:
@@ -133,7 +134,8 @@ class WikipediaTermExtractor:
             response = self.session.get(url)
             response.raise_for_status()
             data = response.json()
-            return data.get("extract", "")
+            extract = data.get("extract")
+            return str(extract) if extract else None
 
         except Exception as e:
             LOGGER.error(f"Failed to get summary for '{page_title}': {e}")
@@ -141,7 +143,7 @@ class WikipediaTermExtractor:
 
     def _get_page_sections(self, page_title: str) -> list[dict]:
         """Get sections from a Wikipedia page."""
-        params = {
+        params: dict[str, str | bool] = {
             "action": "query",
             "format": "json",
             "prop": "extracts",
@@ -228,7 +230,7 @@ class WikipediaTermExtractor:
         self, text: str, source_title: str, topic: str
     ) -> list[WikipediaFact]:
         """Extract atomic facts from text."""
-        facts = []
+        facts: list[WikipediaFact] = []
 
         if not text:
             return facts
@@ -426,7 +428,7 @@ class WikipediaTermExtractor:
         self, text: str, source_title: str, topic: str
     ) -> list[WikipediaTerm]:
         """Extract individual terms from text - kept for backward compatibility."""
-        terms = []
+        terms: list[WikipediaTerm] = []
 
         if not text:
             return terms

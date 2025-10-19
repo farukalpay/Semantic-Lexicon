@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import requests
 
@@ -35,7 +35,7 @@ class ConceptNode:
     depth: int
     relevance_score: float
     connections: set[str] = field(default_factory=set)
-    attributes: dict[str, any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=dict)
     wikipedia_categories: list[str] = field(default_factory=list)
 
 
@@ -91,8 +91,8 @@ class AdvancedWikipediaExtractor:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
         self.knowledge_graph = KnowledgeGraph()
-        self.visited_pages = set()
-        self.topic_categories = set()
+        self.visited_pages: set[str] = set()
+        self.topic_categories: set[str] = set()
 
     def build_knowledge_graph(self, topic: str) -> KnowledgeGraph:
         """Build a comprehensive knowledge graph for the topic."""
@@ -166,7 +166,7 @@ class AdvancedWikipediaExtractor:
 
     def _get_page_full_data(self, page_title: str) -> Optional[dict]:
         """Get comprehensive data about a Wikipedia page."""
-        params = {
+        params: dict[str, str | bool | int] = {
             "action": "query",
             "format": "json",
             "titles": page_title,
@@ -215,7 +215,7 @@ class AdvancedWikipediaExtractor:
 
     def _get_linked_pages(self, page_title: str) -> list[str]:
         """Get pages linked from this Wikipedia page."""
-        params = {
+        params: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "titles": page_title,
@@ -284,7 +284,7 @@ class AdvancedWikipediaExtractor:
 
     def _get_page_categories(self, page_title: str) -> list[str]:
         """Get categories for a Wikipedia page."""
-        params = {
+        params: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "titles": page_title,
@@ -327,7 +327,7 @@ class AdvancedWikipediaExtractor:
             terms.extend(re.findall(pattern, content, re.IGNORECASE))
 
         # Remove duplicates and return top terms
-        term_counts = {}
+        term_counts: dict[str, int] = {}
         for term in terms:
             term_lower = term.lower()
             term_counts[term_lower] = term_counts.get(term_lower, 0) + 1
@@ -386,7 +386,7 @@ class AdvancedWikipediaExtractor:
 
     def _search_wikipedia(self, query: str) -> Optional[str]:
         """Search Wikipedia and return the most relevant page title."""
-        params = {
+        params: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "list": "search",
@@ -400,14 +400,15 @@ class AdvancedWikipediaExtractor:
             data = response.json()
 
             if data.get("query", {}).get("search"):
-                return data["query"]["search"][0]["title"]
+                title = data["query"]["search"][0]["title"]
+                return str(title) if title else None
             return None
 
         except Exception as e:
             LOGGER.error(f"Wikipedia search failed for '{query}': {e}")
             return None
 
-    def get_relevant_concepts(self, topic: str, limit: int = 10) -> list[dict[str, any]]:
+    def get_relevant_concepts(self, topic: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get the most relevant concepts for a topic."""
         # Build knowledge graph if not already built
         if not self.knowledge_graph.nodes:
@@ -467,12 +468,12 @@ class TopicCoherenceManager:
 
         similarity = intersection / union if union > 0 else 0
 
-        return similarity > self.drift_threshold
+        return bool(similarity > self.drift_threshold)
 
     def filter_concepts(self, concepts: list[str], topic: str) -> list[str]:
         """Filter concepts to maintain topic coherence."""
         set(topic.lower().split())
-        filtered = []
+        filtered: list[str] = []
 
         for concept in concepts:
             if self.is_coherent(concept, [topic] + filtered):
