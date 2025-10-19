@@ -43,6 +43,13 @@ def test_validation_records_include_hierarchy_metadata() -> None:
         "virtual_power_plant_enrollment",
     )
     assert "real_time_grid_coordination" in energy_record.traits
+    kernel_record = next(record for record in records if record.domain == "linux_kernel_operations")
+    assert kernel_record.domain_path == (
+        "platform_engineering",
+        "linux_kernel_operations",
+        "ubuntu_kernel_lifecycle",
+    )
+    assert "kernel_reliability_engineering" in kernel_record.traits
 
 
 def test_cross_domain_validation_metrics() -> None:
@@ -63,6 +70,7 @@ def test_cross_domain_validation_metrics() -> None:
         "demand_response",
         "market_strategy",
         "grid_intelligence",
+        "linux_kernel_operations",
     ):
         assert metrics.domain_accuracy.get(domain, 0.0) >= 0.9
     assert metrics.hierarchy_accuracy.get("energy_systems > grid_operations", 0.0) >= 0.9
@@ -74,6 +82,16 @@ def test_cross_domain_validation_metrics() -> None:
         >= 0.9
     )
     assert metrics.trait_accuracy.get("real_time_grid_coordination", 0.0) >= 0.9
+    assert metrics.hierarchy_accuracy.get(
+        "platform_engineering > linux_kernel_operations",
+        0.0,
+    ) >= 0.9
+    assert metrics.hierarchy_accuracy.get(
+        "platform_engineering > linux_kernel_operations > ubuntu_kernel_lifecycle",
+        0.0,
+    ) >= 0.9
+    assert metrics.trait_accuracy.get("kernel_reliability_engineering", 0.0) >= 0.9
+    assert metrics.trait_accuracy.get("ubuntu_support_alignment", 0.0) >= 0.9
 
 
 def test_inference_benchmark_improvement() -> None:

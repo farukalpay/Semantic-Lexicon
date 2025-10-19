@@ -298,3 +298,35 @@
 {"text": "Detail troubleshooting steps for telemetry loss in demand response control rooms.", "intent": "troubleshooting"}
 {"text": "Detail troubleshooting steps for hydrogen blending controller alarms in compressor stations.", "intent": "troubleshooting"}
 {"text": "Recommend optimization levers that enhance market bids for distributed energy portfolios.", "intent": "recommendation"}
+{"text": "Define the structure of bacterial cells for introductory microbiology students.", "intent": "definition"}
+{"text": "Define quorum sensing and explain its role in bacterial communication.", "intent": "definition"}
+{"text": "Define the role of beneficial gut bacteria in human digestion.", "intent": "definition"}
+{"text": "Summarize the differences between nuclear fission and nuclear fusion for physics revision.", "intent": "summary"}
+{"text": "Summarize radiation safety protocols used in modern nuclear power plants.", "intent": "summary"}
+{"text": "Summarize how aircraft flight data recorders support accident investigations.", "intent": "summary"}
+{"text": "Outline major aerodynamic surfaces on a commercial airliner wing for maintenance teams.", "intent": "outline"}
+{"text": "Outline inspection checkpoints for jet engine turbine blades before long-haul flights.", "intent": "outline"}
+{"text": "Detail troubleshooting steps for contamination in a microbiology lab culture.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for cabin pressure alerts detected during cruise altitude.", "intent": "troubleshooting"}
+{"text": "Recommend iconic cultural sites to visit during a first trip to Paris.", "intent": "recommendation"}
+{"text": "Recommend family-friendly activities around Singapore's Marina Bay for weekend itineraries.", "intent": "recommendation"}
+{"text": "Summarize how Ubuntu manages initramfs generation when new kernel images are installed.", "intent": "summary"}
+{"text": "Outline the process for compiling a custom Ubuntu kernel with PREEMPT_RT patches.", "intent": "outline"}
+{"text": "Detail troubleshooting steps for resolving DKMS module rebuild failures after Ubuntu kernel updates.", "intent": "troubleshooting"}
+{"text": "Define the purpose of the Ubuntu kernel livepatch service for production fleets.", "intent": "definition"}
+{"text": "Recommend sysctl tuning practices that reduce network latency on Ubuntu LTS servers.", "intent": "recommendation"}
+{"text": "Summarize how Ubuntu backports Linux stable kernel updates into long-term support releases.", "intent": "summary"}
+{"text": "Outline the steps to enable Canonical Livepatch using the Ubuntu Advantage client on LTS nodes.", "intent": "outline"}
+{"text": "Detail troubleshooting steps for initramfs regeneration failures caused by missing firmware packages on Ubuntu servers.", "intent": "troubleshooting"}
+{"text": "Define the role of Ubuntu kernel ABI checks during package build pipelines.", "intent": "definition"}
+{"text": "Recommend kernel parameters that improve sequential disk throughput on Ubuntu storage hosts.", "intent": "recommendation"}
+{"text": "Define the escalation workflow for Ubuntu kernel crash dumps handled by kdump tools.", "intent": "definition"}
+{"text": "How should I enable ftrace tracing on Ubuntu servers for latency investigations?", "intent": "how_to"}
+{"text": "Recommend strategies for staging Canonical kernel updates across a fleet using Landscape.", "intent": "recommendation"}
+{"text": "Detail troubleshooting steps when Ubuntu Livepatch reports modules out of sync.", "intent": "troubleshooting"}
+{"text": "Summarize how Ubuntu integrates upstream Linux CVEs into security notices.", "intent": "summary"}
+{"text": "Define the responsibilities of the Ubuntu kernel SRU process before release.", "intent": "definition"}
+{"text": "How do I validate Ubuntu kernel builds with autopkgtest and QA certification suites?", "intent": "how_to"}
+{"text": "Recommend telemetry metrics to monitor kernel latency anomalies on Ubuntu hosts.", "intent": "recommendation"}
+{"text": "Outline the steps to stage Ubuntu kernel SRU validation gates for LTS releases.", "intent": "outline"}
+{"text": "Outline the steps for calibrating Ubuntu kernel crash dump retention policies.", "intent": "outline"}

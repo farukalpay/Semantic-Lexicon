@@ -6,3 +6,4 @@
 {"domain": "demand_response", "path": ["energy_systems", "demand_response"], "members": ["control_room_telemetry", "participant_communications"], "traits": ["real_time_grid_coordination", "customer_engagement"]}
 {"domain": "market_strategy", "path": ["energy_systems", "market_strategy"], "members": ["distributed_energy_bids", "ancillary_services_positioning"], "traits": ["market_participation", "low_carbon_transition"]}
 {"domain": "grid_intelligence", "path": ["energy_systems", "grid_intelligence"], "members": ["situational_awareness_dashboards", "grid_edge_signal_fusion"], "traits": ["data_driven_operations", "real_time_grid_coordination"]}
+{"domain": "linux_kernel_operations", "path": ["platform_engineering", "linux_kernel_operations"], "members": ["ubuntu_kernel_lifecycle", "canonical_livepatch_management", "kernel_observability_layers"], "traits": ["kernel_reliability_engineering", "ubuntu_support_alignment"]}

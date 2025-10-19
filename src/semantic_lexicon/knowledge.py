@@ -22,7 +22,6 @@ LOGGER = configure_logging(logger_name=__name__)
 
 FloatArray = NDArray[np.float64]
 
-
 @dataclass(frozen=True)
 class KnowledgeEdge:
     head: str
@@ -238,6 +237,7 @@ class KnowledgeNetwork:
         gates, _ = self._compute_anchor_gates(similarity, anchors)
         gates = np.nan_to_num(gates, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         gate_floor = max(min(self.config.anchor_gate_threshold, 1.0), 0.0)
+        anchor_mask: Optional[np.ndarray] = None
         if anchor_scores is not None and anchor_scores.size:
             scaled_scores = anchor_scores.copy()
             max_score = float(np.max(scaled_scores))
@@ -248,7 +248,15 @@ class KnowledgeNetwork:
                 gates = np.where(anchor_mask, gates * np.maximum(scaled_scores, gate_floor), 0.0)
             else:
                 gates = gates * np.maximum(scaled_scores, gate_floor)
-            topic_mask = np.logical_or(topic_mask, anchor_mask)
+            if anchor_mask is not None and np.any(anchor_mask):
+                topic_mask = np.asarray(anchor_mask, dtype=bool)
+                if self.adjacency is not None and self.adjacency.size:
+                    neighbour_mask = np.any(
+                        self.adjacency[np.where(anchor_mask)[0]] > 0, axis=0
+                    )
+                    topic_mask = np.logical_or(topic_mask, neighbour_mask)
+            else:
+                topic_mask = np.logical_or(topic_mask, anchor_mask)
         gates = np.where(gates > 0.0, gates, np.full_like(gates, 1e-6))
         collaboration_matrix = self._compute_collaboration_matrix(
             similarity,
@@ -773,6 +781,8 @@ class KnowledgeNetwork:
                 if not is_feasible(idx):
                     continue
                 delta_rel = float(gated_relevance[idx])
+                if delta_rel <= 1e-4 and not topic_mask[idx]:
+                    continue
                 candidate_cov = np.maximum(coverage_state, similarity[:, idx])
                 candidate_cov_sum = float(candidate_cov.sum())
                 delta_cov = (candidate_cov_sum - coverage_sum) / max(n, 1)
