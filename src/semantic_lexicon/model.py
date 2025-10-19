@@ -55,6 +55,7 @@ class NeuralSemanticModel:
             embeddings=self.embeddings,
             knowledge=self.knowledge_network,
             template_predictor=self.template_predictor,
+            enable_wikipedia=True,
         )
 
     # Training --------------------------------------------------------------------
@@ -164,6 +165,7 @@ class NeuralSemanticModel:
             embeddings=instance.embeddings,
             knowledge=instance.knowledge_network,
             template_predictor=instance.template_predictor,
+            enable_wikipedia=True,
         )
         return instance
 

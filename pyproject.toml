@@ -29,6 +29,7 @@ dependencies = [
     "typer>=0.13,<0.20",
     "PyYAML>=6.0,<7.0",
     "matplotlib>=3.8,<4.0",
+    "requests>=2.31,<3.0",
 ]
 
 [project.optional-dependencies]

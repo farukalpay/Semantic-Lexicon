@@ -24,6 +24,14 @@ from .training import Trainer, TrainerConfig
 from .utils import normalise_text, read_jsonl
 from .utils.clipboard import ClipboardError, get_clipboard_text
 
+try:
+    from .direct_qa_generator import DirectQAGenerator, EnhancedSentenceBuilder
+    DIRECT_QA_AVAILABLE = True
+except ImportError:
+    DIRECT_QA_AVAILABLE = False
+    DirectQAGenerator = None
+    EnhancedSentenceBuilder = None
+
 LOGGER = configure_logging(logger_name=__name__)
 
 DEFAULT_WORKSPACE = Path("artifacts")
@@ -451,6 +459,33 @@ def compliance_report(
     typer.echo(
         f"Wrote compliance report to {markdown_output} and {json_output}",
     )
+
+
+@app.command("answer")
+def answer(
+    prompt: str = typer.Argument(..., help="Question to answer using Wikipedia facts."),
+    mode: str = typer.Option("direct", help="Answer mode: 'direct' or 'enhanced'"),
+) -> None:
+    """Generate a direct, factual answer using Wikipedia information."""
+    
+    if not DIRECT_QA_AVAILABLE:
+        typer.secho("Direct Q&A module not available. Please check installation.", err=True)
+        raise typer.Exit(code=1)
+    
+    try:
+        if mode == "enhanced":
+            generator = EnhancedSentenceBuilder()
+            response = generator.build_response(prompt)
+        else:
+            generator = DirectQAGenerator()
+            response = generator.generate_answer(prompt)
+        
+        typer.echo(response)
+        
+    except Exception as e:
+        LOGGER.error(f"Failed to generate answer: {e}")
+        typer.secho(f"Error generating answer: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

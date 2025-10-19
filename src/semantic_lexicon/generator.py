@@ -28,6 +28,17 @@ from .template_learning import BalancedTutorPredictor
 from .templates import render_balanced_tutor_response
 from .utils import tokenize
 
+try:
+    from .wikipedia_extractor import WikipediaTermExtractor, KnowledgeAugmentedGenerator
+    from .advanced_wikipedia_extractor import AdvancedWikipediaExtractor, TopicCoherenceManager
+    WIKIPEDIA_AVAILABLE = True
+except ImportError:
+    WIKIPEDIA_AVAILABLE = False
+    WikipediaTermExtractor = None
+    KnowledgeAugmentedGenerator = None
+    AdvancedWikipediaExtractor = None
+    TopicCoherenceManager = None
+
 LOGGER = configure_logging(logger_name=__name__)
 
 
@@ -69,11 +80,8 @@ PMI_BONUS_CAP = 2.0
 PHRASE_LIMIT = 3
 LENGTH_BONUS = 0.05
 
-PHRASE_EXPANSIONS = {
-    "public speaking": ["practice routine", "feedback loops"],
-    "matrix multiplication": ["linear transformations", "dot products"],
-    "machine learning": ["supervised learning", "generalization error"],
-}
+# Dynamic phrase expansions - populated from Wikipedia
+PHRASE_EXPANSIONS = {}
 
 DEFAULT_FALLBACK_TOPICS = ["Key Insight", "Next Step", "Guiding Question"]
 
@@ -93,62 +101,8 @@ VERB_BLACKLIST = {
 }
 
 
-KEYWORD_FALLBACKS: dict[tuple[str, ...], list[str]] = {
-    ("python",): [
-        "schedule focused practice blocks",
-        "work through bite-sized python projects",
-        "review core syntax and standard library patterns",
-        "reflect on debugging takeaways",
-    ],
-    ("public", "speaking"): [
-        "practice short talks on camera",
-        "collect feedback from trusted listeners",
-        "rehearse transitions and openings",
-        "track energy and pacing cues",
-    ],
-    ("matrix", "multiplication"): [
-        "review the row-by-column rule",
-        "connect matrix products to linear transformations",
-        "practice multiplying 2x2 and 3x3 matrices",
-        "interpret column space changes",
-    ],
-    ("neural", "networks"): [
-        "contrast single-layer perceptrons with deeper architectures",
-        "trace the forward pass and backpropagation updates",
-        "explain why activation functions introduce non-linearity",
-        "monitor validation loss while tuning hyperparameters",
-    ],
-    ("machine", "learning"): [
-        "contrast supervised and unsupervised pipelines",
-        "track generalisation error on validation data",
-        "experiment with regularisation strength",
-        "audit feature importance",
-    ],
-    ("productive", "studying"): [
-        "design focus blocks with clear targets",
-        "batch similar study tasks together",
-        "schedule renewal breaks",
-        "log end-of-day reflections",
-    ],
-    ("photosynthesis",): [
-        "map light-dependent and light-independent stages",
-        "highlight the role of chlorophyll",
-        "trace energy conversion to glucose",
-        "connect photosynthesis to cellular respiration",
-    ],
-    ("research", "presentation"): [
-        "draft a clear narrative arc",
-        "storyboard slides around key findings",
-        "practice delivery with timed sections",
-        "prepare audience engagement prompts",
-    ],
-    ("gravitational", "potential", "energy"): [
-        "define reference height explicitly",
-        "illustrate energy transfer scenarios",
-        "compare gravitational and elastic potential energy",
-        "relate potential changes to work",
-    ],
-}
+# Dynamic keyword fallbacks - populated from Wikipedia
+KEYWORD_FALLBACKS: dict[tuple[str, ...], list[str]] = {}
 
 
 @dataclass
@@ -167,12 +121,86 @@ class PersonaGenerator:
         embeddings: Optional[GloVeEmbeddings] = None,
         knowledge: Optional[KnowledgeNetwork] = None,
         template_predictor: Optional[BalancedTutorPredictor] = None,
+        enable_wikipedia: bool = True,
     ) -> None:
         self.config = config or GeneratorConfig()
         self.embeddings = embeddings
         self.knowledge = knowledge
         self.template_predictor = template_predictor
+        
+        # Initialize Wikipedia augmentation if available
+        self.wikipedia_augmenter = None
+        self.advanced_extractor = None
+        self.topic_manager = None
+        if enable_wikipedia and WIKIPEDIA_AVAILABLE:
+            try:
+                self.wikipedia_augmenter = KnowledgeAugmentedGenerator()
+                self.advanced_extractor = AdvancedWikipediaExtractor()
+                self.topic_manager = TopicCoherenceManager()
+                LOGGER.info("Wikipedia augmentation enabled")
+            except Exception as e:
+                LOGGER.warning(f"Failed to enable Wikipedia augmentation: {e}")
 
+    def _build_dynamic_phrase_guidance(
+        self,
+        prompt: str,
+        tokens: Sequence[str],
+        prompt_vector: np.ndarray,
+        embeddings: Optional[GloVeEmbeddings],
+        knowledge: Optional[KnowledgeNetwork],
+    ) -> PhraseGuidance:
+        """Build phrase guidance using Wikipedia knowledge graph."""
+        # First try to get phrases from Wikipedia
+        if self.advanced_extractor:
+            try:
+                # Extract main topic from prompt
+                main_topic = self._extract_main_topic(prompt)
+                
+                # Build knowledge graph for the topic
+                concepts = self.advanced_extractor.get_relevant_concepts(main_topic, limit=20)
+                
+                # Filter for topic coherence
+                if self.topic_manager:
+                    concept_names = [c['name'] for c in concepts]
+                    coherent_concepts = self.topic_manager.filter_concepts(concept_names, main_topic)
+                else:
+                    coherent_concepts = [c['name'] for c in concepts[:10]]
+                
+                # Convert to phrases
+                phrases = []
+                for concept_name in coherent_concepts[:5]:
+                    # Clean up Wikipedia page titles
+                    clean_name = concept_name.replace('_', ' ')
+                    if '(' in clean_name:  # Remove disambiguation
+                        clean_name = clean_name.split('(')[0].strip()
+                    phrases.append(clean_name)
+                
+                if phrases:
+                    return PhraseGuidance(text="", phrases=phrases)
+                    
+            except Exception as e:
+                LOGGER.debug(f"Advanced Wikipedia extraction failed: {e}")
+        
+        # Fallback to original phrase building
+        return _build_phrase_guidance(tokens, prompt_vector, embeddings, knowledge)
+    
+    def _extract_main_topic(self, prompt: str) -> str:
+        """Extract the main topic from a prompt."""
+        # Remove common question words
+        prompt_lower = prompt.lower()
+        for word in ["explain", "what is", "what are", "how does", "how do", "why", "describe"]:
+            prompt_lower = prompt_lower.replace(word, "")
+        
+        # Clean up
+        topic = prompt_lower.strip().strip("?").strip()
+        
+        # If still too long, take first few words
+        words = topic.split()
+        if len(words) > 3:
+            topic = " ".join(words[:3])
+        
+        return topic if topic else "general topic"
+    
     def generate(
         self,
         prompt: str,
@@ -207,35 +235,47 @@ class PersonaGenerator:
         persona_vector = _match_dimensions(persona.vector, prompt_vector)
         semantic_vector = 0.6 * prompt_vector + 0.4 * persona_vector
         primary_intent = next(iter(intents_list), "general")
-        phrase_guidance = _build_phrase_guidance(
+        # Build dynamic phrase guidance using Wikipedia
+        phrase_guidance = self._build_dynamic_phrase_guidance(
+            prompt,
             tokens,
             semantic_vector,
             self.embeddings,
             self.knowledge,
         )
+        # Prioritize Wikipedia-based topics over template predictor
         topics: list[str] = []
         actions: list[str] = []
         predicted_intent: Optional[str] = None
-        if self.template_predictor is not None:
-            prediction = self.template_predictor.predict_variables(prompt)
-            predicted_intent = prediction.intent
-            topics = list(prediction.topics)
-            actions = list(prediction.actions)
-        if predicted_intent:
-            primary_intent = predicted_intent
-            if predicted_intent not in intents_list:
-                intents_list.insert(0, predicted_intent)
-        if not topics:
-            topics = _ensure_topics(tokens, phrase_guidance.phrases)
+        
+        # First, try to use Wikipedia-based phrases as topics
+        if phrase_guidance.phrases:
+            topics = phrase_guidance.phrases[:3]  # Use top 3 Wikipedia concepts
             actions = _actions_for_intent(primary_intent, len(topics))
-            topics = topics[: len(actions)]
         else:
-            limit = min(len(topics), len(actions)) if actions else 0
-            if not limit:
+            # Fall back to template predictor if no Wikipedia concepts
+            if self.template_predictor is not None:
+                prediction = self.template_predictor.predict_variables(prompt)
+                predicted_intent = prediction.intent
+                topics = list(prediction.topics)
+                actions = list(prediction.actions)
+            
+            if predicted_intent:
+                primary_intent = predicted_intent
+                if predicted_intent not in intents_list:
+                    intents_list.insert(0, predicted_intent)
+            
+            if not topics:
+                topics = _ensure_topics(tokens, phrase_guidance.phrases)
                 actions = _actions_for_intent(primary_intent, len(topics))
-                limit = min(len(topics), len(actions))
-            topics = topics[:limit]
-            actions = actions[:limit]
+                topics = topics[: len(actions)]
+            else:
+                limit = min(len(topics), len(actions)) if actions else 0
+                if not limit:
+                    actions = _actions_for_intent(primary_intent, len(topics))
+                    limit = min(len(topics), len(actions))
+                topics = topics[:limit]
+                actions = actions[:limit]
         if topics:
             base_line = render_balanced_tutor_response(
                 prompt=prompt,
@@ -258,6 +298,15 @@ class PersonaGenerator:
             )
         response = " ".join(response_parts)
         response = _personalise_response(response, persona)
+        
+        # Apply Wikipedia augmentation if available
+        if self.wikipedia_augmenter and not _is_structured_response(prompt):
+            try:
+                augmented_response = self.wikipedia_augmenter.generate_with_facts(prompt, response)
+                response = augmented_response
+            except Exception as e:
+                LOGGER.debug(f"Wikipedia augmentation failed, using base response: {e}")
+        
         return GenerationResult(
             response=response,
             intents=intents_list,
@@ -270,6 +319,17 @@ class PersonaGenerator:
 SECTION_TRIGGER = (
     "Return markdown with exactly these sections: ## Matrices, ## Composition, ## Results."
 )
+
+
+def _is_structured_response(prompt: str) -> bool:
+    """Check if the prompt requires a structured response that shouldn't be augmented."""
+    normalised_prompt = prompt.casefold()
+    return (
+        SECTION_TRIGGER in prompt or 
+        SECTION_TRIGGER.casefold() in normalised_prompt or
+        "return only" in normalised_prompt or
+        "output exactly" in normalised_prompt
+    )
 
 
 def _maybe_generate_structured_matrix_response(prompt: str) -> Optional[str]:
@@ -696,14 +756,8 @@ def _enumerate_phrase_candidates(
                 continue
             add_candidate(window, lemmas)
 
-    for base_phrase, expansions in PHRASE_EXPANSIONS.items():
-        base_tokens = tuple(tokenize(base_phrase))
-        if not _contains_sequence(tokens, base_tokens):
-            continue
-        for extra in expansions:
-            extra_tokens = tuple(tokenize(extra))
-            lemmas = tuple(_lemmatise_token(token) for token in extra_tokens)
-            add_candidate(extra_tokens, lemmas, tf_override=1)
+    # Dynamic phrase expansions from Wikipedia (if available)
+    # This section is now handled by _build_dynamic_phrase_guidance
     return list(seen.values())
 
 
@@ -1037,12 +1091,24 @@ def _candidate_from_phrase(
 
 
 def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...]]:
+    """Generate dynamic fallback concepts based on the prompt tokens."""
     prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
     prompt_tokens -= STOPWORDS
-    for keywords, suggestions in KEYWORD_FALLBACKS.items():
-        if set(keywords).issubset(prompt_tokens):
-            return suggestions, keywords
-    return [], ()
+    
+    # Generate basic fallback suggestions based on the tokens
+    suggestions = []
+    
+    # Create generic learning-focused suggestions
+    if prompt_tokens:
+        main_concept = max(prompt_tokens, key=len) if prompt_tokens else "topic"
+        suggestions = [
+            f"understand the fundamentals of {main_concept}",
+            f"explore practical applications of {main_concept}",
+            f"review key principles in {main_concept}",
+            f"practice core concepts of {main_concept}"
+        ]
+    
+    return suggestions[:4] if suggestions else [], ()
 
 
 def _filter_concepts_by_prompt(
