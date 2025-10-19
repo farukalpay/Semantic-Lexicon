@@ -29,6 +29,7 @@ USER_AGENT = "SemanticLexicon/2.0 (https://github.com/semantic-lexicon)"
 @dataclass
 class ConceptNode:
     """Represents a concept in the knowledge graph."""
+
     name: str
     source_page: str
     depth: int
@@ -41,6 +42,7 @@ class ConceptNode:
 @dataclass
 class KnowledgeGraph:
     """Dynamic knowledge graph built from Wikipedia."""
+
     nodes: dict[str, ConceptNode] = field(default_factory=dict)
     edges: list[tuple[str, str, float]] = field(default_factory=list)
     topic_centroid: Optional[np.ndarray] = None
@@ -128,33 +130,33 @@ class AdvancedWikipediaExtractor:
             return
 
         # Create node for this concept
-        relevance = parent_relevance * (0.8 ** depth)  # Decay relevance with depth
+        relevance = parent_relevance * (0.8**depth)  # Decay relevance with depth
         node = ConceptNode(
             name=page_title,
             source_page=page_title,
             depth=depth,
             relevance_score=relevance,
-            wikipedia_categories=page_data.get('categories', [])
+            wikipedia_categories=page_data.get("categories", []),
         )
 
         # Extract attributes from page
-        node.attributes['summary'] = page_data.get('summary', '')
-        node.attributes['key_terms'] = self._extract_key_terms(page_data.get('content', ''))
+        node.attributes["summary"] = page_data.get("summary", "")
+        node.attributes["key_terms"] = self._extract_key_terms(page_data.get("content", ""))
 
         self.knowledge_graph.add_node(node)
 
         # Store categories for topic coherence
         if depth == 0:
-            self.topic_categories.update(page_data.get('categories', []))
+            self.topic_categories.update(page_data.get("categories", []))
 
         # Get linked pages
         linked_pages = self._get_linked_pages(page_title)
 
         # Score and filter linked pages
-        scored_links = self._score_linked_pages(linked_pages, page_data.get('categories', []))
+        scored_links = self._score_linked_pages(linked_pages, page_data.get("categories", []))
 
         # Explore top linked pages
-        for _i, (link_title, link_score) in enumerate(scored_links[:self.max_pages_per_level]):
+        for _i, (link_title, link_score) in enumerate(scored_links[: self.max_pages_per_level]):
             if link_title not in self.visited_pages:
                 # Add edge
                 self.knowledge_graph.add_edge(page_title, link_title, link_score)
@@ -172,7 +174,7 @@ class AdvancedWikipediaExtractor:
             "exintro": True,
             "explaintext": True,
             "cllimit": 20,
-            "pllimit": 50
+            "pllimit": 50,
         }
 
         try:
@@ -188,23 +190,23 @@ class AdvancedWikipediaExtractor:
 
             # Extract categories
             categories = [
-                cat.get('title', '').replace('Category:', '')
-                for cat in page_data.get('categories', [])
+                cat.get("title", "").replace("Category:", "")
+                for cat in page_data.get("categories", [])
             ]
 
             # Extract links
             links = [
-                link.get('title', '')
-                for link in page_data.get('links', [])
-                if not link.get('title', '').startswith(('Template:', 'Help:', 'Wikipedia:'))
+                link.get("title", "")
+                for link in page_data.get("links", [])
+                if not link.get("title", "").startswith(("Template:", "Help:", "Wikipedia:"))
             ]
 
             return {
-                'title': page_data.get('title', ''),
-                'summary': page_data.get('extract', '')[:500],
-                'content': page_data.get('extract', ''),
-                'categories': categories,
-                'links': links
+                "title": page_data.get("title", ""),
+                "summary": page_data.get("extract", "")[:500],
+                "content": page_data.get("extract", ""),
+                "categories": categories,
+                "links": links,
             }
 
         except Exception as e:
@@ -218,7 +220,7 @@ class AdvancedWikipediaExtractor:
             "format": "json",
             "titles": page_title,
             "prop": "links",
-            "pllimit": 100
+            "pllimit": 100,
         }
 
         try:
@@ -231,16 +233,16 @@ class AdvancedWikipediaExtractor:
                 return []
 
             page_data = next(iter(pages.values()))
-            links = page_data.get('links', [])
+            links = page_data.get("links", [])
 
             # Filter out meta pages
             filtered_links = [
-                link.get('title', '')
+                link.get("title", "")
                 for link in links
-                if not link.get('title', '').startswith((
-                    'Template:', 'Help:', 'Wikipedia:', 'File:', 'Category:'
-                ))
-                and not link.get('title', '').endswith(' (disambiguation)')
+                if not link.get("title", "").startswith(
+                    ("Template:", "Help:", "Wikipedia:", "File:", "Category:")
+                )
+                and not link.get("title", "").endswith(" (disambiguation)")
             ]
 
             return filtered_links[:50]  # Limit to top 50 links
@@ -287,7 +289,7 @@ class AdvancedWikipediaExtractor:
             "format": "json",
             "titles": page_title,
             "prop": "categories",
-            "cllimit": 10
+            "cllimit": 10,
         }
 
         try:
@@ -301,8 +303,8 @@ class AdvancedWikipediaExtractor:
 
             page_data = next(iter(pages.values()))
             categories = [
-                cat.get('title', '').replace('Category:', '')
-                for cat in page_data.get('categories', [])
+                cat.get("title", "").replace("Category:", "")
+                for cat in page_data.get("categories", [])
             ]
 
             return categories
@@ -313,12 +315,12 @@ class AdvancedWikipediaExtractor:
     def _extract_key_terms(self, content: str) -> list[str]:
         """Extract key technical terms from content."""
         # Extract capitalized phrases (likely proper nouns/technical terms)
-        terms = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', content)
+        terms = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b", content)
 
         # Extract terms with specific patterns
         technical_patterns = [
-            r'\b\w+(?:ation|ization|ment|ance|ence|ity|ism|ology|graphy)\b',
-            r'\b\w+(?:neural|network|algorithm|model|system|theory)\b',
+            r"\b\w+(?:ation|ization|ment|ance|ence|ity|ism|ology|graphy)\b",
+            r"\b\w+(?:neural|network|algorithm|model|system|theory)\b",
         ]
 
         for pattern in technical_patterns:
@@ -367,7 +369,8 @@ class AdvancedWikipediaExtractor:
     def _prune_graph(self, min_relevance: float = 0.1):
         """Remove nodes with low relevance scores."""
         nodes_to_remove = [
-            name for name, node in self.knowledge_graph.nodes.items()
+            name
+            for name, node in self.knowledge_graph.nodes.items()
             if node.relevance_score < min_relevance
         ]
 
@@ -388,7 +391,7 @@ class AdvancedWikipediaExtractor:
             "format": "json",
             "list": "search",
             "srsearch": query,
-            "srlimit": 1
+            "srlimit": 1,
         }
 
         try:
@@ -412,21 +415,21 @@ class AdvancedWikipediaExtractor:
 
         # Sort nodes by relevance
         sorted_nodes = sorted(
-            self.knowledge_graph.nodes.values(),
-            key=lambda x: x.relevance_score,
-            reverse=True
+            self.knowledge_graph.nodes.values(), key=lambda x: x.relevance_score, reverse=True
         )
 
         # Convert to output format
         concepts = []
         for node in sorted_nodes[:limit]:
-            concepts.append({
-                'name': node.name,
-                'relevance': node.relevance_score,
-                'depth': node.depth,
-                'key_terms': node.attributes.get('key_terms', []),
-                'connections': list(node.connections)[:5]
-            })
+            concepts.append(
+                {
+                    "name": node.name,
+                    "relevance": node.relevance_score,
+                    "depth": node.depth,
+                    "key_terms": node.attributes.get("key_terms", []),
+                    "connections": list(node.connections)[:5],
+                }
+            )
 
         return concepts
 
@@ -451,7 +454,7 @@ class TopicCoherenceManager:
             context_words.update(context_item.lower().split())
 
         # Remove common words
-        common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'}
+        common_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for"}
         new_words -= common_words
         context_words -= common_words
 

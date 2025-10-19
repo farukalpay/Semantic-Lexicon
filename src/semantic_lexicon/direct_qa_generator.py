@@ -121,7 +121,7 @@ class DirectQAGenerator:
             if match:
                 topic = match.group(1).strip()
                 # Clean up common artifacts
-                topic = re.sub(r'\b(the|a|an)\b', '', topic).strip()
+                topic = re.sub(r"\b(the|a|an)\b", "", topic).strip()
                 if topic:
                     break
 
@@ -129,20 +129,41 @@ class DirectQAGenerator:
         if not topic:
             # Remove question words and auxiliary verbs
             words_to_remove = [
-                "explain", "what", "how", "why", "when", "who", "which", "where",
-                "describe", "tell", "me", "about", "is", "are", "was", "were",
-                "do", "does", "did", "can", "could", "would", "should", "will"
+                "explain",
+                "what",
+                "how",
+                "why",
+                "when",
+                "who",
+                "which",
+                "where",
+                "describe",
+                "tell",
+                "me",
+                "about",
+                "is",
+                "are",
+                "was",
+                "were",
+                "do",
+                "does",
+                "did",
+                "can",
+                "could",
+                "would",
+                "should",
+                "will",
             ]
             cleaned = prompt_lower
             for word in words_to_remove:
-                cleaned = re.sub(r'\b' + word + r'\b', '', cleaned)
+                cleaned = re.sub(r"\b" + word + r"\b", "", cleaned)
 
             # Clean up and extract the core topic
             topic = cleaned.strip().strip("?.,!").strip()
 
             # If still empty, try to extract any noun-like phrase
             if not topic:
-                noun_match = re.search(r'\b([a-z]+(?:\s+[a-z]+){0,2})\b', prompt_lower)
+                noun_match = re.search(r"\b([a-z]+(?:\s+[a-z]+){0,2})\b", prompt_lower)
                 if noun_match:
                     candidate = noun_match.group(1)
                     if candidate not in words_to_remove:
@@ -202,8 +223,7 @@ class DirectQAGenerator:
             fact = fact_groups["definitions"][0]
             template = random.choice(DEFINITION_TEMPLATES)
             definition_sentence = template.format(
-                topic=topic.capitalize(),
-                definition=self._naturalize_phrase(fact.object)
+                topic=topic.capitalize(), definition=self._naturalize_phrase(fact.object)
             )
             paragraphs.append(definition_sentence)
         else:
@@ -228,13 +248,12 @@ class DirectQAGenerator:
                     topic=topic,
                     enables="enables",
                     enable="enable",
-                    capability=unique_capabilities[0]
+                    capability=unique_capabilities[0],
                 )
                 paragraphs.append(cap_sentence)
             elif len(unique_capabilities) >= 2:
                 cap_sentence = (
-                    f"This enables both {unique_capabilities[0]} and "
-                    f"{unique_capabilities[1]}."
+                    f"This enables both {unique_capabilities[0]} and {unique_capabilities[1]}."
                 )
                 paragraphs.append(cap_sentence)
 
@@ -265,7 +284,7 @@ class DirectQAGenerator:
     def _naturalize_phrase(self, phrase: str) -> str:
         """Convert a phrase to more natural language."""
         # Remove excess whitespace
-        phrase = re.sub(r'\s+', ' ', phrase).strip()
+        phrase = re.sub(r"\s+", " ", phrase).strip()
 
         # Handle common patterns
         if phrase.endswith("ing") and len(phrase) > 10:
@@ -273,7 +292,7 @@ class DirectQAGenerator:
             return phrase
 
         # Make sure it doesn't start with 'a' or 'an' redundantly
-        phrase = re.sub(r'^(a|an)\s+(a|an)\s+', r'\1 ', phrase, flags=re.IGNORECASE)
+        phrase = re.sub(r"^(a|an)\s+(a|an)\s+", r"\1 ", phrase, flags=re.IGNORECASE)
 
         return phrase
 
@@ -295,8 +314,7 @@ class DirectQAGenerator:
         definitions = [t for t in terms if t.context == "definition"]
         if definitions:
             sentences.append(
-                f"To understand how {topic} works, note that it is "
-                f"{definitions[0].term}."
+                f"To understand how {topic} works, note that it is {definitions[0].term}."
             )
 
         # Add process-related terms
@@ -311,8 +329,9 @@ class DirectQAGenerator:
             sentences.append(f"This typically operates at scales of {quantities[0].term}.")
 
         return (
-            " ".join(sentences) if sentences else
-            f"The mechanism of {topic} requires detailed technical explanation."
+            " ".join(sentences)
+            if sentences
+            else f"The mechanism of {topic} requires detailed technical explanation."
         )
 
     def _build_why_answer(self, topic: str, terms: list[WikipediaTerm]) -> str:
@@ -328,8 +347,7 @@ class DirectQAGenerator:
         years = [t for t in terms if t.context == "year"]
         if years:
             sentences.append(
-                f"It was developed in {years[0].term} to address specific "
-                f"computational needs."
+                f"It was developed in {years[0].term} to address specific computational needs."
             )
 
         # Add benefits from technical terms
@@ -339,8 +357,9 @@ class DirectQAGenerator:
             sentences.append(f"It enables {' and '.join(benefits)}.")
 
         return (
-            " ".join(sentences) if sentences else
-            f"The rationale for {topic} stems from practical needs."
+            " ".join(sentences)
+            if sentences
+            else f"The rationale for {topic} stems from practical needs."
         )
 
     def _build_how_answer_from_facts(self, topic: str, fact_groups: dict) -> str:
@@ -359,8 +378,7 @@ class DirectQAGenerator:
         # Explain the mechanism through capabilities
         if fact_groups["capabilities"]:
             capabilities = [
-                self._naturalize_phrase(f.object)
-                for f in fact_groups["capabilities"][:3]
+                self._naturalize_phrase(f.object) for f in fact_groups["capabilities"][:3]
             ]
             if len(capabilities) == 1:
                 paragraphs.append(f"The mechanism works by enabling {capabilities[0]}.")
@@ -378,8 +396,7 @@ class DirectQAGenerator:
         # Add any technical context
         if not fact_groups["capabilities"] and not fact_groups["composition"]:
             paragraphs.append(
-                f"The specific workings of {topic} depend on the "
-                f"implementation context."
+                f"The specific workings of {topic} depend on the implementation context."
             )
 
         return " ".join(paragraphs)
@@ -399,8 +416,7 @@ class DirectQAGenerator:
         # Explain benefits through capabilities
         if fact_groups["capabilities"]:
             capabilities = [
-                self._naturalize_phrase(f.object)
-                for f in fact_groups["capabilities"][:2]
+                self._naturalize_phrase(f.object) for f in fact_groups["capabilities"][:2]
             ]
             if capabilities:
                 reason = f"This is important because it enables {self._format_list(capabilities)}."
@@ -412,8 +428,7 @@ class DirectQAGenerator:
             if fact_groups["attribution"]:
                 creator = fact_groups["attribution"][0].object
                 paragraphs.append(
-                    f"It was developed in {year} by {creator} to address "
-                    f"emerging needs."
+                    f"It was developed in {year} by {creator} to address emerging needs."
                 )
             else:
                 paragraphs.append(f"It emerged in {year} to solve specific challenges of that era.")
@@ -421,8 +436,7 @@ class DirectQAGenerator:
         # If we don't have much info, provide generic reasoning
         if len(paragraphs) == 0:
             paragraphs.append(
-                f"The rationale for {topic} comes from practical requirements "
-                f"in the field."
+                f"The rationale for {topic} comes from practical requirements in the field."
             )
 
         return " ".join(paragraphs)
@@ -450,13 +464,11 @@ class DirectQAGenerator:
             if fact_groups["attribution"]:
                 creator = fact_groups["attribution"][0].object
                 paragraphs.append(
-                    f"While the exact date is unclear, {topic} is associated "
-                    f"with {creator}."
+                    f"While the exact date is unclear, {topic} is associated with {creator}."
                 )
             else:
                 paragraphs.append(
-                    f"The specific timeline for {topic} would require more "
-                    f"historical context."
+                    f"The specific timeline for {topic} would require more historical context."
                 )
 
         return " ".join(paragraphs)
@@ -484,13 +496,11 @@ class DirectQAGenerator:
             if fact_groups["temporal"]:
                 year = fact_groups["temporal"][0].object
                 paragraphs.append(
-                    f"While {topic} emerged around {year}, specific attribution "
-                    f"is unclear."
+                    f"While {topic} emerged around {year}, specific attribution is unclear."
                 )
             else:
                 paragraphs.append(
-                    f"The specific creators of {topic} would require more "
-                    f"historical research."
+                    f"The specific creators of {topic} would require more historical research."
                 )
 
         return " ".join(paragraphs)

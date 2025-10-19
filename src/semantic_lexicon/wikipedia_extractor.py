@@ -27,6 +27,7 @@ USER_AGENT = "SemanticLexicon/1.0 (https://github.com/semantic-lexicon)"
 @dataclass
 class WikipediaTerm:
     """Represents an extracted term from Wikipedia."""
+
     term: str
     context: str  # The type of information (definition, date, number, etc.)
     source_title: str
@@ -36,6 +37,7 @@ class WikipediaTerm:
 @dataclass
 class WikipediaFact:
     """Represents an atomic fact extracted from Wikipedia."""
+
     subject: str
     predicate: str
     object: str
@@ -86,7 +88,7 @@ class WikipediaTermExtractor:
             "format": "json",
             "list": "search",
             "srsearch": query,
-            "srlimit": 1
+            "srlimit": 1,
         }
 
         try:
@@ -117,9 +119,7 @@ class WikipediaTermExtractor:
         sections = self._get_page_sections(page_title)
         for section in sections[:3]:  # Limit to first 3 sections
             section_terms = self._extract_terms_from_text(
-                section.get("text", ""),
-                page_title,
-                original_topic
+                section.get("text", ""), page_title, original_topic
             )
             terms.extend(section_terms)
 
@@ -148,7 +148,7 @@ class WikipediaTermExtractor:
             "titles": page_title,
             "exintro": False,
             "explaintext": True,
-            "exsectionformat": "plain"
+            "exsectionformat": "plain",
         }
 
         try:
@@ -218,9 +218,7 @@ class WikipediaTermExtractor:
         sections = self._get_page_sections(page_title)
         for section in sections[:3]:
             section_facts = self._extract_facts_from_text(
-                section.get("text", ""),
-                page_title,
-                topic
+                section.get("text", ""), page_title, topic
             )
             facts.extend(section_facts)
 
@@ -235,8 +233,8 @@ class WikipediaTermExtractor:
         if not text:
             return facts
 
-        sentences = text.split('.')
-        topic_normalized = topic.lower().replace('_', ' ')
+        sentences = text.split(".")
+        topic_normalized = topic.lower().replace("_", " ")
 
         for sentence in sentences[:10]:
             sentence = sentence.strip()
@@ -248,9 +246,9 @@ class WikipediaTermExtractor:
                 # Try to capture the full definition
                 # First, try to get everything up to a period
                 for pattern in [
-                    r'([^,]+?)\s+is\s+an?\s+([^\.]+)',  # Everything until period
+                    r"([^,]+?)\s+is\s+an?\s+([^\.]+)",  # Everything until period
                     # Until conjunction
-                    r'([^,]+?)\s+is\s+an?\s+([^,]+?)(?:,\s*(?:which|that|and))',
+                    r"([^,]+?)\s+is\s+an?\s+([^,]+?)(?:,\s*(?:which|that|and))",
                 ]:
                     match = re.search(pattern, sentence, re.IGNORECASE)
                     if match:
@@ -260,7 +258,7 @@ class WikipediaTermExtractor:
                         # Only use if the subject is relevant to our topic
                         if (
                             topic_normalized in subject.lower()
-                            or subject.lower() in ['it', 'this']
+                            or subject.lower() in ["it", "this"]
                             or len(subject.split()) <= 3
                         ):
                             # Clean and validate the object
@@ -269,28 +267,32 @@ class WikipediaTermExtractor:
                             # Make sure we got a meaningful definition
                             # At least 3 words for a meaningful definition
                             if len(clean_obj.split()) >= 3:
-                                facts.append(WikipediaFact(
-                                    subject=self._clean_subject(subject, topic),
-                                    predicate="is_type_of",
-                                    object=clean_obj,
-                                    context="definition",
-                                    confidence=0.95,
-                                    source_title=source_title
-                                ))
+                                facts.append(
+                                    WikipediaFact(
+                                        subject=self._clean_subject(subject, topic),
+                                        predicate="is_type_of",
+                                        object=clean_obj,
+                                        context="definition",
+                                        confidence=0.95,
+                                        source_title=source_title,
+                                    )
+                                )
                                 break
 
             # Extract "refers to" facts
             if "refers to" in sentence:
-                match = re.search(r'([^,]+?)\s+refers to\s+([^,\.]+)', sentence, re.IGNORECASE)
+                match = re.search(r"([^,]+?)\s+refers to\s+([^,\.]+)", sentence, re.IGNORECASE)
                 if match:
-                    facts.append(WikipediaFact(
-                        subject=self._clean_subject(match.group(1).strip(), topic),
-                        predicate="refers_to",
-                        object=self._clean_object(match.group(2).strip()),
-                        context="definition",
-                        confidence=0.9,
-                        source_title=source_title
-                    ))
+                    facts.append(
+                        WikipediaFact(
+                            subject=self._clean_subject(match.group(1).strip(), topic),
+                            predicate="refers_to",
+                            object=self._clean_object(match.group(2).strip()),
+                            context="definition",
+                            confidence=0.9,
+                            source_title=source_title,
+                        )
+                    )
 
             # Extract capability facts - capture complete capabilities
             if any(
@@ -298,10 +300,10 @@ class WikipediaTermExtractor:
                 for word in ["can", "enables", "allows", "used to", "used for"]
             ):
                 patterns = [
-                    r'([^,]+?)\s+can\s+([^\.]+)',  # Full capability until period
-                    r'([^,]+?)\s+enables\s+([^\.]+)',
-                    r'([^,]+?)\s+allows\s+([^\.]+)',
-                    r'([^,]+?)\s+(?:is|are)\s+used\s+(?:to|for)\s+([^\.]+)',
+                    r"([^,]+?)\s+can\s+([^\.]+)",  # Full capability until period
+                    r"([^,]+?)\s+enables\s+([^\.]+)",
+                    r"([^,]+?)\s+allows\s+([^\.]+)",
+                    r"([^,]+?)\s+(?:is|are)\s+used\s+(?:to|for)\s+([^\.]+)",
                 ]
 
                 for pattern in patterns:
@@ -314,83 +316,91 @@ class WikipediaTermExtractor:
                         if len(capability.split()) >= 2:  # At least 2 words
                             # Avoid duplicate capabilities
                             if not any(
-                                f.object == capability
-                                for f in facts if f.predicate == "enables"
+                                f.object == capability for f in facts if f.predicate == "enables"
                             ):
-                                facts.append(WikipediaFact(
-                                    subject=subject,
-                                    predicate="enables",
-                                    object=capability,
-                                    context="capability",
-                                    confidence=0.85,
-                                    source_title=source_title
-                                ))
+                                facts.append(
+                                    WikipediaFact(
+                                        subject=subject,
+                                        predicate="enables",
+                                        object=capability,
+                                        context="capability",
+                                        confidence=0.85,
+                                        source_title=source_title,
+                                    )
+                                )
                             break
 
             # Extract composition facts
             if "consists of" in sentence or "composed of" in sentence or "includes" in sentence:
-                for pattern in [r'([^,]+?)\s+consists of\s+([^\.]+)',
-                               r'([^,]+?)\s+composed of\s+([^\.]+)',
-                               r'([^,]+?)\s+includes\s+([^\.]+)']:
+                for pattern in [
+                    r"([^,]+?)\s+consists of\s+([^\.]+)",
+                    r"([^,]+?)\s+composed of\s+([^\.]+)",
+                    r"([^,]+?)\s+includes\s+([^\.]+)",
+                ]:
                     match = re.search(pattern, sentence, re.IGNORECASE)
                     if match:
-                        facts.append(WikipediaFact(
-                            subject=self._clean_subject(match.group(1).strip(), topic),
-                            predicate="composed_of",
-                            object=self._clean_object(match.group(2).strip()),
-                            context="structure",
-                            confidence=0.85,
-                            source_title=source_title
-                        ))
+                        facts.append(
+                            WikipediaFact(
+                                subject=self._clean_subject(match.group(1).strip(), topic),
+                                predicate="composed_of",
+                                object=self._clean_object(match.group(2).strip()),
+                                context="structure",
+                                confidence=0.85,
+                                source_title=source_title,
+                            )
+                        )
                         break
 
             # Extract temporal facts
-            year_match = re.search(r'in\s+(1[0-9]{3}|20[0-2][0-9])', sentence)
+            year_match = re.search(r"in\s+(1[0-9]{3}|20[0-2][0-9])", sentence)
             if year_match:
                 year = year_match.group(1)
                 # Look for what happened in that year
                 if "introduced" in sentence or "developed" in sentence or "created" in sentence:
-                    facts.append(WikipediaFact(
-                        subject=topic,
-                        predicate="developed_in",
-                        object=year,
-                        context="temporal",
-                        confidence=0.9,
-                        source_title=source_title
-                    ))
+                    facts.append(
+                        WikipediaFact(
+                            subject=topic,
+                            predicate="developed_in",
+                            object=year,
+                            context="temporal",
+                            confidence=0.9,
+                            source_title=source_title,
+                        )
+                    )
 
             # Extract inventor/creator facts
             by_match = re.search(
-                r'(?:developed|created|introduced|designed)\s+by\s+([A-Z][^,\.]+)',
-                sentence
+                r"(?:developed|created|introduced|designed)\s+by\s+([A-Z][^,\.]+)", sentence
             )
             if by_match:
                 creator = by_match.group(1).strip()
-                facts.append(WikipediaFact(
-                    subject=topic,
-                    predicate="created_by",
-                    object=creator,
-                    context="attribution",
-                    confidence=0.85,
-                    source_title=source_title
-                ))
+                facts.append(
+                    WikipediaFact(
+                        subject=topic,
+                        predicate="created_by",
+                        object=creator,
+                        context="attribution",
+                        confidence=0.85,
+                        source_title=source_title,
+                    )
+                )
 
         return facts
 
     def _clean_subject(self, subject: str, topic: str) -> str:
         """Clean and normalize subject string."""
         # Remove articles
-        subject = re.sub(r'^(the|a|an)\s+', '', subject, flags=re.IGNORECASE)
+        subject = re.sub(r"^(the|a|an)\s+", "", subject, flags=re.IGNORECASE)
         # If subject is a pronoun or too generic, use the topic
-        if subject.lower() in ['it', 'this', 'that', 'they', 'these', 'those']:
+        if subject.lower() in ["it", "this", "that", "they", "these", "those"]:
             return topic
         return subject.strip()
 
     def _clean_object(self, obj: str) -> str:
         """Clean and normalize object string."""
         # Remove articles and clean up
-        obj = re.sub(r'^(the|a|an)\s+', '', obj, flags=re.IGNORECASE)
-        obj = re.sub(r'\s+', ' ', obj)
+        obj = re.sub(r"^(the|a|an)\s+", "", obj, flags=re.IGNORECASE)
+        obj = re.sub(r"\s+", " ", obj)
 
         # Try to preserve complete phrases by looking for sentence endings
         # Don't cut in the middle of a thought
@@ -400,15 +410,15 @@ class WikipediaTermExtractor:
             for i in range(10, min(15, len(words))):
                 word = words[i]
                 # If we find a conjunction or preposition, break before it
-                if word.lower() in ['and', 'or', 'but', 'which', 'that', 'with', 'for']:
-                    obj = ' '.join(words[:i])
+                if word.lower() in ["and", "or", "but", "which", "that", "with", "for"]:
+                    obj = " ".join(words[:i])
                     break
             else:
                 # If no natural break, take first 15 words
-                obj = ' '.join(words[:15])
+                obj = " ".join(words[:15])
 
         # Ensure it doesn't end mid-phrase
-        obj = re.sub(r'\s+(of|the|a|an|in|on|at|to|for)$', '', obj)
+        obj = re.sub(r"\s+(of|the|a|an|in|on|at|to|for)$", "", obj)
 
         return obj.strip()
 
@@ -428,26 +438,32 @@ class WikipediaTermExtractor:
         # Convert some facts to terms for backward compatibility
         for fact in facts[:5]:
             if fact.context == "definition":
-                terms.append(WikipediaTerm(
-                    term=fact.object,
-                    context="definition",
-                    source_title=source_title,
-                    confidence=fact.confidence
-                ))
+                terms.append(
+                    WikipediaTerm(
+                        term=fact.object,
+                        context="definition",
+                        source_title=source_title,
+                        confidence=fact.confidence,
+                    )
+                )
             elif fact.predicate == "developed_in":
-                terms.append(WikipediaTerm(
-                    term=fact.object,
-                    context="year",
-                    source_title=source_title,
-                    confidence=fact.confidence
-                ))
+                terms.append(
+                    WikipediaTerm(
+                        term=fact.object,
+                        context="year",
+                        source_title=source_title,
+                        confidence=fact.confidence,
+                    )
+                )
             elif fact.predicate == "created_by":
-                terms.append(WikipediaTerm(
-                    term=fact.object,
-                    context="entity",
-                    source_title=source_title,
-                    confidence=fact.confidence
-                ))
+                terms.append(
+                    WikipediaTerm(
+                        term=fact.object,
+                        context="entity",
+                        source_title=source_title,
+                        confidence=fact.confidence,
+                    )
+                )
 
         return terms
 
@@ -494,14 +510,13 @@ class KnowledgeAugmentedGenerator:
             if word in ["explain", "what", "define", "describe"] and i + 1 < len(words):
                 # The next word(s) might be the topic
                 if i + 2 < len(words):
-                    potential_topic = f"{words[i+1]} {words[i+2]}"
+                    potential_topic = f"{words[i + 1]} {words[i + 2]}"
                     if not any(
-                        w in ["is", "are", "the", "a", "an"]
-                        for w in [words[i+1], words[i+2]]
+                        w in ["is", "are", "the", "a", "an"] for w in [words[i + 1], words[i + 2]]
                     ):
                         topics.append(potential_topic)
                 else:
-                    topics.append(words[i+1])
+                    topics.append(words[i + 1])
 
         return topics[:3]  # Limit to 3 topics
 
@@ -516,7 +531,7 @@ class KnowledgeAugmentedGenerator:
             if "This ties closely to" in augmented:
                 augmented = augmented.replace(
                     "This ties closely to",
-                    f"This relates to {best_def.term}, which ties closely to"
+                    f"This relates to {best_def.term}, which ties closely to",
                 )
 
         # Add years for historical context

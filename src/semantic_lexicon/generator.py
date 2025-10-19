@@ -31,6 +31,7 @@ from .utils import tokenize
 try:
     from .advanced_wikipedia_extractor import AdvancedWikipediaExtractor, TopicCoherenceManager
     from .wikipedia_extractor import KnowledgeAugmentedGenerator, WikipediaTermExtractor
+
     WIKIPEDIA_AVAILABLE = True
 except ImportError:
     WIKIPEDIA_AVAILABLE = False
@@ -161,20 +162,20 @@ class PersonaGenerator:
 
                 # Filter for topic coherence
                 if self.topic_manager:
-                    concept_names = [c['name'] for c in concepts]
+                    concept_names = [c["name"] for c in concepts]
                     coherent_concepts = self.topic_manager.filter_concepts(
                         concept_names, main_topic
                     )
                 else:
-                    coherent_concepts = [c['name'] for c in concepts[:10]]
+                    coherent_concepts = [c["name"] for c in concepts[:10]]
 
                 # Convert to phrases
                 phrases = []
                 for concept_name in coherent_concepts[:5]:
                     # Clean up Wikipedia page titles
-                    clean_name = concept_name.replace('_', ' ')
-                    if '(' in clean_name:  # Remove disambiguation
-                        clean_name = clean_name.split('(')[0].strip()
+                    clean_name = concept_name.replace("_", " ")
+                    if "(" in clean_name:  # Remove disambiguation
+                        clean_name = clean_name.split("(")[0].strip()
                     phrases.append(clean_name)
 
                 if phrases:
@@ -327,10 +328,10 @@ def _is_structured_response(prompt: str) -> bool:
     """Check if the prompt requires a structured response that shouldn't be augmented."""
     normalised_prompt = prompt.casefold()
     return (
-        SECTION_TRIGGER in prompt or
-        SECTION_TRIGGER.casefold() in normalised_prompt or
-        "return only" in normalised_prompt or
-        "output exactly" in normalised_prompt
+        SECTION_TRIGGER in prompt
+        or SECTION_TRIGGER.casefold() in normalised_prompt
+        or "return only" in normalised_prompt
+        or "output exactly" in normalised_prompt
     )
 
 
@@ -1107,7 +1108,7 @@ def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...
             f"understand the fundamentals of {main_concept}",
             f"explore practical applications of {main_concept}",
             f"review key principles in {main_concept}",
-            f"practice core concepts of {main_concept}"
+            f"practice core concepts of {main_concept}",
         ]
 
     return suggestions[:4] if suggestions else [], ()

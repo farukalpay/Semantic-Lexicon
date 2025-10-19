@@ -26,6 +26,7 @@ from .utils.clipboard import ClipboardError, get_clipboard_text
 
 try:
     from .direct_qa_generator import DirectQAGenerator, EnhancedSentenceBuilder
+
     DIRECT_QA_AVAILABLE = True
 except ImportError:
     DIRECT_QA_AVAILABLE = False
