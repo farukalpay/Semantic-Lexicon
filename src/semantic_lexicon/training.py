@@ -66,13 +66,15 @@ class Trainer:
                 relation_raw = item.get("relation")
                 default_relation = "describes"
             else:
-                msg = "Knowledge record must provide either ('head','tail') or ('key','text') fields"
+                msg = "Knowledge record must provide ('head','tail') or ('key','text') fields"
                 raise KeyError(msg)
             if not isinstance(head_raw, str) or not head_raw.strip():
                 raise TypeError("Knowledge 'head'/'key' field must be a non-empty string")
             if not isinstance(tail_raw, str) or not tail_raw.strip():
                 raise TypeError("Knowledge 'tail'/'text' field must be a non-empty string")
-            relation_value = relation_raw if isinstance(relation_raw, str) and relation_raw.strip() else default_relation
+            relation_value = (
+                relation_raw if isinstance(relation_raw, str) and relation_raw.strip() else default_relation
+            )
             processed_knowledge.append(
                 {
                     "head": normalise_text(head_raw),
