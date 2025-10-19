@@ -94,13 +94,11 @@ def test_cross_domain_validation_metrics() -> None:
         )
         >= 0.9
     )
-    assert (
-        metrics.hierarchy_accuracy.get(
-            "science_and_technology > platform_engineering > linux_kernel_operations > ubuntu_kernel_lifecycle",
-            0.0,
-        )
-        >= 0.9
+    ubuntu_path = (
+        "science_and_technology > platform_engineering > linux_kernel_operations > "
+        "ubuntu_kernel_lifecycle"
     )
+    assert metrics.hierarchy_accuracy.get(ubuntu_path, 0.0) >= 0.9
     assert metrics.trait_accuracy.get("kernel_reliability", 0.0) >= 0.9
     assert metrics.trait_accuracy.get("ubuntu_support_alignment", 0.0) >= 0.9
 

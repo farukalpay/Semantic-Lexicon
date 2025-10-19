@@ -165,14 +165,16 @@ def _coerce_lineage_prefix(
     prefix = tuple(_normalise_identifier(part, "lineage_traits") for part in parts)
     if len(prefix) > len(path):
         msg = (
-            f"Lineage trait prefix '{raw_prefix}' for domain '{domain}' is deeper than the domain path"
+            "Lineage trait prefix "
+            f"'{raw_prefix}' for domain '{domain}' is deeper than the domain path"
         )
         raise ValueError(msg)
     path_prefix = tuple(entry.casefold() for entry in path[: len(prefix)])
     prefix_key = tuple(entry.casefold() for entry in prefix)
     if path_prefix != prefix_key:
         msg = (
-            f"Lineage trait prefix '{raw_prefix}' for domain '{domain}' must align with the declared path"
+            "Lineage trait prefix "
+            f"'{raw_prefix}' for domain '{domain}' must align with the declared path"
         )
         raise ValueError(msg)
     return prefix
@@ -246,7 +248,8 @@ def load_domain_hierarchy(path: Path | None = None) -> dict[str, DomainHierarchy
         if lineage_traits_field is not None:
             if not isinstance(lineage_traits_field, Mapping):
                 msg = (
-                    f"Expected mapping for 'lineage_traits' in domain '{domain}', received {type(lineage_traits_field)!r}"
+                    "Expected mapping for 'lineage_traits' in domain "
+                    f"'{domain}', received {type(lineage_traits_field)!r}"
                 )
                 raise TypeError(msg)
             for raw_prefix, raw_values in lineage_traits_field.items():
@@ -257,7 +260,8 @@ def load_domain_hierarchy(path: Path | None = None) -> dict[str, DomainHierarchy
                 )
                 if prefix in lineage_traits:
                     msg = (
-                        f"Duplicate lineage trait prefix '{raw_prefix}' declared for domain '{domain}'"
+                        "Duplicate lineage trait prefix "
+                        f"'{raw_prefix}' declared for domain '{domain}'"
                     )
                     raise ValueError(msg)
                 trait_values = _coerce_identifier_sequence(
