@@ -22,6 +22,7 @@ LOGGER = configure_logging(logger_name=__name__)
 
 FloatArray = NDArray[np.float64]
 
+
 @dataclass(frozen=True)
 class KnowledgeEdge:
     head: str
@@ -251,9 +252,7 @@ class KnowledgeNetwork:
             if anchor_mask is not None and np.any(anchor_mask):
                 topic_mask = np.asarray(anchor_mask, dtype=bool)
                 if self.adjacency is not None and self.adjacency.size:
-                    neighbour_mask = np.any(
-                        self.adjacency[np.where(anchor_mask)[0]] > 0, axis=0
-                    )
+                    neighbour_mask = np.any(self.adjacency[np.where(anchor_mask)[0]] > 0, axis=0)
                     topic_mask = np.logical_or(topic_mask, neighbour_mask)
             else:
                 topic_mask = np.logical_or(topic_mask, anchor_mask)
