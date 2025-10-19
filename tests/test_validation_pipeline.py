@@ -6,6 +6,11 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+import pytest
+
 from semantic_lexicon.analysis import (
     benchmark_inference,
     evaluate_classifier,
@@ -29,6 +34,17 @@ def _load_training_examples() -> list[IntentExample]:
     return examples
 
 
+def test_validation_records_include_hierarchy_metadata() -> None:
+    records = load_validation_records()
+    energy_record = next(record for record in records if record.domain == "grid_operations")
+    assert energy_record.domain_path == (
+        "energy_systems",
+        "grid_operations",
+        "virtual_power_plant_enrollment",
+    )
+    assert "real_time_grid_coordination" in energy_record.traits
+
+
 def test_cross_domain_validation_metrics() -> None:
     training = _load_training_examples()
     records = load_validation_records()
@@ -38,6 +54,26 @@ def test_cross_domain_validation_metrics() -> None:
     assert metrics.accuracy >= 0.9
     assert metrics.reward_summary["min"] >= 0.7
     assert metrics.ece_reduction >= 0.5
+    for domain in (
+        "grid_operations",
+        "energy_innovation",
+        "grid_security",
+        "storage_engineering",
+        "pipeline_operations",
+        "demand_response",
+        "market_strategy",
+        "grid_intelligence",
+    ):
+        assert metrics.domain_accuracy.get(domain, 0.0) >= 0.9
+    assert metrics.hierarchy_accuracy.get("energy_systems > grid_operations", 0.0) >= 0.9
+    assert (
+        metrics.hierarchy_accuracy.get(
+            "energy_systems > grid_operations > virtual_power_plant_enrollment",
+            0.0,
+        )
+        >= 0.9
+    )
+    assert metrics.trait_accuracy.get("real_time_grid_coordination", 0.0) >= 0.9
 
 
 def test_inference_benchmark_improvement() -> None:
@@ -56,3 +92,223 @@ def test_inference_benchmark_improvement() -> None:
     )
     assert performance.latency_improvement_pct >= 20.0
     assert performance.optimised_latency_ms > 0.0
+
+
+def test_domain_hierarchy_duplicate_members_raise(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy", "grid_operations"],
+                        "members": ["virtual_power_plant", "virtual_power_plant"],
+                        "traits": ["coordination"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"Duplicate member identifier"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_hierarchy_contradictory_members_raise(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy", "grid_operations"],
+                        "members": ["shared_member"],
+                        "traits": ["coordination"],
+                    }
+                ),
+                json.dumps(
+                    {
+                        "domain": "demand_response",
+                        "path": ["energy", "demand_response"],
+                        "members": ["shared_member"],
+                        "traits": ["engagement"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"Contradictory member 'shared_member'"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_hierarchy_domain_casefold_conflict(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy_systems", "grid_operations"],
+                        "members": ["virtual_power_plant"],
+                        "traits": ["coordination"],
+                    }
+                ),
+                json.dumps(
+                    {
+                        "domain": "Grid_Operations",
+                        "path": ["energy_systems", "Grid_Operations"],
+                        "members": ["telemetry_restoration"],
+                        "traits": ["coordination"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"conflicts with previously declared domain"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_member_conflicts_with_domain_identifier(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy_systems", "grid_operations"],
+                        "members": ["grid_operations"],
+                        "traits": ["coordination"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"conflicts with domain identifier"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_hierarchy_path_must_include_domain(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy_systems", "operations"],
+                        "members": ["virtual_power_plant"],
+                        "traits": ["coordination"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"must end with the domain name"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_domain_hierarchy_member_casefold_conflict(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy_systems", "grid_operations"],
+                        "members": ["Shared_Member"],
+                        "traits": ["coordination"],
+                    }
+                ),
+                json.dumps(
+                    {
+                        "domain": "demand_response",
+                        "path": ["energy_systems", "demand_response"],
+                        "members": ["shared_member"],
+                        "traits": ["engagement"],
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"Contradictory member 'shared_member'"):
+        load_validation_records(
+            Path("src/semantic_lexicon/data/cross_domain_validation.jsonl"),
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_validation_member_identifier_cannot_be_blank(tmp_path) -> None:
+    hierarchy_path = tmp_path / "hierarchy.jsonl"
+    hierarchy_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "domain": "grid_operations",
+                        "path": ["energy_systems", "grid_operations"],
+                        "members": ["virtual_power_plant"],
+                        "traits": ["coordination"],
+                    }
+                ),
+            )
+        )
+    )
+    validation_path = tmp_path / "validation.jsonl"
+    validation_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "text": "Summarise",
+                        "intent": "summary",
+                        "domain": "grid_operations",
+                        "domain_member": "   ",
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match=r"'domain_member' must be a non-empty string"):
+        load_validation_records(
+            validation_path,
+            hierarchy_path=hierarchy_path,
+        )
+
+
+def test_validation_member_requires_hierarchy(tmp_path) -> None:
+    validation_path = tmp_path / "validation.jsonl"
+    validation_path.write_text(
+        "\n".join(
+            (
+                json.dumps(
+                    {
+                        "text": "Summarise",
+                        "intent": "summary",
+                        "domain": "grid_operations",
+                        "domain_member": "virtual_power_plant",
+                    }
+                ),
+            )
+        )
+    )
+    with pytest.raises(ValueError, match="no hierarchy metadata"):
+        load_validation_records(validation_path, hierarchy_path=tmp_path / "missing.jsonl")

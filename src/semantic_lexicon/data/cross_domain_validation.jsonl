@@ -98,3 +98,11 @@
 {"text": "Explore concepts for sustainable fashion projects.", "intent": "exploration", "domain": "fashion", "feedback": 0.9}
 {"text": "Provide ideas for team-building icebreakers.", "intent": "exploration", "domain": "teamwork", "feedback": 0.94}
 {"text": "Brainstorm mindfulness exercises for stress relief.", "intent": "exploration", "domain": "wellness", "feedback": 0.95}
+{"text": "Summarize regulatory compliance checkpoints for virtual power plant enrollment.", "intent": "summary", "domain": "grid_operations", "domain_member": "virtual_power_plant_enrollment", "feedback": 0.92}
+{"text": "Summarize hydrogen blending pilot results for natural gas utilities.", "intent": "summary", "domain": "energy_innovation", "domain_member": "hydrogen_blending_pilots", "feedback": 0.91}
+{"text": "Outline cybersecurity hardening measures for grid edge analytics deployments.", "intent": "outline", "domain": "grid_security", "domain_member": "grid_edge_analytics_hardening", "feedback": 0.93}
+{"text": "Outline lifecycle assessment checkpoints for battery energy storage projects.", "intent": "outline", "domain": "storage_engineering", "domain_member": "battery_lifecycle_assessment", "feedback": 0.94}
+{"text": "Detail troubleshooting steps for hydrogen blending controller alarms in compressor stations.", "intent": "troubleshooting", "domain": "pipeline_operations", "domain_member": "hydrogen_blending_controller", "feedback": 0.92}
+{"text": "Detail troubleshooting steps for telemetry loss in demand response control rooms.", "intent": "troubleshooting", "domain": "demand_response", "domain_member": "control_room_telemetry", "feedback": 0.93}
+{"text": "Recommend optimization levers that enhance market bids for distributed energy portfolios.", "intent": "recommendation", "domain": "market_strategy", "domain_member": "distributed_energy_bids", "feedback": 0.92}
+{"text": "Recommend grid-edge analytics actions that improve situational awareness dashboards.", "intent": "recommendation", "domain": "grid_intelligence", "domain_member": "situational_awareness_dashboards", "feedback": 0.93}

@@ -431,3 +431,23 @@
 {"text": "Explore concepts for sustainable fashion projects.", "intent": "exploration"}
 {"text": "Provide ideas for team-building icebreakers.", "intent": "exploration"}
 {"text": "Brainstorm mindfulness exercises for stress relief.", "intent": "exploration"}
+{"text": "Summarize regulatory compliance checkpoints for virtual power plant enrollment.", "intent": "summary"}
+{"text": "Summarize grid-edge analytics pilot outcomes for reliability leadership briefings.", "intent": "summary"}
+{"text": "Summarize hydrogen blending pilot findings for gas utility executives.", "intent": "summary"}
+{"text": "Summarize lessons learned from distributed storage orchestration sprints.", "intent": "summary"}
+{"text": "Summarize demand flexibility market performance for stakeholder reviews.", "intent": "summary"}
+{"text": "Outline cybersecurity hardening measures for grid edge analytics deployments.", "intent": "outline"}
+{"text": "Outline lifecycle assessment checkpoints for battery energy storage projects.", "intent": "outline"}
+{"text": "Outline workforce development modules for transmission modernization teams.", "intent": "outline"}
+{"text": "Outline governance milestones for distributed energy resource aggregation portfolios.", "intent": "outline"}
+{"text": "Outline validation phases for virtual power plant onboarding initiatives.", "intent": "outline"}
+{"text": "Detail troubleshooting steps for anomalous inverter behavior in community solar arrays.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for telemetry loss in demand response control rooms.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for hydrogen blending controller alarms in compressor stations.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for congestion alerts on distribution feeders.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for DER telemetry drift across municipal microgrids.", "intent": "troubleshooting"}
+{"text": "Recommend optimization levers that enhance market bids for distributed energy portfolios.", "intent": "recommendation"}
+{"text": "Recommend grid-edge analytics actions that improve situational awareness dashboards.", "intent": "recommendation"}
+{"text": "Recommend demand response incentives that boost residential enrollment.", "intent": "recommendation"}
+{"text": "Recommend resilience investments that fortify critical distribution circuits.", "intent": "recommendation"}
+{"text": "Recommend forecasting enhancements that stabilize renewable dispatch schedules.", "intent": "recommendation"}

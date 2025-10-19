@@ -224,6 +224,38 @@ class IntentClassifier:
                 " consider deeply ",
                 " self-awareness ",
             ),
+            "__feat_summary_phrase": (
+                " summarize ",
+                " summary of ",
+                " key takeaways ",
+                " executive summary ",
+                " highlight ",
+                " distill findings ",
+            ),
+            "__feat_outline_phrase": (
+                " outline ",
+                " blueprint ",
+                " roadmap for ",
+                " stage gate ",
+                " structure for ",
+                " phased plan ",
+            ),
+            "__feat_troubleshooting_phrase": (
+                " troubleshoot ",
+                " troubleshooting ",
+                " diagnose ",
+                " resolving ",
+                " fix ",
+                " fault isolation ",
+            ),
+            "__feat_recommendation_phrase": (
+                " recommend ",
+                " recommendation ",
+                " optimization lever ",
+                " prioritize actions ",
+                " strategy to improve ",
+                " prescriptive guidance ",
+            ),
         }
         self._feature_names: tuple[str, ...] = tuple(
             sorted({"__feat_question_mark", *self._feature_keywords.keys()})
@@ -815,6 +847,18 @@ class IntentClassifier:
             bump("definition", 0.85)
         if features.get("__feat_exploration_phrase") or features.get("__feat_reflective_language"):
             bump("exploration", 1.35)
+        if features.get("__feat_summary_phrase"):
+            bump("summary", 1.4)
+            bump("definition", 0.8)
+        if features.get("__feat_outline_phrase"):
+            bump("outline", 1.4)
+            bump("how_to", 0.85)
+        if features.get("__feat_troubleshooting_phrase"):
+            bump("troubleshooting", 1.45)
+            bump("how_to", 0.85)
+        if features.get("__feat_recommendation_phrase"):
+            bump("recommendation", 1.4)
+            bump("exploration", 0.85)
         if features.get("__feat_question_mark") and not features.get("__feat_how_to_phrase"):
             bump("definition", 1.1)
         return np.asarray(bias, dtype=np.float64) if changed else None
@@ -827,6 +871,10 @@ class IntentClassifier:
             "__feat_how_to_phrase": "how_to",
             "__feat_comparison_phrase": "comparison",
             "__feat_exploration_phrase": "exploration",
+            "__feat_summary_phrase": "summary",
+            "__feat_outline_phrase": "outline",
+            "__feat_troubleshooting_phrase": "troubleshooting",
+            "__feat_recommendation_phrase": "recommendation",
         }
         triggered = [intent for feature, intent in mapping.items() if features.get(feature)]
         if len(triggered) != 1:

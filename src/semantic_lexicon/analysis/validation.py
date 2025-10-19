@@ -20,6 +20,16 @@ if TYPE_CHECKING:  # pragma: no cover - import only for typing
 
 
 @dataclass(frozen=True)
+class DomainHierarchy:
+    """Hierarchical metadata describing a validation domain."""
+
+    domain: str
+    path: tuple[str, ...]
+    members: tuple[str, ...]
+    traits: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ValidationRecord:
     """Single labelled prompt used during validation."""
 
@@ -27,6 +37,8 @@ class ValidationRecord:
     intent: str
     domain: str
     feedback: float
+    domain_path: tuple[str, ...]
+    traits: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -35,6 +47,7 @@ class PredictionSummary:
 
     text: str
     domain: str
+    domain_path: tuple[str, ...]
     expected: str
     predicted: str
     confidence: float
@@ -51,6 +64,8 @@ class ValidationMetrics:
     ece_after: float
     ece_reduction: float
     domain_accuracy: dict[str, float]
+    hierarchy_accuracy: dict[str, float]
+    trait_accuracy: dict[str, float]
     predictions: Sequence[PredictionSummary]
 
     def to_dict(self) -> dict[str, object]:
@@ -63,6 +78,10 @@ def _default_validation_path() -> Path:
     return Path(__file__).resolve().parents[1] / "data" / "cross_domain_validation.jsonl"
 
 
+def _default_domain_hierarchy_path() -> Path:
+    return Path(__file__).resolve().parents[1] / "data" / "domain_hierarchy.jsonl"
+
+
 def _coerce_to_str(value: object, field: str, *, default: str | None = None) -> str:
     if isinstance(value, str):
         return value
@@ -70,6 +89,140 @@ def _coerce_to_str(value: object, field: str, *, default: str | None = None) -> 
         return default
     msg = f"Expected string for '{field}', received {type(value)!r}"
     raise TypeError(msg)
+
+
+def _coerce_optional_str(value: object, field: str) -> str | None:
+    if value is None:
+        return None
+    return _normalise_identifier(_coerce_to_str(value, field), field)
+
+
+def _coerce_to_sequence_of_str(
+    value: object,
+    field: str,
+    *,
+    default: Sequence[str] | None = None,
+) -> tuple[str, ...]:
+    if value is None:
+        return tuple(default or ())
+    if isinstance(value, str):
+        return (value,)
+    if isinstance(value, Sequence):
+        result: list[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"Expected all entries in '{field}' to be strings"
+                raise TypeError(msg)
+            result.append(item)
+        return tuple(result)
+    msg = f"Expected sequence of strings for '{field}', received {type(value)!r}"
+    raise TypeError(msg)
+
+
+def _normalise_identifier(value: str, field: str) -> str:
+    normalised = value.strip()
+    if not normalised:
+        raise ValueError(f"'{field}' must be a non-empty string")
+    return normalised
+
+
+def _coerce_identifier_sequence(
+    value: object,
+    field: str,
+    *,
+    default: Sequence[str] | None = None,
+) -> tuple[str, ...]:
+    raw_values = _coerce_to_sequence_of_str(value, field, default=default)
+    return tuple(_normalise_identifier(item, field) for item in raw_values)
+
+
+def _find_casefold_duplicates(values: Sequence[str]) -> list[str]:
+    buckets: dict[str, list[str]] = {}
+    for entry in values:
+        key = entry.casefold()
+        buckets.setdefault(key, []).append(entry)
+    duplicates: list[str] = []
+    for bucket in buckets.values():
+        if len(bucket) > 1:
+            duplicates.extend(sorted(set(bucket)))
+    return sorted(duplicates, key=str.lower)
+
+
+def load_domain_hierarchy(path: Path | None = None) -> dict[str, DomainHierarchy]:
+    """Load domain hierarchy metadata indexed by domain name."""
+
+    path = path or _default_domain_hierarchy_path()
+    hierarchy: dict[str, DomainHierarchy] = {}
+    if not Path(path).exists():
+        return hierarchy
+    canonical_domains: dict[str, str] = {}
+    member_domains: dict[str, str] = {}
+    for raw in read_jsonl(Path(path)):
+        mapping = cast(Mapping[str, object], raw)
+        domain = _normalise_identifier(_coerce_to_str(mapping.get("domain"), "domain"), "domain")
+        domain_key = domain.casefold()
+        existing_domain = canonical_domains.get(domain_key)
+        if existing_domain:
+            if existing_domain == domain:
+                msg = f"Duplicate hierarchy definition for domain '{domain}'"
+            else:
+                msg = (
+                    f"Domain '{domain}' conflicts with previously declared domain "
+                    f"'{existing_domain}'"
+                )
+            raise ValueError(msg)
+        canonical_domains[domain_key] = domain
+        path_values = _coerce_identifier_sequence(
+            mapping.get("path"),
+            "path",
+            default=(domain,),
+        )
+        if not path_values:
+            path_values = (domain,)
+        duplicates = _find_casefold_duplicates(path_values)
+        if duplicates:
+            dup = ", ".join(duplicates)
+            msg = f"Duplicate path entry(ies) {dup} declared for domain '{domain}'"
+            raise ValueError(msg)
+        if path_values[-1].casefold() != domain.casefold():
+            msg = f"Hierarchy path for domain '{domain}' must end with the domain name"
+            raise ValueError(msg)
+        members = _coerce_identifier_sequence(mapping.get("members"), "members")
+        duplicates = _find_casefold_duplicates(members)
+        if duplicates:
+            dup = ", ".join(duplicates)
+            msg = f"Duplicate member identifier(s) {dup} declared for domain '{domain}'"
+            raise ValueError(msg)
+        traits = _coerce_identifier_sequence(mapping.get("traits"), "traits")
+        duplicates = _find_casefold_duplicates(traits)
+        if duplicates:
+            dup = ", ".join(duplicates)
+            msg = f"Duplicate trait identifier(s) {dup} declared for domain '{domain}'"
+            raise ValueError(msg)
+        for member in members:
+            member_key = member.casefold()
+            owning_domain = canonical_domains.get(member_key)
+            if owning_domain:
+                msg = (
+                    f"Member '{member}' for domain '{domain}' conflicts with domain "
+                    f"identifier '{owning_domain}'"
+                )
+                raise ValueError(msg)
+            existing = member_domains.get(member_key)
+            if existing and existing != domain:
+                msg = (
+                    f"Contradictory member '{member}' declared for domains "
+                    f"'{existing}' and '{domain}'"
+                )
+                raise ValueError(msg)
+            member_domains[member_key] = domain
+        hierarchy[domain] = DomainHierarchy(
+            domain=domain,
+            path=path_values,
+            members=members,
+            traits=traits,
+        )
+    return hierarchy
 
 
 def _coerce_feedback(value: object) -> float:
@@ -85,23 +238,48 @@ def _coerce_feedback(value: object) -> float:
     raise TypeError(f"Feedback must be numeric, received {type(value)!r}")
 
 
-def load_validation_records(path: Path | None = None) -> list[ValidationRecord]:
+def load_validation_records(
+    path: Path | None = None,
+    *,
+    hierarchy_path: Path | None = None,
+) -> list[ValidationRecord]:
     """Load labelled prompts for evaluation."""
 
     path = path or _default_validation_path()
+    hierarchy_index = load_domain_hierarchy(hierarchy_path)
     records: list[ValidationRecord] = []
     for raw in read_jsonl(path):
         mapping = cast(Mapping[str, object], raw)
+        domain = _coerce_to_str(mapping.get("domain"), "domain", default="unknown")
+        hierarchy = hierarchy_index.get(domain)
+        traits: tuple[str, ...] = hierarchy.traits if hierarchy else ()
+        domain_path: tuple[str, ...]
+        if hierarchy:
+            domain_path = hierarchy.path
+        else:
+            domain_path = (domain,)
+        member = _coerce_optional_str(mapping.get("domain_member"), "domain_member")
+        if member:
+            if not hierarchy:
+                msg = (
+                    f"Validation record references member '{member}' for domain '{domain}'"
+                    " but no hierarchy metadata is available"
+                )
+                raise ValueError(msg)
+            domain_path = domain_path + (member,)
+            if hierarchy and hierarchy.members and member not in hierarchy.members:
+                msg = (
+                    f"Validation record references unknown member '{member}' for domain '{domain}'"
+                )
+                raise ValueError(msg)
         records.append(
             ValidationRecord(
                 text=_coerce_to_str(mapping.get("text"), "text"),
                 intent=_coerce_to_str(mapping.get("intent"), "intent"),
-                domain=_coerce_to_str(
-                    mapping.get("domain"),
-                    "domain",
-                    default="unknown",
-                ),
+                domain=domain,
                 feedback=_coerce_feedback(mapping.get("feedback", 0.9)),
+                domain_path=domain_path,
+                traits=traits,
             )
         )
     if not records:
@@ -124,6 +302,8 @@ def evaluate_classifier(
     rewards: list[float] = []
     predictions: list[PredictionSummary] = []
     domain_hits: dict[str, list[bool]] = {}
+    hierarchy_hits: dict[tuple[str, ...], list[bool]] = {}
+    trait_hits: dict[str, list[bool]] = {}
     for record in records:
         probabilities: dict[str, float] = classifier.predict_proba(record.text)
         predicted_intent = max(probabilities.items(), key=lambda item: item[1])[0]
@@ -140,6 +320,7 @@ def evaluate_classifier(
             PredictionSummary(
                 text=record.text,
                 domain=record.domain,
+                domain_path=record.domain_path,
                 expected=record.intent,
                 predicted=predicted_intent,
                 confidence=float(probabilities[predicted_intent]),
@@ -149,6 +330,11 @@ def evaluate_classifier(
         is_correct = predicted_intent == record.intent
         correct += int(is_correct)
         domain_hits.setdefault(record.domain, []).append(is_correct)
+        for depth in range(1, len(record.domain_path) + 1):
+            prefix = record.domain_path[:depth]
+            hierarchy_hits.setdefault(prefix, []).append(is_correct)
+        for trait in record.traits:
+            trait_hits.setdefault(trait, []).append(is_correct)
         if reward < reward_threshold:
             msg = (
                 f"Reward {reward:.2f} below threshold for domain='{record.domain}'"
@@ -169,6 +355,10 @@ def evaluate_classifier(
         "p90": float(quantiles[4]),
     }
     domain_accuracy = {domain: float(np.mean(flags)) for domain, flags in domain_hits.items()}
+    hierarchy_accuracy = {
+        " > ".join(path): float(np.mean(flags)) for path, flags in hierarchy_hits.items()
+    }
+    trait_accuracy = {trait: float(np.mean(flags)) for trait, flags in trait_hits.items()}
     ece_reduction = 1.0 if raw_ece == 0 else 1.0 - (calibrated_ece / raw_ece)
     return ValidationMetrics(
         accuracy=float(accuracy),
@@ -177,6 +367,8 @@ def evaluate_classifier(
         ece_after=float(calibrated_ece),
         ece_reduction=float(ece_reduction),
         domain_accuracy=domain_accuracy,
+        hierarchy_accuracy=hierarchy_accuracy,
+        trait_accuracy=trait_accuracy,
         predictions=predictions,
     )
 
