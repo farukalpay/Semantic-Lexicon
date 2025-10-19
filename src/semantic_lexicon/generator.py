@@ -29,8 +29,8 @@ from .templates import render_balanced_tutor_response
 from .utils import tokenize
 
 try:
-    from .wikipedia_extractor import WikipediaTermExtractor, KnowledgeAugmentedGenerator
     from .advanced_wikipedia_extractor import AdvancedWikipediaExtractor, TopicCoherenceManager
+    from .wikipedia_extractor import KnowledgeAugmentedGenerator, WikipediaTermExtractor
     WIKIPEDIA_AVAILABLE = True
 except ImportError:
     WIKIPEDIA_AVAILABLE = False
@@ -127,7 +127,7 @@ class PersonaGenerator:
         self.embeddings = embeddings
         self.knowledge = knowledge
         self.template_predictor = template_predictor
-        
+
         # Initialize Wikipedia augmentation if available
         self.wikipedia_augmenter = None
         self.advanced_extractor = None
@@ -155,17 +155,19 @@ class PersonaGenerator:
             try:
                 # Extract main topic from prompt
                 main_topic = self._extract_main_topic(prompt)
-                
+
                 # Build knowledge graph for the topic
                 concepts = self.advanced_extractor.get_relevant_concepts(main_topic, limit=20)
-                
+
                 # Filter for topic coherence
                 if self.topic_manager:
                     concept_names = [c['name'] for c in concepts]
-                    coherent_concepts = self.topic_manager.filter_concepts(concept_names, main_topic)
+                    coherent_concepts = self.topic_manager.filter_concepts(
+                        concept_names, main_topic
+                    )
                 else:
                     coherent_concepts = [c['name'] for c in concepts[:10]]
-                
+
                 # Convert to phrases
                 phrases = []
                 for concept_name in coherent_concepts[:5]:
@@ -174,33 +176,33 @@ class PersonaGenerator:
                     if '(' in clean_name:  # Remove disambiguation
                         clean_name = clean_name.split('(')[0].strip()
                     phrases.append(clean_name)
-                
+
                 if phrases:
                     return PhraseGuidance(text="", phrases=phrases)
-                    
+
             except Exception as e:
                 LOGGER.debug(f"Advanced Wikipedia extraction failed: {e}")
-        
+
         # Fallback to original phrase building
         return _build_phrase_guidance(tokens, prompt_vector, embeddings, knowledge)
-    
+
     def _extract_main_topic(self, prompt: str) -> str:
         """Extract the main topic from a prompt."""
         # Remove common question words
         prompt_lower = prompt.lower()
         for word in ["explain", "what is", "what are", "how does", "how do", "why", "describe"]:
             prompt_lower = prompt_lower.replace(word, "")
-        
+
         # Clean up
         topic = prompt_lower.strip().strip("?").strip()
-        
+
         # If still too long, take first few words
         words = topic.split()
         if len(words) > 3:
             topic = " ".join(words[:3])
-        
+
         return topic if topic else "general topic"
-    
+
     def generate(
         self,
         prompt: str,
@@ -247,7 +249,7 @@ class PersonaGenerator:
         topics: list[str] = []
         actions: list[str] = []
         predicted_intent: Optional[str] = None
-        
+
         # First, try to use Wikipedia-based phrases as topics
         if phrase_guidance.phrases:
             topics = phrase_guidance.phrases[:3]  # Use top 3 Wikipedia concepts
@@ -259,12 +261,12 @@ class PersonaGenerator:
                 predicted_intent = prediction.intent
                 topics = list(prediction.topics)
                 actions = list(prediction.actions)
-            
+
             if predicted_intent:
                 primary_intent = predicted_intent
                 if predicted_intent not in intents_list:
                     intents_list.insert(0, predicted_intent)
-            
+
             if not topics:
                 topics = _ensure_topics(tokens, phrase_guidance.phrases)
                 actions = _actions_for_intent(primary_intent, len(topics))
@@ -298,7 +300,7 @@ class PersonaGenerator:
             )
         response = " ".join(response_parts)
         response = _personalise_response(response, persona)
-        
+
         # Apply Wikipedia augmentation if available
         if self.wikipedia_augmenter and not _is_structured_response(prompt):
             try:
@@ -306,7 +308,7 @@ class PersonaGenerator:
                 response = augmented_response
             except Exception as e:
                 LOGGER.debug(f"Wikipedia augmentation failed, using base response: {e}")
-        
+
         return GenerationResult(
             response=response,
             intents=intents_list,
@@ -325,7 +327,7 @@ def _is_structured_response(prompt: str) -> bool:
     """Check if the prompt requires a structured response that shouldn't be augmented."""
     normalised_prompt = prompt.casefold()
     return (
-        SECTION_TRIGGER in prompt or 
+        SECTION_TRIGGER in prompt or
         SECTION_TRIGGER.casefold() in normalised_prompt or
         "return only" in normalised_prompt or
         "output exactly" in normalised_prompt
@@ -1094,10 +1096,10 @@ def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...
     """Generate dynamic fallback concepts based on the prompt tokens."""
     prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
     prompt_tokens -= STOPWORDS
-    
+
     # Generate basic fallback suggestions based on the tokens
     suggestions = []
-    
+
     # Create generic learning-focused suggestions
     if prompt_tokens:
         main_concept = max(prompt_tokens, key=len) if prompt_tokens else "topic"
@@ -1107,7 +1109,7 @@ def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...
             f"review key principles in {main_concept}",
             f"practice core concepts of {main_concept}"
         ]
-    
+
     return suggestions[:4] if suggestions else [], ()
 
 

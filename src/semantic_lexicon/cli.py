@@ -467,11 +467,11 @@ def answer(
     mode: str = typer.Option("direct", help="Answer mode: 'direct' or 'enhanced'"),
 ) -> None:
     """Generate a direct, factual answer using Wikipedia information."""
-    
+
     if not DIRECT_QA_AVAILABLE:
         typer.secho("Direct Q&A module not available. Please check installation.", err=True)
         raise typer.Exit(code=1)
-    
+
     try:
         if mode == "enhanced":
             generator = EnhancedSentenceBuilder()
@@ -479,13 +479,13 @@ def answer(
         else:
             generator = DirectQAGenerator()
             response = generator.generate_answer(prompt)
-        
+
         typer.echo(response)
-        
+
     except Exception as e:
         LOGGER.error(f"Failed to generate answer: {e}")
         typer.secho(f"Error generating answer: {e}", err=True)
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 if __name__ == "__main__":
