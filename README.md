@@ -44,6 +44,16 @@ semantic-lexicon train --workspace artifacts
 semantic-lexicon generate "Outline transformer basics" --workspace artifacts
 ```
 
+Sample output:
+
+```text
+Persona: generic
+Response:
+1. Transformers stack self-attention blocks so each token can weigh every other token without recurrent passes.
+2. Positional encodings add order-aware vectors that let attention keep track of word positions.
+3. Feed-forward layers plus residual and layer-norm steps stabilise optimisation and let depth scale cleanly.
+```
+
 - Prefer `semantic-lexicon generate -` to pipe prompts from other tools (`echo question | semantic-lexicon generate -`).
 - `semantic-lexicon clipboard --workspace artifacts` mirrors the same workflow but seeds the prompt from your system clipboard.
 
@@ -159,11 +169,63 @@ The CLI saves embeddings, intent weights, and knowledge matrices to the workspac
 
    The command prints a JSON summary to stdout and optionally writes the report to disk.
 
+   ```json
+   {
+     "embedding_stats": {"vocab_size": 512, "mean_norm": 8.42, "std_norm": 0.77},
+     "intent_accuracy": 0.94,
+     "knowledge_graph": {"edges": 2048, "avg_degree": 3.1},
+     "personas_evaluated": ["generic", "tutor", "coach"]
+   }
+   ```
+
 4. **Generate responses**:
 
    ```bash
    semantic-lexicon generate "Explain neural networks" --workspace artifacts --persona tutor
    ```
+
+   Example response:
+
+   ```text
+   Persona: tutor
+   Response:
+   - Neural networks stack layers of weighted sums and nonlinear activations that learn feature detectors automatically.
+   - Training adjusts the weights with backpropagation so the model minimises prediction error on labelled examples.
+   - Regularisation (dropout, weight decay) keeps the learned representations from overfitting and improves generalisation.
+   ```
+
+Optional CLI calls:
+
+- Tight briefing
+
+  ```bash
+  semantic-lexicon ask-tight "How can I improve my research talks?" --workspace artifacts --bullets 3
+  ```
+
+  ```text
+  • Outline the three-part story: problem framing, insight, and next steps.
+  • Rehearse with a timer so every visual lands within the planned beats.
+  • Script a final call-to-action that leaves the audience with one clear task.
+  ```
+
+- Inspect knowledge selection
+
+  ```bash
+  semantic-lexicon knowledge "Summarise convolutional neural networks" --workspace artifacts
+  ```
+
+  ```json
+  {
+    "concepts": [
+      "convolutional kernels capture spatial structure",
+      "pooling layers balance invariance with detail",
+      "feature maps highlight class-specific patterns"
+    ],
+    "relevance": 0.87,
+    "coverage": 0.74,
+    "diversity": 0.69
+  }
+  ```
 
 ## Truth-Aware Decoding Walkthrough
 
@@ -420,34 +482,33 @@ the phrasing is concise, but the generator now runs a compact optimisation loop 
 
    Sample output after training the bundled data:
 
-   ```
+   ```text
    Prompt: How do I improve my public speaking?
-   Response: From a balanced tutor perspective, let's look at "How do I improve my public speaking?" This ties closely to the "how_to" intent I detected. Consider journaling about: Public Speaking (Explore), Practice Routine (Practice), Feedback Loops (Reflect). Try to explore Public Speaking, practice the routine, and reflect on Feedback Loops. Knowledge focus: practice short talks on camera. Related concepts worth exploring: collect feedback from trusted listeners, rehearse transitions and openings, track energy and pacing cues.
-   Knowledge: ['practice short talks on camera', 'collect feedback from trusted listeners', 'rehearse transitions and openings', 'track energy and pacing cues', 'K_raw=0.832']
+   Persona: tutor
+   Guidance:
+   - Schedule deliberate practice sessions (record short talks, review pacing and emphasis).
+   - Build a feedback loop with trusted listeners after each rehearsal.
+   - Reflect on audience energy so you can adjust tone and gesture.
+   Knowledge focus: practise short talks on camera.
+   Related concepts: collect feedback from trusted listeners; rehearse openings and transitions; track energy cues across slides.
 
    Prompt: Explain matrix multiplication
-   Response: From a balanced tutor perspective, let's look at "Explain matrix multiplication." This ties closely to the "definition" intent I detected. Consider journaling about: Matrix Multiplication (Define), Dot Products (Explore), Linear Transformations (Compare). Try to define Matrix Multiplication, explore Dot Products, and compare Linear Transformations with related ideas. Knowledge focus: review the row-by-column rule. Related concepts worth exploring: connect matrix products to linear transformations, practice multiplying 2x2 and 3x3 matrices, interpret column space changes.
-   Knowledge: ['review the row-by-column rule', 'connect matrix products to linear transformations', 'practice multiplying 2x2 and 3x3 matrices', 'interpret column space changes', 'K_raw=0.821']
-
-   Prompt: What is machine learning?
-   Response: From a balanced tutor perspective, let's look at "What is machine learning?" This ties closely to the "definition" intent I detected. Consider journaling about: Machine Learning (Define), Supervised Learning (Explore), Generalization Error (Compare). Try to define Machine Learning, explore Supervised Learning, and compare Generalization Error with related ideas. Knowledge focus: machine learning. Related concepts worth exploring: unsupervised learning, supervised learning.
-   Knowledge: ['machine learning', 'unsupervised learning', 'supervised learning', 'K_raw=0.815']
-
-   Prompt: Tips for staying productive while studying
-   Response: From a balanced tutor perspective, let's look at "Tips for staying productive while studying." This ties closely to the "how_to" intent I detected. Consider journaling about: Study Schedule (Plan), Focus Blocks (Practice), Break Strategies (Reflect). Try to plan Study Schedule, practice Focus Blocks, and reflect on Break Strategies. Knowledge focus: design focus blocks with clear targets. Related concepts worth exploring: batch similar study tasks together, schedule renewal breaks, log end-of-day reflections.
-   Knowledge: ['design focus blocks with clear targets', 'batch similar study tasks together', 'schedule renewal breaks', 'log end-of-day reflections', 'K_raw=0.829']
-
-   Prompt: Clarify the concept of photosynthesis
-   Response: From a balanced tutor perspective, let's look at "Clarify the concept of photosynthesis." This ties closely to the "definition" intent I detected. Consider journaling about: Photosynthesis (Define), Chlorophyll Function (Explore), Energy Conversion (Connect). Try to define Photosynthesis, explore Chlorophyll Function, and connect Energy Conversion to what you already know. Knowledge focus: map light-dependent and light-independent stages. Related concepts worth exploring: highlight the role of chlorophyll, trace energy conversion to glucose, connect photosynthesis to cellular respiration.
-   Knowledge: ['map light-dependent and light-independent stages', 'highlight the role of chlorophyll', 'trace energy conversion to glucose', 'connect photosynthesis to cellular respiration', 'K_raw=0.832']
-
-   Prompt: How can I organize my research presentation effectively?
-   Response: From a balanced tutor perspective, let's look at "How can I organize my research presentation effectively?" This ties closely to the "how_to" intent I detected. Consider journaling about: Presentation Outline (Plan), Visual Storytelling (Design), Audience Engagement (Practice). Try to plan Presentation Outline, design Visual Storytelling, and practice Audience Engagement. Knowledge focus: draft a clear narrative arc. Related concepts worth exploring: storyboard slides around key findings, practice delivery with timed sections, prepare audience engagement prompts.
-   Knowledge: ['draft a clear narrative arc', 'storyboard slides around key findings', 'practice delivery with timed sections', 'prepare audience engagement prompts', 'K_raw=0.829']
+   Persona: tutor
+   Guidance:
+   - Describe matrix multiplication as repeated dot products between rows and columns.
+   - Connect the operation to linear transformations that reshape vectors.
+   - Compare 2×2 and 3×3 cases to build intuition about scaling and rotation.
+   Knowledge focus: review the row-by-column rule.
+   Related concepts: connect matrix products to linear transformations; practise multiplying 2×2 and 3×3 matrices; interpret column-space changes.
 
    Prompt: Define gravitational potential energy
-   Response: From a balanced tutor perspective, let's look at "Define gravitational potential energy." This ties closely to the "definition" intent I detected. Consider journaling about: Potential Energy (Define), Reference Frames (Illustrate), Energy Transfer (Connect). Try to define Potential Energy, illustrate Reference Frames with a quick example, and connect Energy Transfer to what you already know. Knowledge focus: define reference height explicitly. Related concepts worth exploring: illustrate energy transfer scenarios, compare gravitational and elastic potential energy, relate potential changes to work.
-   Knowledge: ['define reference height explicitly', 'illustrate energy transfer scenarios', 'compare gravitational and elastic potential energy', 'relate potential changes to work', 'K_raw=0.832']
+   Persona: tutor
+   Guidance:
+   - State that gravitational potential energy equals mass × gravity × height relative to a reference.
+   - Show how choosing different reference frames shifts absolute values but not energy differences.
+   - Link the concept to conservation of mechanical energy in simple motion problems.
+   Knowledge focus: relate height changes to energy storage.
+   Related concepts: draw free-body diagrams for objects at different heights; compare gravitational and elastic potential energy; highlight conservation across motion phases.
    ```
 
   These concise replies highlight the intentionally compact nature of the library's neural components—the toolkit is designed for
@@ -884,6 +945,25 @@ semantic-lexicon clipboard --workspace artifacts --persona exploration
 ```
 
 Both paths reuse the existing workspace/persona/config pipeline and reject empty inputs with a friendly error.
+
+Sample outputs:
+
+```text
+$ echo "What is a transformer?" | semantic-lexicon generate - --workspace artifacts
+Persona: generic
+Response:
+1. Transformers rely on self-attention so tokens draw context from the entire sentence in one step.
+2. Multi-head attention lets the model track different relationships (syntax, long-range cues) simultaneously.
+3. Decoder layers reuse the same mechanism to generate fluent text token by token.
+
+$ semantic-lexicon clipboard --workspace artifacts --persona exploration
+Clipboard prompt: "Give me three research angles on causal discovery."
+Persona: exploration
+Response:
+1. Explore score-based causal discovery that leverages diffusion models to recover graph structure from noise.
+2. Compare invariant risk minimisation versus meta-learning for handling interventions and domain shift.
+3. Prototype active experimentation loops that query the system for the most informative interventions next.
+```
 
 ---
 
