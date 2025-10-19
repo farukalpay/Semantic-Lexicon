@@ -946,7 +946,10 @@ def _build_related_topics(
     focus: str
     related: list[str]
 
-    if filtered_matches:
+    if fallback_items:
+        focus = fallback_items[0]
+        related = fallback_items[1:4]
+    elif filtered_matches:
         focus_match = filtered_matches[0]
         focus = focus_match.concept
         related = [match.concept for match in filtered_matches[1:4]]
@@ -955,17 +958,10 @@ def _build_related_topics(
             for token in focus_match.prompt_overlap
             if token in {"energy", "topic", "concept", "information", "data", "idea"}
         }
-        if fallback_items:
-            overlap_without_generics = focus_match.prompt_overlap - generic_prompt_overlap
-            fallback_keyword_set = set(fallback_keywords)
-            if not overlap_without_generics or not fallback_keyword_set.issubset(
-                overlap_without_generics
-            ):
-                focus = fallback_items[0]
-                related = fallback_items[1:4]
-    elif fallback_items:
-        focus = fallback_items[0]
-        related = fallback_items[1:4]
+        overlap_without_generics = focus_match.prompt_overlap - generic_prompt_overlap
+        if not overlap_without_generics and fallback_items:
+            focus = fallback_items[0]
+            related = fallback_items[1:4]
     else:
         if not concepts:
             candidate_focus = _candidate_from_phrase(knowledge, phrases)

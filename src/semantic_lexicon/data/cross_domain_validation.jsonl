@@ -18,6 +18,14 @@
 {"text": "What is stellar nucleosynthesis in astronomy?", "intent": "definition", "domain": "astronomy", "feedback": 0.9}
 {"text": "Explain the concept of social contract theory.", "intent": "definition", "domain": "philosophy", "feedback": 0.94}
 {"text": "Define ecological succession in ecology.", "intent": "definition", "domain": "ecology", "feedback": 0.93}
+{"text": "Summarize how Ubuntu integrates upstream Linux CVEs into security notices.", "intent": "summary", "domain": "linux_kernel_operations", "domain_member": "ubuntu_kernel_lifecycle", "feedback": 0.93}
+{"text": "How should I enable ftrace tracing on Ubuntu servers for latency investigations?", "intent": "how_to", "domain": "linux_kernel_operations", "domain_member": "kernel_observability_layers", "feedback": 0.92}
+{"text": "Detail troubleshooting steps when Ubuntu Livepatch reports modules out of sync.", "intent": "troubleshooting", "domain": "linux_kernel_operations", "domain_member": "canonical_livepatch_management", "feedback": 0.94}
+{"text": "Define the escalation workflow for Ubuntu kernel crash dumps handled by kdump tools.", "intent": "definition", "domain": "linux_kernel_operations", "domain_member": "ubuntu_kernel_lifecycle", "feedback": 0.93}
+{"text": "How do I validate Ubuntu kernel builds with autopkgtest and QA certification suites?", "intent": "how_to", "domain": "linux_kernel_operations", "domain_member": "ubuntu_kernel_lifecycle", "feedback": 0.92}
+{"text": "Define the responsibilities of the Ubuntu kernel SRU process before release.", "intent": "definition", "domain": "linux_kernel_operations", "domain_member": "ubuntu_kernel_lifecycle", "feedback": 0.91}
+{"text": "Recommend strategies for staging Canonical kernel updates across a fleet using Landscape.", "intent": "recommendation", "domain": "linux_kernel_operations", "domain_member": "canonical_livepatch_management", "feedback": 0.92}
+{"text": "Recommend telemetry metrics to monitor kernel latency anomalies on Ubuntu hosts.", "intent": "recommendation", "domain": "linux_kernel_operations", "domain_member": "kernel_observability_layers", "feedback": 0.93}
 {"text": "What is marginal utility in microeconomics?", "intent": "definition", "domain": "economics", "feedback": 0.92}
 {"text": "Explain the meaning of ethical hacking.", "intent": "definition", "domain": "cybersecurity", "feedback": 0.9}
 {"text": "Define homeostasis for medical students.", "intent": "definition", "domain": "medicine", "feedback": 0.95}
