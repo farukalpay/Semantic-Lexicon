@@ -9,31 +9,38 @@ from __future__ import annotations
 import platform
 import shutil
 import subprocess
-from typing import Optional
+from importlib import import_module
+from typing import Any, Optional
 
 
 class ClipboardError(RuntimeError):
     """Raised when clipboard text cannot be retrieved."""
 
 
+def _load_pyperclip() -> Any:
+    """Attempt to import pyperclip dynamically."""
+
+    try:
+        return import_module("pyperclip")
+    except ImportError:
+        return None
+
+
 def _read_with_pure_python() -> Optional[str]:
     """Attempt to read the clipboard using pure Python backends."""
 
     # Prefer third-party helpers if available; fall back to tkinter.
-    try:
-        import pyperclip  # type: ignore[import-not-found]
-    except ImportError:
-        pass
-    else:
+    pyperclip = _load_pyperclip()
+    if pyperclip is not None:
         try:
             text = pyperclip.paste()
-        except pyperclip.PyperclipException:  # type: ignore[attr-defined]
+        except Exception:  # pragma: no cover - best effort fallback
             text = ""
         if text is not None:
             return str(text)
 
     try:
-        import tkinter  # type: ignore[import-not-found]
+        import tkinter
     except ImportError:
         return None
 
