@@ -129,11 +129,13 @@ class PersonaGenerator:
         self.wikipedia_augmenter = None
         self.advanced_extractor = None
         self.topic_manager = None
+        self.term_extractor = None
         if enable_wikipedia and WIKIPEDIA_AVAILABLE:
             try:
                 self.wikipedia_augmenter = KnowledgeAugmentedGenerator()
                 self.advanced_extractor = AdvancedWikipediaExtractor()
                 self.topic_manager = TopicCoherenceManager()
+                self.term_extractor = WikipediaTermExtractor()
                 LOGGER.info("Wikipedia augmentation enabled")
             except Exception as e:
                 LOGGER.warning(f"Failed to enable Wikipedia augmentation: {e}")
@@ -155,6 +157,18 @@ class PersonaGenerator:
 
                 # Build knowledge graph for the topic
                 concepts = self.advanced_extractor.get_relevant_concepts(main_topic, limit=20)
+
+                # Use WikipediaTermExtractor to extract additional relevant terms
+                if self.term_extractor:
+                    try:
+                        # Extract terms from the prompt using WikipediaTermExtractor
+                        extracted_terms = self.term_extractor.extract_terms(prompt)
+                        # Merge extracted terms with concepts for richer phrase guidance
+                        for term in extracted_terms[:5]:  # Limit to top 5 terms
+                            if term not in [c.get("name", "") for c in concepts]:
+                                concepts.append({"name": term})
+                    except Exception as e:
+                        LOGGER.debug(f"WikipediaTermExtractor failed: {e}")
 
                 # Filter for topic coherence
                 if self.topic_manager:
