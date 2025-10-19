@@ -288,3 +288,13 @@
 {"text": "Provide exploration prompts for energy transition that identify workforce needs.", "intent": "exploration"}
 {"text": "Provide exploration prompts for carbon markets that analyze pricing mechanisms.", "intent": "exploration"}
 {"text": "Provide exploration prompts for renewable integration that model grid stability.", "intent": "exploration"}
+{"text": "Summarize regulatory compliance steps for virtual power plant enrollment.", "intent": "summary"}
+{"text": "Summarize demand response program metrics for regional aggregators.", "intent": "summary"}
+{"text": "Summarize hydrogen blending pilot results for natural gas utilities.", "intent": "summary"}
+{"text": "Outline cybersecurity hardening measures for grid edge analytics deployments.", "intent": "outline"}
+{"text": "Outline lifecycle assessment checkpoints for battery energy storage projects.", "intent": "outline"}
+{"text": "Outline workforce development modules for transmission modernization teams.", "intent": "outline"}
+{"text": "Detail troubleshooting steps for anomalous inverter behavior in community solar arrays.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for telemetry loss in demand response control rooms.", "intent": "troubleshooting"}
+{"text": "Detail troubleshooting steps for hydrogen blending controller alarms in compressor stations.", "intent": "troubleshooting"}
+{"text": "Recommend optimization levers that enhance market bids for distributed energy portfolios.", "intent": "recommendation"}
