@@ -112,6 +112,12 @@ KEYWORD_FALLBACKS: dict[tuple[str, ...], list[str]] = {
         "practice multiplying 2x2 and 3x3 matrices",
         "interpret column space changes",
     ],
+    ("neural", "networks"): [
+        "contrast single-layer perceptrons with deeper architectures",
+        "trace the forward pass and backpropagation updates",
+        "explain why activation functions introduce non-linearity",
+        "monitor validation loss while tuning hyperparameters",
+    ],
     ("machine", "learning"): [
         "contrast supervised and unsupervised pipelines",
         "track generalisation error on validation data",
@@ -545,6 +551,31 @@ def _normalise_token(token: str) -> str:
     return "".join(char for char in token.lower() if char.isalpha())
 
 
+def _tokenize_identifier(text: str) -> list[str]:
+    expanded = text.replace("_", " ").replace("-", " ")
+    return tokenize(expanded)
+
+
+GENERIC_CONCEPT_TOKENS = {
+    "energy",
+    "topic",
+    "concept",
+    "information",
+    "data",
+    "idea",
+    "program",
+    "programs",
+    "network",
+    "networks",
+    "system",
+    "systems",
+    "plan",
+    "plans",
+    "initiative",
+    "initiatives",
+}
+
+
 def _build_intro(prompt: str, intent: str) -> str:
     prompt_text = prompt.strip()
     if not prompt_text:
@@ -942,10 +973,10 @@ def _build_related_topics(
     selection = knowledge.select_concepts(prompt_vector, anchor_tokens=token_sequence)
     concepts = list(selection.concepts)
     filtered_matches = _filter_concepts_by_prompt(token_sequence, phrases, concepts)
-    fallback_items, fallback_keywords = _fallback_concepts(token_sequence)
-    focus: str
-    related: list[str]
-
+    fallback_items, _ = _fallback_concepts(token_sequence)
+    focus: Optional[str] = None
+    related: list[str] = []
+    metric = f"K_raw={selection.knowledge_raw:.3f}"
     if fallback_items:
         focus = fallback_items[0]
         related = fallback_items[1:4]
@@ -959,24 +990,37 @@ def _build_related_topics(
             if token in {"energy", "topic", "concept", "information", "data", "idea"}
         }
         overlap_without_generics = focus_match.prompt_overlap - generic_prompt_overlap
-        if not overlap_without_generics and fallback_items:
-            focus = fallback_items[0]
-            related = fallback_items[1:4]
+        if not overlap_without_generics:
+            if fallback_items:
+                focus = fallback_items[0]
+                related = fallback_items[1:4]
+            else:
+                focus = None
+                related = []
     else:
         if not concepts:
             candidate_focus = _candidate_from_phrase(knowledge, phrases)
             if candidate_focus is None:
-                return "", [], selection
+                return "", [metric], selection
             concepts = [candidate_focus]
-        focus = concepts[0]
-        related = list(concepts[1:4])
+        candidate_focus = _candidate_from_phrase(knowledge, phrases)
+        if candidate_focus is not None:
+            focus = candidate_focus
+            related = []
+        elif fallback_items:
+            focus = fallback_items[0]
+            related = fallback_items[1:4]
+        else:
+            return "", [metric], selection
+    if focus is None:
+        return "", [metric], selection
 
     pieces: list[str] = []
     pieces.append(f"Knowledge focus: {focus}.")
     if related:
         pieces.append("Related concepts worth exploring: " + ", ".join(related) + ".")
     message = " ".join(pieces)
-    hits = [focus, *related, f"K_raw={selection.knowledge_raw:.3f}"]
+    hits = [focus, *related, metric]
     return message, hits, selection
 
 
@@ -1019,20 +1063,24 @@ def _filter_concepts_by_prompt(
     filtered: list[ConceptSelectionMatch] = []
     for concept in concepts:
         concept_tokens = {
-            _normalise_token(token) for token in tokenize(concept) if _normalise_token(token)
+            _normalise_token(token)
+            for token in _tokenize_identifier(concept)
+            if _normalise_token(token)
         }
         if not concept_tokens:
             continue
         prompt_overlap = _collect_overlap(prompt_tokens, concept_tokens)
         phrase_overlap = _collect_overlap(phrase_tokens, concept_tokens)
-        if prompt_overlap or len(phrase_overlap) >= 2:
-            filtered.append(
-                ConceptSelectionMatch(
-                    concept=concept,
-                    prompt_overlap=prompt_overlap,
-                    phrase_overlap=phrase_overlap,
-                )
+        salient_overlap = {token for token in prompt_overlap if token not in GENERIC_CONCEPT_TOKENS}
+        if not salient_overlap and len(phrase_overlap) < 2:
+            continue
+        filtered.append(
+            ConceptSelectionMatch(
+                concept=concept,
+                prompt_overlap=prompt_overlap,
+                phrase_overlap=phrase_overlap,
             )
+        )
     return filtered
 
 
@@ -1068,15 +1116,15 @@ def _match_knowledge_entity(
     knowledge: KnowledgeNetwork,
     phrase: str,
 ) -> Optional[str]:
-    phrase_tokens = tuple(tokenize(phrase))
+    phrase_tokens = tuple(_tokenize_identifier(phrase))
     if not phrase_tokens:
         return None
     for entity in knowledge.entities:
-        entity_tokens = tuple(tokenize(entity))
+        entity_tokens = tuple(_tokenize_identifier(entity))
         if entity_tokens == phrase_tokens:
             return entity
     for entity in knowledge.entities:
-        entity_tokens = tuple(tokenize(entity))
+        entity_tokens = tuple(_tokenize_identifier(entity))
         if all(token in entity_tokens for token in phrase_tokens):
             return entity
     return None
