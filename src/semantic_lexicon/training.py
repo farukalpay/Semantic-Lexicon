@@ -72,9 +72,10 @@ class Trainer:
                 raise TypeError("Knowledge 'head'/'key' field must be a non-empty string")
             if not isinstance(tail_raw, str) or not tail_raw.strip():
                 raise TypeError("Knowledge 'tail'/'text' field must be a non-empty string")
-            relation_value = (
-                relation_raw if isinstance(relation_raw, str) and relation_raw.strip() else default_relation
-            )
+            if isinstance(relation_raw, str) and relation_raw.strip():
+                relation_value = relation_raw
+            else:
+                relation_value = default_relation
             processed_knowledge.append(
                 {
                     "head": normalise_text(head_raw),
