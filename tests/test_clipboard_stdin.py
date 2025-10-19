@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 
 from semantic_lexicon import cli as cli_module
 
-runner = CliRunner()
+runner = CliRunner(mix_stderr=False)
 
 
 @pytest.fixture
@@ -60,4 +60,4 @@ def test_clipboard_empty(monkeypatch, tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "Clipboard is empty." in result.stdout
+    assert "Clipboard is empty." in result.stderr
