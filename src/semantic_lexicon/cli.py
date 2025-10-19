@@ -218,7 +218,6 @@ def _tight_bullet_points(
     return bullets[:limit]
 
 
-
 def _load_records(path: Path) -> list[dict[str, Any]]:
     path = Path(path)
     if path.suffix.lower() in {".jsonl", ".jsonl.gz"}:
