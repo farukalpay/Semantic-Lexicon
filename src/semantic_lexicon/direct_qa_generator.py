@@ -407,9 +407,7 @@ class DirectQAGenerator:
         if fact_groups["definitions"]:
             fact = fact_groups["definitions"][0]
             purpose = self._naturalize_phrase(fact.object)
-            paragraphs.append(
-                f"{topic.capitalize()} exists because it provides {purpose}."
-            )
+            paragraphs.append(f"{topic.capitalize()} exists because it provides {purpose}.")
 
         # Explain benefits through capabilities
         if fact_groups["capabilities"]:
