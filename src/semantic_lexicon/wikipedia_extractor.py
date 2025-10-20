@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import quote
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 from .logging import configure_logging
 
@@ -80,6 +80,11 @@ class WikipediaTermExtractor:
         self.cache[cache_key] = terms
 
         return terms
+
+    def extract_terms(self, topic: str) -> list[str]:
+        """Return the surface forms of extracted terms for backwards compatibility."""
+
+        return [term.term for term in self.extract_terms_for_topic(topic)]
 
     def _search_wikipedia(self, query: str) -> Optional[str]:
         """Search Wikipedia and return the most relevant page title."""
