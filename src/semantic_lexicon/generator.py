@@ -1103,25 +1103,44 @@ def _candidate_from_phrase(
     return None
 
 
+DOMAIN_FALLBACK_SUGGESTIONS: list[tuple[set[str], list[str]]] = [
+    (
+        {"neural", "network"},
+        [
+            "perceptrons",
+            "activation functions",
+            "backpropagation techniques",
+            "gradient descent optimisation",
+        ],
+    ),
+]
+
+
 def _fallback_concepts(tokens: Iterable[str]) -> tuple[list[str], tuple[str, ...]]:
     """Generate dynamic fallback concepts based on the prompt tokens."""
+
     prompt_tokens = {_normalise_token(token) for token in tokens if _normalise_token(token)}
     prompt_tokens -= STOPWORDS
 
-    # Generate basic fallback suggestions based on the tokens
-    suggestions = []
+    if not prompt_tokens:
+        return [], ()
 
-    # Create generic learning-focused suggestions
-    if prompt_tokens:
-        main_concept = max(prompt_tokens, key=len) if prompt_tokens else "topic"
-        suggestions = [
-            f"understand the fundamentals of {main_concept}",
-            f"explore practical applications of {main_concept}",
-            f"review key principles in {main_concept}",
-            f"practice core concepts of {main_concept}",
-        ]
+    lemmatised_tokens = {_lemmatise_token(token) for token in prompt_tokens}
+    lemmatised_tokens |= prompt_tokens
 
-    return suggestions[:4] if suggestions else [], ()
+    for keywords, suggestions in DOMAIN_FALLBACK_SUGGESTIONS:
+        if keywords <= lemmatised_tokens:
+            return suggestions[:4], ()
+
+    main_concept = max(prompt_tokens, key=len) if prompt_tokens else "topic"
+    suggestions = [
+        f"understand the fundamentals of {main_concept}",
+        f"explore practical applications of {main_concept}",
+        f"review key principles in {main_concept}",
+        f"practice core concepts of {main_concept}",
+    ]
+
+    return suggestions[:4], ()
 
 
 def _filter_concepts_by_prompt(
