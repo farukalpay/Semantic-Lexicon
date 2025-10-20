@@ -11,7 +11,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Optional
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 from .logging import configure_logging
 
